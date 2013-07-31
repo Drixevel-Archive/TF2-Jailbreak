@@ -1,0 +1,124 @@
+"Phrases"
+{
+	"Feature Not Available"
+	{
+		"en"		"This feature is not available on your version. Upgrade your version of SourceMod ClientPrefs extension."
+	}
+	"Banned AuthId"
+	{
+		"#format"	"{1:s}"
+		"en"		"Added Steam Id {1} to the CT Bans database."
+	}
+	"Unbanned AuthId"
+	{
+		"#format"	"{1:s}"
+		"en"		"Removed Steam Id {1} from the CT Bans database."
+	}
+	"No Targets"
+	{
+		"en"		"No targets are available to ban."
+	}
+	"Ready to CT Ban"
+	{
+		"#format"	"{1:s}"
+		"en"		"Ready to CT Ban {1}."
+	}
+	"CT Ban Removed"
+	{
+		"#format"	"{1:N}"
+		"en"		"Removed CT ban on {1}."
+	}
+	"CT Ban Auto Removed"
+	{
+		"#format"	"{1:N}"
+		"en"		"Auto-removed an expired CT ban for {1}."
+	}
+	"Already CT Banned"
+	{
+		"#format"	"{1:N}"
+		"en"		"{1} is already CT Banned."
+	}
+	"Enforcing CT Ban"
+	{
+		"en"		"CT Bans is enforcing a ban on your Steam ID"
+	}
+	"Last CT Banned On"
+	{
+		"#format"	"{1:s},{2:s}"
+		"en"		"You were last CT banned on {1}. {2}"
+	}
+	"Cookie Status Unavailable"
+	{
+		"en"		"Unable to get cookie status."
+	}
+	"Rage Ban"
+	{
+		"#format"	"{1:s}"
+		"en"		"{1} rage banned from CT indefinitely."
+	}
+	"Permanent CT Ban"
+	{
+		"#format"	"{1:N}"
+		"en"		"{1} banned from CT indefinitely."
+	}
+	"Temporary CT Ban"
+	{
+		"#format"	"{1:N},{2:d}"
+		"en"		"{1} banned from CT for {2} minutes spent alive."
+	}
+	"Not CT Banned"
+	{
+		"#format"	"{1:N}"
+		"en"		"{1} is NOT banned from CT."
+	}
+	"Rage Ban Menu Title"
+	{
+		"en"		"CT Ban the Following Rage Quitter:"
+	}
+	"Feature Not Available On Console"
+	{
+		"en"		"Feature not available on the server console."
+	}
+	"CT Ban Menu Title"
+	{
+		"en"		"CT Ban Player:"
+	}
+	"CT Ban Length Menu"
+	{
+		"#format"	"{1:N}"
+		"en"		"CT Banning {1} for Length:"
+	}
+	"CT Ban Reason Menu"
+	{
+		"#format"	"{1:N}"
+		"en"		"CTBanning {1} for Reason:"
+	}
+	"CT Ban Reason 1"
+	{
+		"en"		"Freekill Massacre"
+	}
+	"CT Ban Reason 2"
+	{
+		"en"		"Cheating/Exploiting"
+	}
+	"CT Ban Reason 3"
+	{
+		"en"		"Mic Spamming"
+	}
+	"CT Ban Reason 4"
+	{
+		"en"		"Poor Quality Mic"
+	}
+	"CT Ban Reason 5"
+	{
+		"en"		"Freekilling"
+	}
+	"CT Ban Reason 6"
+	{
+		"en"		"Gun Planting"
+	}
+	"CT Ban Reason 7"
+	{
+		"en"		"Breaking Rules"
+	}
+}

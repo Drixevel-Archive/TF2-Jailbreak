@@ -1,0 +1,594 @@
+﻿"Phrases"
+{
+	"plugin enabled"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} TF2 Jailbreak has been enabled."
+		"es"		"{darkkhaki} TF2 Jailbreak ha sido habilitado."
+	}
+
+	"plugin disabled"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} TF2 Jailbreak has been disabled."
+		"es"		"{darkkhaki} TF2 Jailbreak ha sido deshabilitado."
+	}
+	
+	"plugin advertisement"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} TF2 Jailbreak plugin by Jack of Designs. (www.jackofdesigns.com)."
+		"es"		"{darkkhaki} TF2 Jailbreak plugin realizado por Jack of Designs. (www.jackofdesigns.com)."
+	}
+
+	"welcome message"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Welcome to Team Fortress 2 Jailbreak! Type !jailbreak in chat for the rules and list of commands."
+		"es"		"{darkkhaki} ¡Bienvenido a Jailbreak en Team Fortress 2! Escribe !jailbreak en el chat para ver las reglas y la lista de comandos."
+	}
+	
+	"incompatible map"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} The current map is incompatible with this command."
+	}
+	
+	"warden disabled"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Warden is currently disabled."
+		"es"		"{darkkhaki} El guardia esta actualmente deshabilitado."
+	}
+	
+	"door controls disabled"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Door controls are currently disabled."
+		"es"		"{darkkhaki} Los controles de las puertas estan actualmente deshabilitados."
+	}
+	
+	"admin deny lr"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Admin has denied all currently queued last requests. Last request can be granted again."
+	}	
+
+	"admin reset plugin"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Admin has reset the plugin. Please reacquire Warden and grant Freedays if there are any."
+	}	
+	
+	"admin removed freeday"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Your freeday status has been removed by an admin."
+	}
+	
+	"admin removed robot"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Your robot status has been removed by an admin."
+	}
+
+	"fire warden minimum players not met"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Minimum players has not been met to fire warden."
+	}	
+	
+	"fire warden already voted"
+	{
+		"#format"	"{1:d},{2:d}"
+		"en"		"{darkkhaki} You have already voted to cast off this warden. ({1} votes, {2} required)"
+	}	
+	
+	"fire warden requested"
+	{
+		"#format"	"{1:s},{2:d},{3:d}"
+		"en"		"{darkkhaki} {1} wants to fire the current warden. ({2} votes, {3} required)"
+	}
+	
+	"forced warden"
+	{
+		"#format"	"{1:N},{2:N}"
+		"en"		"{darkkhaki} {1} has forced {2} to become Warden."
+	}
+
+	"new warden"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} is the new Warden."
+		"es"		"{darkkhaki} {1} es el nuevo guardia."
+	}
+	
+	"current warden"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} is the current Warden."
+		"es"		"{darkkhaki} {1} es el guardia."
+	}
+
+	"warden locked"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Warden is currently locked."
+		"es"		"{darkkhaki} La opcion para ser guardia ha sido bloqueada."
+	}
+	
+	"warden granted lr"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Warden has granted you last request."
+		"es"		"{darkkhaki} el guardia le ha dado un ultimo deseo."
+	}
+
+	"warden removed lr"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Last request has been reset. You may grant a Prisoner last request again."
+		"es"		"{darkkhaki} Ul ultimo deseo ha sido reiniciado. Puedes darle un ultimo deseo a otro prisionero nuevamente."	
+	}
+	
+	"warden disconnected center"
+	{
+		"#format"	""
+		"en"		"Warden has disconnected!"
+		"es"		"el guardia se ha desconectado!"
+	}
+	
+	"warden disconnected"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} The warden has disconnected. You may now choose a new warden by typing !w in chat."
+		"es"		"{darkkhaki} El guardia se ha desconectado. Puedes seleccionar un nuevo guardia escribiendo !w en el chat"
+	}
+	
+	"warden retired center"
+	{
+		"#format"	""
+		"en"		"Warden has retired!"
+		"es"		"el guardia se ha retirado!"
+	}
+	
+	"warden retired"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has retired from Warden. A new Warden may now be chosen by typing !w in chat."
+		"es"		"{darkkhaki} El guardia se ha retirado. Un nuevo guardia puede ser seleccionado escribiendo !w en el chat "
+	}
+	
+	"not warden"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} You are not the Warden."
+		"es"		"{darkkhaki} Tu no eres el guardia."
+	}
+	
+	"dead warden"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} The warden is now dead. You may now choose a new one by typing !w in chat."
+		"es"		"{darkkhaki} El guardia ha muerto. Puedes seleccionar un nuevo guardia escribiendo !w en el chat."
+	}
+	
+	"warden killed"
+	{
+		"#format"	""
+		"en"		"Warden has been killed!"
+		"es"		"el guardia ha sido asesinado!"
+	}
+	
+	"warden fired center"
+	{
+		"#format"	""
+		"en"		"Warden has been fired!"
+		"es"		"el guardia ha sido despedido!"
+	}
+	
+	"warden fired"
+	{
+		"#format"	"{1:N},{2:N}"
+		"en"		"{darkkhaki} {1} has fired {2} from Warden."
+		"es"		"{darkkhaki} {1} ha sido despedido a {2} de guardia."		
+	}
+	
+	"no warden current"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Warden is not currently taken."
+		"es"		"{darkkhaki} no hay guardia actualmente."
+	}
+
+	"warden message"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} You are now Warden! Type !wlist in chat to see the list of available commands."
+		"es"		"{darkkhaki} Tu eres el nuevo guardia! Escribe !wlist en el chat para ver la lista de comandos disponibles"
+	}
+	
+	"last request invalid client"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} You can only grant last requests to valid clients and Prisoners that are alive."
+		"es"		"{darkkhaki} Solo puedes darle un ultimo deseo a los clientes y prisioneros que se ecuentren vivos."
+	}
+	
+	"last request in use"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Last request is currently in use. Feel free to type !removelr in order to cancel all queued requests and the current LR."
+		"es"		"{darkkhaki} Se ha concedido un ultimo deseso. Sientete libre de escribir !removelr para cancelar toda la lista de deseos que se encuentran en espera."
+	}
+	
+	"last request closed"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} The last request menu has been closed. Warden may grant a last request again to a prisoner."
+		"es"		"{darkkhaki} . El guardia puede darle un ultimo deseo a otro prisionero."
+	}
+	
+	"last request given"
+	{
+		"#format"	"{1:N},{2:N}"
+		"en"		"{darkkhaki} {1} has given {2} a last request."
+		"es"		"{darkkhaki} {1} le ha dado {2} un ultimo deseo."
+	}
+	
+	"lr freeday queued"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has chosen freeday next round."
+		"es"		"{darkkhaki} {1} ha escogido dia libre en la proxima fase."
+	}
+	
+	"lr freeday executed"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} Freeday mode is now activated for {1}."
+		"es"		"{darkkhaki} El modo dia libre ha sido activado para {1}."
+	}
+	
+	"lr freeday message"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Freedays are granted godmode for protection. If you attack or damage a Guard, your Freeday will be lifted."
+		"es"		"{darkkhaki} Los dias libres son en modo d-os. Si atacas o lastimas a un guardia tu dia libre sera suspendido."	
+	}
+	
+	"lr freeday lost center"
+	{
+		"#format"	"{1:N}"
+		"en"		"{1} has lost his/her freeday!"
+		"es"		"{1} ha perdido su dia libre!"
+	}
+	
+	"lr freeday lost"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1}'s Freeday has been removed because you attacked a Guard."
+		"es"		"{darkkhaki} {1}'s El dia libre se ha eliminado porque atacastes a un guardia."
+	}
+	
+	"lr free for all queued"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has chosen to grant freeday for all next round."
+		"es"		"{darkkhaki} {1}'s Ha escogido dia libre para todas las personas en la siguiente fase"
+	}
+	
+	"lr freeday picking clients"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} is picking clients for Freeday next round..."
+	}
+
+	"lr free for all executed"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Freeday mode is activated."
+		"es"		"{darkkhaki} El modo dia libre se ha activado."
+	}
+
+	"lr suicide"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has chosen to kill himself. What a shame..."
+	}	
+	
+	"lr guards melee only queued"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has chosen for guards to use melee only next round."
+		"es"		"{darkkhaki} {1} ha escogido que los guardias usen solo armas cuerpo a cuerpo en la proxima fase."
+	}
+	
+	"lr guards melee only executed"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Guards melee only activated."
+		"es"		"{darkkhaki} Guardias con solo armas cuerpo a cuerpo se ha activado."
+	}
+	
+	"lr hhh kill round queued"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has chosen Horseless Headless Horsemann Kill Round next round."
+	}
+	
+	"lr hhh kill round executed"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Horseless Headless Horsemann Kill round has been activated."
+	}
+
+	"lr low gravity round queued"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has chosen Low Gravity next round."
+	}
+	
+	"lr low gravity round executed"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Low Gravity mode has been activated."
+	}
+	
+	"lr speed demon round queued"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has chosen Speed Demon next round."
+	}
+	
+	"lr speed demon round executed"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Speed Demon mode has been activated."
+	}
+	
+	"lr hunger games queued"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has chosen Hunger Games next round."
+		"es"		"{darkkhaki} {1} ha escogido Hunger Games en la siguiente fase."
+	}
+	
+	"lr hunger games executed"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Hunger games mode activated. Friendly fire will be enabled in 10 seconds."
+		"es"		"{darkkhaki} El modo Hunger games ha sido activado. Fuego amigo sera habilitado en 10 segundos."
+	}
+	
+	"lr robotic takeover queued"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has chosen for robots to take over the world!"
+		"es"		"{darkkhaki} {1} ha escogido que los robots se apoderen del mundo!"
+	}
+	
+	"lr robotic takeover executed"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Robots have taken over the eart as a part of a last request!"
+		"en"		"{darkkhaki} Los robots se han apoderado de la tierra como parte de la ultima peticion!"
+	}
+	
+	"lr custom message"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has chosen to type out his/her LR in chat. (Custom)"
+		"es"		"{darkkhaki} {1} ha escogido escribir su ultimo deseo en el chat. (Personalizado)"
+	}
+
+	"microphone verified"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Thank you! Your microphone is now verified and you can join the Guards team."
+		"es"		"{darkkhaki} Muchas Gracias! Tu microfono ha sido verificado usted puede entrar al equipo de los guardias."
+	}
+	
+	"microphone unverified"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Please verifiy that you have a microphone by talking in chat or enabling voice input."
+		"es"		"{darkkhaki} Por favor compruebe que tiene un microfono hablando en el chat o habilitando la entrada de voz."	
+	}
+	
+	"bans add user usage"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Use: sm_ban_add <#userid|name>"
+	}
+	
+	"bans add user"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} %N [%s] has been added to the the Guards blacklist."
+		"es"		"{darkkhaki} %N [%s] ha sido agregado a la lista negra de guardias."
+	}
+	
+	"bans reloaded"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} %d SteamIDs have been reloaded from the list."
+		"es"		"{darkkhaki} %d La lista de SteamIDs ha sido recargada."
+	}
+	
+	"bans file failed"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} Failed to open %s for writing."
+		"es"		"{darkkhaki} Fallo al abrir %s por escribir."
+	}
+
+	"banned from guards"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} You have been banned from Guards team! Contact an admin to dispute the ban."
+		"es"		"{darkkhaki} Usted ha sido expulsado del equipo de guardias! Contacte al administrador para impugnar la penalizacion."
+	}
+
+	"muted player"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} You have been muted."
+		"es"		"{darkkhaki} Usted ha sido silenciado."
+	}
+
+	"unmuted player"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} You have been unmuted."
+		"es"		"{darkkhaki} Usted ya puede hablar."
+	}
+
+	"red team muted"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Red team has been muted permanently."
+		"es"		"{darkkhaki} El equipo rojo ha sido silenciado permanentemente."
+	}
+	
+	"red team muted temporarily"
+	{
+		"#format"	"{1:d}"
+		"en"		"{darkkhaki} Red team has been muted for {1} seconds."
+		"es"		"{darkkhaki} El equipo rojo ha sido silenciado por {1} segundos."
+	}
+	
+	"red team unmuted"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Red team has been unmuted."
+		"es"		"{darkkhaki} El equipo rojo ha sido silenciado."
+	}
+	
+	"stripped weapons and ammo"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Your weapons and ammo have been stripped."
+		"es"		"{darkkhaki} Ha sido despojado de sus armas y municiones."
+	}
+	
+	"doors opened"
+	{		
+		"#format"	""
+		"en"		"{darkkhaki} The cell doors have been opened!"
+		"es"		"{darkkhaki} Las puertas de la celda han sido abiertas!"
+	}
+	
+	"doors manual open"
+	{		
+		"#format"	""
+		"en"		"{darkkhaki} The cell doors have been opened manually, timer has been cancelled."
+	}
+
+	"doors closed"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} The cell doors have been closed!"
+		"es"		"{darkkhaki} Las puertas de la celda han sido cerradas!"
+	}
+	
+	"doors locked"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} The cell doors have been locked!"
+		"es"		"{darkkhaki} Las puertas de las celdas han sido bloqueadas!"
+	}
+	
+	"doors unlocked"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} The cell doors have been unlocked!"
+		"es"		"{darkkhaki} Las puertas de las celdas han sido desbloqueadas!"
+	}
+	
+	"prisoner has rebelled"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has rebelled."
+	}
+	
+	"moved for balance"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} You have been moved for Team balance."
+		"es"		"{darkkhaki} Ha sido movido al otro equipo para equilibrarlos."
+	}
+	
+	"guards only"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} This command is restricted to Guards only."
+		"es"		"{darkkhaki} Este comando ha sido restringo solo para guardias."
+	}
+	
+	"prisoners only"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} This command is restricted to Prisoners only."
+		"es"		"{darkkhaki} Este comando ha sido restringido solo para prisioneros."
+	}
+	
+	"cell doors open start"
+	{
+		"#format"	"{1:d}"
+		"en"		"{darkkhaki} Cell doors will be opened after {1} seconds unless opened."
+	}
+
+	"cell doors open end"
+	{
+		"#format"	"{1:d}"
+		"en"		"{darkkhaki} Cell doors have been opened after {1} seconds of remaining closed."
+	}
+	
+	"rebel timer start"
+	{
+		"#format"	"{1:d}"
+		"en"		"{darkkhaki} Your rebel status will be removed automatically in {1} seconds."
+	}
+	
+	"rebel timer end"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Your rebel status has been removed."
+	}
+
+	"friendlyfire enabled"
+	{
+		"#format"	""
+		"en"		"{darkkhaki}Friendly fire is now enabled."
+		"es"		"{darkkhaki}Fuego amigo se ha habilitado."
+	}
+	
+	"friendlyfire disabled"
+	{
+		"#format"	""
+		"en"		"{darkkhaki}Friendly fire is now disabled."
+		"es"		"{darkkhaki}Fuego amigo se ha deshabilitado."
+	}
+	
+	"collision enabled"
+	{
+		"#format"	""
+		"en"		"{darkkhaki}Collision is now enabled."
+		"es"		"{darkkhaki} Colision ha sido habilitada"
+	}
+	
+	"collision disabled"
+	{
+		"#format"	""
+		"en"		"{darkkhaki}Collision is now disabled."
+		"es"		"{darkkhaki} Colision ha sido deshabilitada"
+	}
+	
+	"Target not found"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Target not found!"
+		"es"		"{darkkhaki} El objetivo!"
+	}
+}
