@@ -48,6 +48,18 @@
 		"es"		"{darkkhaki} Los controles de las puertas estan actualmente deshabilitados."
 	}
 	
+	"freekillers system disabled"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} The Anti-Freekill system is currently disabled."
+	}
+	
+	"lr system disabled"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} The Last Request system is currently disabled."
+	}
+
 	"admin deny lr"
 	{
 		"#format"	""
@@ -66,6 +78,12 @@
 		"en"		"{darkkhaki} Your freeday status has been removed by an admin."
 	}
 	
+	"admin pardoned freekillers"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Admin has pardoned all current Freekillers marked."
+	}
+	
 	"admin removed robot"
 	{
 		"#format"	""
@@ -82,12 +100,24 @@
 	{
 		"#format"	"{1:d},{2:d}"
 		"en"		"{darkkhaki} You have already voted to cast off this warden. ({1} votes, {2} required)"
-	}	
+	}
 	
 	"fire warden requested"
 	{
 		"#format"	"{1:s},{2:d},{3:d}"
 		"en"		"{darkkhaki} {1} wants to fire the current warden. ({2} votes, {3} required)"
+	}
+	
+	"voted off of warden"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} You have been voted off! Please wait until next map and you may become Warden again."
+	}
+	
+	"warden fires exceeded"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} You can no longer vote to fire Wardens this map."
 	}
 	
 	"forced warden"
@@ -283,6 +313,12 @@
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1} is picking clients for Freeday next round..."
 	}
+	
+	"lr freeday picked clients"
+	{
+		"#format"	"{1:N},{2:N}"
+		"en"		"{darkkhaki} {1} has chosen {2} for a freeday."
+	}
 
 	"lr free for all executed"
 	{
@@ -375,6 +411,18 @@
 		"en"		"{darkkhaki} Los robots se han apoderado de la tierra como parte de la ultima peticion!"
 	}
 	
+	"lr hide and seek queued"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has chosen Hide & Seek next round!"
+	}
+	
+	"lr hide and seek executed"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Hide & Seek has been activated. Blue's are locked down for 30 seconds, prisoners need to find places to hide."
+	}
+
 	"lr custom message"
 	{
 		"#format"	"{1:N}"
@@ -590,5 +638,11 @@
 		"#format"	""
 		"en"		"{darkkhaki} Target not found!"
 		"es"		"{darkkhaki} El objetivo!"
+	}
+	
+	"freekiller timer start"
+	{
+		"#format"	"{1:N},{2:d}"
+		"en"		"{darkkhaki} {1} has been marked as a Freekiller and will be banned in {2} unless admin pardons it."
 	}
 }
