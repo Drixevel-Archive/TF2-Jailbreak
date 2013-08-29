@@ -59,6 +59,12 @@
 		"#format"	""
 		"en"		"{darkkhaki} The Last Request system is currently disabled."
 	}
+	
+	"red mute system disabled"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Muting is currently disabled on this server. Everyone may talk."
+	}
 
 	"admin deny lr"
 	{
@@ -421,6 +427,18 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Hide & Seek has been activated. Blue's are locked down for 30 seconds, prisoners need to find places to hide."
+	}
+	
+	"lr disco day queued"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has chosen Disco Day next round! PARTY HARD!"
+	}
+	
+	"lr disco day executed"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Disco Day mode has been activated. PARTY!"
 	}
 
 	"lr custom message"

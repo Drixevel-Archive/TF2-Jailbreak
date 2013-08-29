@@ -1,0 +1,34 @@
+Update Notes:
+
+Jailbreak-
+* Fixed BecomeWarden not checking if client is valid.
+* Timers should now be killed properly. 'sm_pardon' should now work as intended.
+* Freeday system has been fleshed out a bit so it properly removes and grants freedays when needed.
+* RemoveWarden has been moved from End Round to Round Start.
+* Fixed all commands to check if the client is console.
+* Added 'sm_jail_deadmute' which is original functionality from 'sm_jail_redmute' split for server operators.
+* Added a new LR called 'Disco Day' which requires FunCommandsX.
+* Added late load support.
+* Added an extra check if the client was a warden on switch.
+* Added a translation for red mute disabled.
+
+Bluebans-
+* Switched all menu handles to switch statements instead of if/else/else if statements.
+* Finished converting all translations to match TF2 format.
+
+++ 08/21/2013
+
+Jailbreak-
+* Updated all menus to use switch statements instead of if/else statements.
+* Fixed a bug where trails would stick to players through rounds if they were Freeday.
+* Fixed the required check that client must be alive to receive LR.
+* Added 'sm_givelrmenu' or 'sm_givelrm' to give the Warden a menu instead. I will put them on the same command later.
+* Cleaned up the code a bit.
+
+Bluebans-
+* Fixed a PrintToChat error on PlayerSpawn.
+* Updated plugin information at the top of the source.
+* Reformatted code to make things easier to work with.
+* Changed up the database names used to all lowercase letters to play nice with PHP scripts.
+
+--

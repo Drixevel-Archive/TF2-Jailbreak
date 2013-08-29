@@ -17,7 +17,7 @@
 
 #define PLUGIN_NAME     "[TF2] Jailbreak - Bans"												//Plugin name
 #define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"											//Plugin author
-#define PLUGIN_VERSION  "4.8.6"																	//Plugin version
+#define PLUGIN_VERSION  "4.8.8"																	//Plugin version
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."									//Plugin description
 #define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"											//Plugin contact URL
 
@@ -55,6 +55,8 @@ new String:sLogTableName[32];
 new String:sTimesTableName[32];
 new bool:debugging;
 
+new bool:RoundActive = false;
+
 public Plugin:myinfo =
 {
 	name = PLUGIN_NAME,
@@ -78,6 +80,8 @@ public OnPluginStart()
 	JBB_Cvar_Debugger = CreateConVar("sm_jail_blueban_debug", "1", "Debugging logs status: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	
 	HookEvent("player_spawn", PlayerSpawn);
+	HookEvent("teamplay_round_start", RoundStart);
+	HookEvent("teamplay_round_win", RoundEnd);
 
 	AutoExecConfig(true, "TF2Jail_BlueBans");
 
@@ -168,13 +172,16 @@ public DB_Callback_OnClientAuthed(Handle:owner, Handle:hndl, const String:error[
 
 public AdminMenu_RageBan(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (action == TopMenuAction_DisplayOption)
+	switch (action)
 	{
-		Format(buffer, maxlength, "Rage Ban");
-	}
-	else if (action == TopMenuAction_SelectOption)
-	{
-		DisplayRageBanMenu(param, GetArraySize(DNames));
+		case TopMenuAction_DisplayOption:
+			{
+				Format(buffer, maxlength, "Rage Ban");
+			}
+		case TopMenuAction_SelectOption:
+			{
+				DisplayRageBanMenu(param, GetArraySize(DNames));
+			}
 	}
 }
 
@@ -206,40 +213,43 @@ DisplayRageBanMenu(Client, ArraySize)
 
 public MenuHandler_RageBan(Handle:menu, MenuAction:action, param1, param2)
 {
-	if (action == MenuAction_End)
+	switch (action)
 	{
-		CloseHandle(menu);
-	}
-	else if (action == MenuAction_Cancel)
-	{
-		if ((param2 == MenuCancel_ExitBack) && (TopMenu != INVALID_HANDLE))
-		{
-			DisplayTopMenu(TopMenu, param1, TopMenuPosition_LastCategory);
-		}
-	}
-	else if (action == MenuAction_Select)
-	{
-		decl String:sInfoString[22];
-		GetMenuItem(menu, param2, sInfoString, sizeof(sInfoString));
-		
-		if (bAuthIdNativeExists)
-		{
-			SetAuthIdCookie(sInfoString, Guard_Cookie, "1");
-		}
-		else
-		{
-			if (CP_DataBase != INVALID_HANDLE)
+		case MenuAction_End:
 			{
-				decl String:query[255];
-				Format(query, sizeof(query), "SELECT value FROM sm_cookie_cache WHERE player = '%s' and cookie_id = '%i'", sInfoString, iCookieIndex);
-				new Handle:TheDataPack = CreateDataPack();
-				WritePackString(TheDataPack, sInfoString);
-				WritePackCell(TheDataPack, param1);
-				WritePackCell(TheDataPack, param2);
-				SQL_TQuery(CP_DataBase, CP_Callback_CheckBan, query, TheDataPack); 
+				CloseHandle(menu);
 			}
-		}
-		if (debugging) PrintToChat(param1, "%s %t", CLAN_TAG, "Ready to CT Ban", sInfoString);
+		case MenuAction_Cancel:
+			{
+				if ((param2 == MenuCancel_ExitBack) && (TopMenu != INVALID_HANDLE))
+				{
+					DisplayTopMenu(TopMenu, param1, TopMenuPosition_LastCategory);
+				}
+			}
+		case MenuAction_Select:
+			{
+				decl String:sInfoString[22];
+				GetMenuItem(menu, param2, sInfoString, sizeof(sInfoString));
+				
+				if (bAuthIdNativeExists)
+				{
+					SetAuthIdCookie(sInfoString, Guard_Cookie, "1");
+				}
+				else
+				{
+					if (CP_DataBase != INVALID_HANDLE)
+					{
+						decl String:query[255];
+						Format(query, sizeof(query), "SELECT value FROM sm_cookie_cache WHERE player = '%s' and cookie_id = '%i'", sInfoString, iCookieIndex);
+						new Handle:TheDataPack = CreateDataPack();
+						WritePackString(TheDataPack, sInfoString);
+						WritePackCell(TheDataPack, param1);
+						WritePackCell(TheDataPack, param2);
+						SQL_TQuery(CP_DataBase, CP_Callback_CheckBan, query, TheDataPack); 
+					}
+				}
+				if (debugging) PrintToChat(param1, "%s %t", CLAN_TAG, "Ready to Guard Ban", sInfoString);
+			}
 	}
 }
 
@@ -247,7 +257,7 @@ public CP_Callback_CheckBan(Handle:owner, Handle:hndl, const String:error[], any
 {
 	if (hndl == INVALID_HANDLE)
 	{
-		LogError("CT Ban query had a failure: %s", error);
+		LogError("Guard Ban query had a failure: %s", error);
 		CloseHandle(stringPack);
 	}
 	else
@@ -398,7 +408,7 @@ public Action:CheckTimedGuardBans(Handle:timer)
 					RemoveFromArray(TimedBanLocalList, idx);
 					iTimeArraySize--;
 					Remove_CTBan(0, iBannedClientIndex, true);
-					if (debugging) LogMessage("removed CT ban on %N", iBannedClientIndex);
+					if (debugging) LogMessage("removed Guard ban on %N", iBannedClientIndex);
 				}
 			}
 		}
@@ -570,13 +580,16 @@ public AdminMenu_CTBan(Handle:topmenu,
 					  String:buffer[],
 					  maxlength)
 {
-	if (action == TopMenuAction_DisplayOption)
+	switch (action)
 	{
-		Format(buffer, maxlength, "CT Ban");
-	}
-	else if (action == TopMenuAction_SelectOption)
-	{
-		DisplayCTBanPlayerMenu(param);
+		case TopMenuAction_DisplayOption:
+			{
+				Format(buffer, maxlength, "Guard Ban");
+			}
+		case TopMenuAction_SelectOption:
+			{
+				DisplayCTBanPlayerMenu(param);
+			}
 	}
 }
 
@@ -584,7 +597,7 @@ DisplayCTBanPlayerMenu(client)
 {
 	new Handle:menu = CreateMenu(MenuHandler_CTBanPlayerList);
 	
-	SetMenuTitle(menu, "%T", "CT Ban Menu Title", client);
+	SetMenuTitle(menu, "%T", "Guard Ban Menu Title", client);
 	SetMenuExitBackButton(menu, true);
 	
 	AddTargetsToMenu(menu, client, true, false);
@@ -596,7 +609,7 @@ DisplayCTBanTimeMenu(client, targetUserId)
 {
 	new Handle:menu = CreateMenu(MenuHandler_CTBanTimeList);
 
-	SetMenuTitle(menu, "%T", "CT Ban Length Menu", client, GetClientOfUserId(targetUserId));
+	SetMenuTitle(menu, "%T", "Guard Ban Length Menu", client, GetClientOfUserId(targetUserId));
 	SetMenuExitBackButton(menu, true);
 
 	AddMenuItem(menu, "0", "Permanent");
@@ -614,23 +627,23 @@ DisplayCTBanReasonMenu(client)
 {
 	new Handle:menu = CreateMenu(MenuHandler_CTBanReasonList);
 
-	SetMenuTitle(menu, "%T", "CT Ban Reason Menu", client, GetClientOfUserId(GuardBanTargetUserId[client]));
+	SetMenuTitle(menu, "%T", "Guard Ban Reason Menu", client, GetClientOfUserId(GuardBanTargetUserId[client]));
 	SetMenuExitBackButton(menu, true);
 
 	decl String:sMenuReason[128];
-	Format(sMenuReason, sizeof(sMenuReason), "%T", "CT Ban Reason 1", client);
+	Format(sMenuReason, sizeof(sMenuReason), "%T", "Guard Ban Reason 1", client);
 	AddMenuItem(menu, "1", sMenuReason);
-	Format(sMenuReason, sizeof(sMenuReason), "%T", "CT Ban Reason 2", client);
+	Format(sMenuReason, sizeof(sMenuReason), "%T", "Guard Ban Reason 2", client);
 	AddMenuItem(menu, "2", sMenuReason);
-	Format(sMenuReason, sizeof(sMenuReason), "%T", "CT Ban Reason 3", client);
+	Format(sMenuReason, sizeof(sMenuReason), "%T", "Guard Ban Reason 3", client);
 	AddMenuItem(menu, "3", sMenuReason);
-	Format(sMenuReason, sizeof(sMenuReason), "%T", "CT Ban Reason 4", client);
+	Format(sMenuReason, sizeof(sMenuReason), "%T", "Guard Ban Reason 4", client);
 	AddMenuItem(menu, "4", sMenuReason);
-	Format(sMenuReason, sizeof(sMenuReason), "%T", "CT Ban Reason 5", client);
+	Format(sMenuReason, sizeof(sMenuReason), "%T", "Guard Ban Reason 5", client);
 	AddMenuItem(menu, "5", sMenuReason);
-	Format(sMenuReason, sizeof(sMenuReason), "%T", "CT Ban Reason 6", client);
+	Format(sMenuReason, sizeof(sMenuReason), "%T", "Guard Ban Reason 6", client);
 	AddMenuItem(menu, "6", sMenuReason);
-	Format(sMenuReason, sizeof(sMenuReason), "%T", "CT Ban Reason 7", client);
+	Format(sMenuReason, sizeof(sMenuReason), "%T", "Guard Ban Reason 7", client);
 	AddMenuItem(menu, "7", sMenuReason);
 
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
@@ -638,96 +651,105 @@ DisplayCTBanReasonMenu(client)
 
 public MenuHandler_CTBanReasonList(Handle:menu, MenuAction:action, param1, param2)
 {
-	if (action == MenuAction_End)
+	switch (action)
 	{
-		CloseHandle(menu);
-	}
-	else if (action == MenuAction_Cancel)
-	{
-		if (param2 == MenuCancel_ExitBack && TopMenu != INVALID_HANDLE)
-		{
-			DisplayTopMenu(TopMenu, param1, TopMenuPosition_LastCategory);
-		}
-	}
-	else if (action == MenuAction_Select)
-	{
-		decl String:sBanChoice[10];
-		GetMenuItem(menu, param2, sBanChoice, sizeof(sBanChoice));
-		new iBanReason = StringToInt(sBanChoice);
-		new iTimeToBan = GuardBanTimeLength[param1];
-		new iTargetIndex = GetClientOfUserId(GuardBanTargetUserId[param1]);
-		
-		decl String:sBanned[3];
-		GetClientCookie(iTargetIndex, Guard_Cookie, sBanned, sizeof(sBanned));
-		new banFlag = StringToInt(sBanned);
-		if (!banFlag)
-		{
-			PerformCTBan(iTargetIndex, param1, iTimeToBan, iBanReason);
-		}
-		else
-		{
-			PrintToChat(param1, CLAN_TAG, "Already CT Banned", iTargetIndex);
-		}
+		case MenuAction_End:
+			{
+				CloseHandle(menu);
+			}
+		case MenuAction_Cancel:
+			{
+				if (param2 == MenuCancel_ExitBack && TopMenu != INVALID_HANDLE)
+				{
+					DisplayTopMenu(TopMenu, param1, TopMenuPosition_LastCategory);
+				}
+			}
+		case MenuAction_Select:
+			{
+				decl String:sBanChoice[10];
+				GetMenuItem(menu, param2, sBanChoice, sizeof(sBanChoice));
+				new iBanReason = StringToInt(sBanChoice);
+				new iTimeToBan = GuardBanTimeLength[param1];
+				new iTargetIndex = GetClientOfUserId(GuardBanTargetUserId[param1]);
+				
+				decl String:sBanned[3];
+				GetClientCookie(iTargetIndex, Guard_Cookie, sBanned, sizeof(sBanned));
+				new banFlag = StringToInt(sBanned);
+				if (!banFlag)
+				{
+					PerformCTBan(iTargetIndex, param1, iTimeToBan, iBanReason);
+				}
+				else
+				{
+					PrintToChat(param1, CLAN_TAG, "Already Guard Banned", iTargetIndex);
+				}
+			}
 	}
 }
 
 public MenuHandler_CTBanPlayerList(Handle:menu, MenuAction:action, param1, param2)
 {
-	if (action == MenuAction_End)
+	switch (action)
 	{
-		CloseHandle(menu);
-	}
-	else if (action == MenuAction_Cancel)
-	{
-		if (param2 == MenuCancel_ExitBack && TopMenu != INVALID_HANDLE)
-		{
-			DisplayTopMenu(TopMenu, param1, TopMenuPosition_LastCategory);
-		}
-	}
-	else if (action == MenuAction_Select)
-	{
-		decl String:info[32];
-		new userid, target;
-		
-		GetMenuItem(menu, param2, info, sizeof(info));
-		userid = StringToInt(info);
+		case MenuAction_End:
+			{
+				CloseHandle(menu);
+			}
+		case MenuAction_Cancel:
+			{
+				if (param2 == MenuCancel_ExitBack && TopMenu != INVALID_HANDLE)
+				{
+					DisplayTopMenu(TopMenu, param1, TopMenuPosition_LastCategory);
+				}
+			}
+		case MenuAction_Select:
+			{
+				decl String:info[32];
+				new userid, target;
+				
+				GetMenuItem(menu, param2, info, sizeof(info));
+				userid = StringToInt(info);
 
-		if ((target = GetClientOfUserId(userid)) == 0)
-		{
-			PrintToChat(param1, "%s %t", CLAN_TAG, "Player no longer available");
-		}
-		else if (!CanUserTarget(param1, target))
-		{
-			PrintToChat(param1, "%s %t", CLAN_TAG, "Unable to target");
-		}
-		else
-		{
-			GuardBanTargetUserId[param1] = userid;
-			DisplayCTBanTimeMenu(param1, userid);
-		}
+				if ((target = GetClientOfUserId(userid)) == 0)
+				{
+					PrintToChat(param1, "%s %t", CLAN_TAG, "Player no longer available");
+				}
+				else if (!CanUserTarget(param1, target))
+				{
+					PrintToChat(param1, "%s %t", CLAN_TAG, "Unable to target");
+				}
+				else
+				{
+					GuardBanTargetUserId[param1] = userid;
+					DisplayCTBanTimeMenu(param1, userid);
+				}
+			}
 	}
 }
 
 public MenuHandler_CTBanTimeList(Handle:menu, MenuAction:action, param1, param2)
 {
-	if (action == MenuAction_End)
+	switch (action)
 	{
-		CloseHandle(menu);
-	}
-	else if (action == MenuAction_Cancel)
-	{
-		if (param2 == MenuCancel_ExitBack && TopMenu != INVALID_HANDLE)
-		{
-			DisplayTopMenu(TopMenu, param1, TopMenuPosition_LastCategory);
-		}
-	}
-	else if (action == MenuAction_Select)
-	{
-		decl String:info[32];
-		GetMenuItem(menu, param2, info, sizeof(info));
-		new iTimeToBan = StringToInt(info);
-		GuardBanTimeLength[param1] = iTimeToBan;
-		DisplayCTBanReasonMenu(param1);
+		case MenuAction_End:
+			{
+				CloseHandle(menu);
+			}
+		case MenuAction_Cancel:
+			{
+				if (param2 == MenuCancel_ExitBack && TopMenu != INVALID_HANDLE)
+				{
+					DisplayTopMenu(TopMenu, param1, TopMenuPosition_LastCategory);
+				}
+			}
+		case MenuAction_Select:
+			{
+				decl String:info[32];
+				GetMenuItem(menu, param2, info, sizeof(info));
+				new iTimeToBan = StringToInt(info);
+				GuardBanTimeLength[param1] = iTimeToBan;
+				DisplayCTBanReasonMenu(param1);
+			}
 	}
 }
 
@@ -908,7 +930,7 @@ ProcessBanCookies(client)
 					ForcePlayerSuicide(client);
 				}
 				ChangeClientTeam(client, _:TFTeam_Red);
-				PrintToChat(client, CLAN_TAG, "Enforcing CT Ban");
+				PrintToChat(client, CLAN_TAG, "Enforcing Guard Ban");
 			}		
 		}
 	}
@@ -967,15 +989,15 @@ Remove_CTBan(adminIndex, targetIndex, bExpired=false)
 		SQL_TQuery(BanDatabase, DB_Callback_RemoveCTBan, logQuery, targetIndex);
 		#endif
 		
-		LogMessage("%N has removed the CT ban on %N (%s).", adminIndex, targetIndex, targetSteam);
+		LogMessage("%N has removed the Guard ban on %N (%s).", adminIndex, targetIndex, targetSteam);
 		
 		if (!bExpired)
 		{
-			ShowActivity2(adminIndex, CLAN_TAG, "%t", "CT Ban Removed", targetIndex);
+			ShowActivity2(adminIndex, CLAN_TAG, "%t", "Guard Ban Removed", targetIndex);
 		}
 		else
 		{
-			ShowActivity2(adminIndex, CLAN_TAG, "%t", "CT Ban Auto Removed", targetIndex);
+			ShowActivity2(adminIndex, CLAN_TAG, "%t", "Guard Ban Auto Removed", targetIndex);
 		}
 		
 		decl String:query[255];
@@ -990,7 +1012,7 @@ public DB_Callback_RemoveCTBan(Handle:owner, Handle:hndl, const String:error[], 
 {
 	if (hndl == INVALID_HANDLE)
 	{
-		LogError("Error handling steamID after CT ban removal: %s", error);
+		LogError("Error handling steamID after Guard ban removal: %s", error);
 	}
 	else
 	{
@@ -1044,7 +1066,7 @@ public Action:Command_CTBan(client, args)
 					new banFlag = StringToInt(isBanned);	
 					if (banFlag)
 					{
-						ReplyToCommand(client, CLAN_TAG, "Already CT Banned", target_list[0]);
+						ReplyToCommand(client, CLAN_TAG, "Already Guard Banned", target_list[0]);
 					}
 					else
 					{
@@ -1088,31 +1110,31 @@ PerformCTBan(client, adminclient, banTime=0, reason=0, String:manualReason[]="")
 		{
 			case 1:
 			{
-				Format(sReason, sizeof(sReason), "%T", "CT Ban Reason 1", adminclient);
+				Format(sReason, sizeof(sReason), "%T", "Guard Ban Reason 1", adminclient);
 			}
 			case 2:
 			{
-				Format(sReason, sizeof(sReason), "%T", "CT Ban Reason 2", adminclient);
+				Format(sReason, sizeof(sReason), "%T", "Guard Ban Reason 2", adminclient);
 			}
 			case 3:
 			{
-				Format(sReason, sizeof(sReason), "%T", "CT Ban Reason 3", adminclient);
+				Format(sReason, sizeof(sReason), "%T", "Guard Ban Reason 3", adminclient);
 			}
 			case 4:
 			{
-				Format(sReason, sizeof(sReason), "%T", "CT Ban Reason 4", adminclient);
+				Format(sReason, sizeof(sReason), "%T", "Guard Ban Reason 4", adminclient);
 			}
 			case 5:
 			{
-				Format(sReason, sizeof(sReason), "%T", "CT Ban Reason 5", adminclient);
+				Format(sReason, sizeof(sReason), "%T", "Guard Ban Reason 5", adminclient);
 			}
 			case 6:
 			{
-				Format(sReason, sizeof(sReason), "%T", "CT Ban Reason 6", adminclient);
+				Format(sReason, sizeof(sReason), "%T", "Guard Ban Reason 6", adminclient);
 			}
 			case 7:
 			{
-				Format(sReason, sizeof(sReason), "%T", "CT Ban Reason 7", adminclient);
+				Format(sReason, sizeof(sReason), "%T", "Guard Ban Reason 7", adminclient);
 			}
 			default:
 			{
@@ -1134,7 +1156,7 @@ PerformCTBan(client, adminclient, banTime=0, reason=0, String:manualReason[]="")
 		if (debugging)	LogMessage("log query: %s", logQuery);
 		SQL_TQuery(BanDatabase, DB_Callback_CTBan, logQuery, client);
 		#endif
-		LogMessage("%N (%s) has issued a CT ban on %N (%s) for %d minutes for %s.", adminclient, adminSteam, client, targetSteam, banTime, sReason);
+		LogMessage("%N (%s) has issued a Guard ban on %N (%s) for %d minutes for %s.", adminclient, adminSteam, client, targetSteam, banTime, sReason);
 	}
 	else
 	{
@@ -1144,12 +1166,12 @@ PerformCTBan(client, adminclient, banTime=0, reason=0, String:manualReason[]="")
 		if (debugging)	LogMessage("log query: %s", logQuery);
 		SQL_TQuery(BanDatabase, DB_Callback_CTBan, logQuery, client);
 		#endif
-		LogMessage("Console has issued a CT ban on %N (%s) for %d.", client, targetSteam, banTime);
+		LogMessage("Console has issued a Guard ban on %N (%s) for %d.", client, targetSteam, banTime);
 	}
 
 	if (banTime > 0)
 	{
-		ShowActivity2(adminclient, CLAN_TAG, "%t", "Temporary CT Ban", client, banTime);
+		ShowActivity2(adminclient, CLAN_TAG, "%t", "Temporary Guard Ban", client, banTime);
 		PushArrayCell(TimedBanLocalList, client);
 		LocalTimeRemaining[client] = banTime;
 		
@@ -1167,7 +1189,7 @@ PerformCTBan(client, adminclient, banTime=0, reason=0, String:manualReason[]="")
 	}
 	else
 	{
-		ShowActivity2(adminclient, CLAN_TAG, "%t", "Permanent CT Ban", client);	
+		ShowActivity2(adminclient, CLAN_TAG, "%t", "Permanent Guard Ban", client);	
 	}
 }
 
@@ -1181,7 +1203,7 @@ public DB_Callback_CTBan(Handle:owner, Handle:hndl, const String:error[], any:cl
 	{
 		if (debugging && IsClientInGame(client))
 		{
-			LogMessage("SQL CTBan: Updated database with CT Ban for %N", client);
+			LogMessage("SQL CTBan: Updated database with Guard Ban for %N", client);
 		}
 	}
 }
@@ -1216,16 +1238,16 @@ public Action:Command_IsCTBanned(client, args)
 					{
 						if (LocalTimeRemaining[target_list[0]] <= 0)
 						{
-							ReplyToCommand(client, CLAN_TAG, "Permanent CT Ban", target_list[0]);
+							ReplyToCommand(client, CLAN_TAG, "Permanent Guard Ban", target_list[0]);
 						}
 						else
 						{
-							ReplyToCommand(client, CLAN_TAG, "Temporary CT Ban", target_list[0], LocalTimeRemaining[target_list[0]]);
+							ReplyToCommand(client, CLAN_TAG, "Temporary Guard Ban", target_list[0], LocalTimeRemaining[target_list[0]]);
 						}
 					}
 					else
 					{
-						ReplyToCommand(client, CLAN_TAG, "Not CT Banned", target_list[0]);
+						ReplyToCommand(client, CLAN_TAG, "Not Guard Banned", target_list[0]);
 					}
 				}
 				else
@@ -1259,11 +1281,28 @@ public Action:PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 		
 		if (team == _:TFTeam_Blue && iBanStatus)
 		{
-			PrintCenterText(client, "%t", "Enforcing CT Ban");
+			PrintCenterText(client, "%t", "Enforcing Guard Ban");
 			PrintToChat(client, BanMsg);
-			ChangeClientTeam(client, _:TFTeam_Red);
+			if (RoundActive)
+			{
+				ChangeClientTeam(client, _:TFTeam_Spectator);
+			}
+			else
+			{
+				ChangeClientTeam(client, _:TFTeam_Red);
+			}
 		}
 	}
+}
+
+public Action:RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	if (!RoundActive)	RoundActive = true;
+}
+
+public Action:RoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	if (RoundActive)	RoundActive = false;
 }
 
 bool:IsSetAuthIdNativePresent()

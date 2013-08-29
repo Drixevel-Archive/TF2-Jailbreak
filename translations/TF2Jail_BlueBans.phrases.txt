@@ -18,31 +18,31 @@
 	{
 		"en"		"No targets are available to ban."
 	}
-	"Ready to CT Ban"
+	"Ready to Guard Ban"
 	{
 		"#format"	"{1:s}"
 		"en"		"Ready to Guard Ban {1}."
 	}
-	"CT Ban Removed"
+	"Guard Ban Removed"
 	{
 		"#format"	"{1:N}"
 		"en"		"Removed Guard ban on {1}."
 	}
-	"CT Ban Auto Removed"
+	"Guard Ban Auto Removed"
 	{
 		"#format"	"{1:N}"
 		"en"		"Auto-removed an expired Guard ban for {1}."
 	}
-	"Already CT Banned"
+	"Already Guard Banned"
 	{
 		"#format"	"{1:N}"
 		"en"		"{1} is already Guard Banned."
 	}
-	"Enforcing CT Ban"
+	"Enforcing Guard Ban"
 	{
 		"en"		"Guard Bans is enforcing a ban on your Steam ID"
 	}
-	"Last CT Banned On"
+	"Last Guard Banned On"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"You were last Guard banned on {1}. {2}"
@@ -56,17 +56,17 @@
 		"#format"	"{1:s}"
 		"en"		"{1} rage banned from Guards indefinitely."
 	}
-	"Permanent CT Ban"
+	"Permanent Guard Ban"
 	{
 		"#format"	"{1:N}"
 		"en"		"{1} banned from Guards indefinitely."
 	}
-	"Temporary CT Ban"
+	"Temporary Guard Ban"
 	{
 		"#format"	"{1:N},{2:d}"
 		"en"		"{1} banned from Guards for {2} minutes spent alive."
 	}
-	"Not CT Banned"
+	"Not Guard Banned"
 	{
 		"#format"	"{1:N}"
 		"en"		"{1} is NOT banned from Guards."
@@ -79,45 +79,45 @@
 	{
 		"en"		"Feature not available on the server console."
 	}
-	"CT Ban Menu Title"
+	"Guard Ban Menu Title"
 	{
 		"en"		"Guard Ban Player:"
 	}
-	"CT Ban Length Menu"
+	"Guard Ban Length Menu"
 	{
 		"#format"	"{1:N}"
 		"en"		"Guard Banning {1} for Length:"
 	}
-	"CT Ban Reason Menu"
+	"Guard Ban Reason Menu"
 	{
 		"#format"	"{1:N}"
 		"en"		"Guard Banning {1} for Reason:"
 	}
-	"CT Ban Reason 1"
+	"Guard Ban Reason 1"
 	{
 		"en"		"Freekill Massacre"
 	}
-	"CT Ban Reason 2"
+	"Guard Ban Reason 2"
 	{
 		"en"		"Cheating/Exploiting"
 	}
-	"CT Ban Reason 3"
+	"Guard Ban Reason 3"
 	{
 		"en"		"Mic Spamming"
 	}
-	"CT Ban Reason 4"
+	"Guard Ban Reason 4"
 	{
 		"en"		"Poor Quality Mic"
 	}
-	"CT Ban Reason 5"
+	"Guard Ban Reason 5"
 	{
 		"en"		"Freekilling"
 	}
-	"CT Ban Reason 6"
+	"Guard Ban Reason 6"
 	{
 		"en"		"Gun Planting"
 	}
-	"CT Ban Reason 7"
+	"Guard Ban Reason 7"
 	{
 		"en"		"Breaking Rules"
 	}
