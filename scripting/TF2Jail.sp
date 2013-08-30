@@ -1077,7 +1077,8 @@ public Action:PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 			}
 			if (j_RedMute != 0) MutePlayer(client);	//Lets mute the players if the cvar is set to the given value.
 			if (g_IsFreeday[client]) GiveFreeday(client);	//If the client's freeday, give him is freeday.
-			if (j_RedMelee) RedSpawnStrip(client);	//Lets strip reds of their melee, this also removes certain weapons.
+			//if (j_RedMelee) RedSpawnStrip(client);	//Lets strip reds of their melee, this also removes certain weapons.
+			if (j_RedMelee) CreateTimer(0.1, StripWeaponsReds, client, TIMER_FLAG_NO_MAPCHANGE);
 		}
 		else if (team == _:TFTeam_Blue)
 		{
@@ -1091,6 +1092,11 @@ public Action:PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 		}
 	}
 	return Plugin_Continue;
+}
+
+public Action:StripWeaponsReds(Handle:hTimer, any:client)
+{
+	RedSpawnStrip(client);
 }
 
 RedSpawnStrip(client)	//This strips weapons properly so clients have no ammo in the clip or on them properly without glitches. (Least it should)

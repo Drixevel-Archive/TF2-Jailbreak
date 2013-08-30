@@ -1,6 +1,11 @@
 Update Notes:
 
 Jailbreak-
+* Added a 0.1 timer to strip ammo after players spawn, easier to use than adding compatibility for tNoUnlocksPls plugin set.
+
+++ 08/29/2013
+
+Jailbreak-
 * Fixed BecomeWarden not checking if client is valid.
 * Timers should now be killed properly. 'sm_pardon' should now work as intended.
 * Freeday system has been fleshed out a bit so it properly removes and grants freedays when needed.
