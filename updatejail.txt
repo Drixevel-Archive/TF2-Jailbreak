@@ -2,6 +2,8 @@ Update Notes:
 
 Jailbreak-
 * Added a 0.1 timer to strip ammo after players spawn, easier to use than adding compatibility for tNoUnlocksPls plugin set.
+* Fixed an error in translations. (lr robotic takeover translation having 2 english translations instead of 1 english and 1 spanish)
+* Added a check if the timer handle isn't invalid for Freekillers marked during Player Death.
 
 ++ 08/29/2013
 

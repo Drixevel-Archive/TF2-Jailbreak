@@ -414,7 +414,7 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Robots have taken over the eart as a part of a last request!"
-		"en"		"{darkkhaki} Los robots se han apoderado de la tierra como parte de la ultima peticion!"
+		"es"		"{darkkhaki} Los robots se han apoderado de la tierra como parte de la ultima peticion!"
 	}
 	
 	"lr hide and seek queued"

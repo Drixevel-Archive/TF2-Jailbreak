@@ -370,7 +370,7 @@ public OnPluginStart()
 
 	g_hArray_Pending = CreateArray();	//Create an array and make it easier to use.
 	
-	if (g_bLateLoad)
+	if (g_bLateLoad)	//Checks for late loading and properly executes needed functions.
 	{
 		for (new i = 1; i <= MaxClients; i++)
 		{
@@ -639,10 +639,7 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 			UnhookEvent("teamplay_round_win", RoundEnd);
 			RemoveCommandListener(InterceptBuild, "build");
 			j_Enabled = false;
-			if (steamtools)
-			{
-				Steam_SetGameDescription("Team Fortress");
-			}
+			if (steamtools) Steam_SetGameDescription("Team Fortress");
 			for (new i = 1; i <= MaxClients; i++)
 			{
 				if (i == Warden && j_WardenModel)
@@ -972,7 +969,7 @@ public Action:TimerAdvertisement (Handle:hTimer, any:client)
 
 public OnClientConnected(client)
 {
-	if (IsFakeClient(client))	return;	//Fake client? Don't worry, we gotchya covered!
+	if (IsFakeClient(client)) return;	//Skip fake clients and only effect actual players.
 	
 	g_Voted[client] = false;
 
@@ -984,7 +981,7 @@ public OnClientConnected(client)
 
 public OnClientPutInServer(client)
 {
-	//Not entirely certain that these are needed but reconnecting clients may cause problems.
+	//Lets set the client bools when they're put in the server just in case.
 	g_IsMuted[client] = false;
 	g_RobotRoundClients[client] = false;
 	g_IsRebel[client] = false;
@@ -1007,7 +1004,7 @@ public Action:Timer_Welcome(Handle:hTimer, any:client)
 
 public OnClientDisconnect(client)
 {
-	if (IsFakeClient(client))	return;	//Those pesky fake clients...
+	if (IsFakeClient(client)) return;	//Skip fake clients and only effect actual players.
 	
 	if (g_Voted[client])	g_Votes--;
 	g_Voters--;
@@ -2872,7 +2869,7 @@ public FreedayForClientsMenu_H(Handle:menu, MenuAction:action, client, param2)
 			
 			new target = GetClientOfUserId(StringToInt(info));
 
-			if ((target) == 0)
+			if (target == 0)
 			{
 				PrintToChat(client, "[JODC] %T", "Player no longer available", LANG_SERVER);
 			}
@@ -2979,7 +2976,7 @@ MarkFreekiller(client)
 		WritePackCell(hPack, client);
 		WritePackCell(hPack, GetClientUserId(client));
 		WritePackString(hPack, sAuth);
-		PushArrayCell(hPack, DataTimerF);
+		if (DataTimerF != INVALID_HANDLE) PushArrayCell(hPack, DataTimerF);
 	}
 }
 
