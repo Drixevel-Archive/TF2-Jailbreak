@@ -13,11 +13,34 @@
 	The list of credits for the plugin will be on the Github Wiki, I want them in one central place so check them out there. There's a lot of people since I generally looked at code made up by them and saw new methods that actually made my life easier.
 	
 	Also, I'd like to thank The Outpost Community for giving me a ground to step in in terms of a server to test things on and start the plugin on, I wouldn't have been able to do it without them.
+	
+	**
+	 * =============================================================================
+	 * TF2 Jailbreak Plugin Set (TF2Jail)
+	 * Displays and searches SourceMod commands and descriptions.
+	 *
+	 * Created and developed by Keith Warren (Jack of Designs).
+	 * =============================================================================
+	 *
+	 * This program is free software: you can redistribute it and/or modify
+	 * it under the terms of the GNU General Public License as published by
+	 * the Free Software Foundation, either version 3 of the License, or
+	 * (at your option) any later version.
+	 *
+	 * This program is distributed in the hope that it will be useful,
+	 * but WITHOUT ANY WARRANTY; without even the implied warranty of
+	 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	 * GNU General Public License for more details.
+	 *
+	 * You should have received a copy of the GNU General Public License
+	 * along with this program. If not, see <http://www.gnu.org/licenses/>.
+	 *
+	**
 */
 
-#pragma semicolon 1	//Based on C languages, we like to use semicolons in our code.
+#pragma semicolon 1	//Requires the compiler to give errors if semicolons do not end functions.
 
-//Includes, not entirely convinced that #tryinclude is needed since our plugin doesn't use them as requirements but it's fine.
+//Includes
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
@@ -25,6 +48,7 @@
 #include <tf2_stocks>
 #include <morecolors>
 #include <smlib>
+#include <autoexecconfig>
 #undef REQUIRE_EXTENSIONS
 #tryinclude <clientprefs>
 #tryinclude <tf2items>
@@ -41,17 +65,17 @@
 #tryinclude <voiceannounce_ex>
 #tryinclude <filesmanagementinterface>
 
-//Defines so we don't have to edit code manually for simple stuff.
+//Defines
 #define PLUGIN_NAME     "[TF2] Jailbreak"
 #define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"
-#define PLUGIN_VERSION  "4.8.8"
+#define PLUGIN_VERSION  "4.9.1"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"
 
 #define CLAN_TAG_COLOR	"{community}[TF2Jail]"
 #define CLAN_TAG		"[TF2Jail]"
 
-//Cvar handles
+//Cvar Handles, bools, ints, floats, etc.
 new Handle:JB_Cvar_Version = INVALID_HANDLE;
 new Handle:JB_Cvar_Enabled = INVALID_HANDLE;
 new Handle:JB_Cvar_Advertise = INVALID_HANDLE;
@@ -60,6 +84,7 @@ new Handle:JB_Cvar_Balance = INVALID_HANDLE;
 new Handle:JB_Cvar_BalanceRatio = INVALID_HANDLE;
 new Handle:JB_Cvar_RedMelee = INVALID_HANDLE;
 new Handle:JB_Cvar_Warden = INVALID_HANDLE;
+new Handle:JB_Cvar_WardenAuto = INVALID_HANDLE;
 new Handle:JB_Cvar_WardenModel = INVALID_HANDLE;
 new Handle:JB_Cvar_WardenColor = INVALID_HANDLE;
 new Handle:JB_Cvar_Doorcontrol = INVALID_HANDLE;
@@ -71,10 +96,13 @@ new Handle:JB_Cvar_Rebels = INVALID_HANDLE;
 new Handle:JB_Cvar_RebelColor = INVALID_HANDLE;
 new Handle:JB_Cvar_RebelsTime = INVALID_HANDLE;
 new Handle:JB_Cvar_Crits = INVALID_HANDLE;
+new Handle:JB_Cvar_CritsType = INVALID_HANDLE;
 new Handle:JB_Cvar_VoteNeeded = INVALID_HANDLE;
 new Handle:JB_Cvar_VoteMinPlayers = INVALID_HANDLE;
 new Handle:JB_Cvar_VotePostAction = INVALID_HANDLE;
+new Handle:JB_Cvar_VotePassedLimit = INVALID_HANDLE;
 new Handle:JB_Cvar_Freekillers = INVALID_HANDLE;
+new Handle:JB_Cvar_FreedayColor = INVALID_HANDLE;
 new Handle:JB_Cvar_Freekillers_Time = INVALID_HANDLE;
 new Handle:JB_Cvar_Freekillers_Kills = INVALID_HANDLE;
 new Handle:JB_Cvar_Freekillers_Wave = INVALID_HANDLE;
@@ -84,27 +112,10 @@ new Handle:JB_Cvar_Freekillers_BanMSGDC = INVALID_HANDLE;
 new Handle:JB_Cvar_Freekillers_Bantime = INVALID_HANDLE;
 new Handle:JB_Cvar_Freekillers_BantimeDC = INVALID_HANDLE;
 new Handle:JB_Cvar_LRS_Enabled = INVALID_HANDLE;
-new Handle:JB_Cvar_FreedayColor = INVALID_HANDLE;
-new Handle:JB_Cvar_VotePassedLimit = INVALID_HANDLE;
 new Handle:JB_Cvar_BlueMute = INVALID_HANDLE;
 new Handle:JB_Cvar_DeadMute = INVALID_HANDLE;
+new Handle:JB_Cvar_Freeday_Limit = INVALID_HANDLE;
 
-//Array to save our clients for the anti-freekill system.
-new Handle:g_hArray_Pending = INVALID_HANDLE;
-
-//Handles the forwards for our natives involving Warden.
-new Handle:g_fward_onBecome = INVALID_HANDLE;
-new Handle:g_fward_onRemove = INVALID_HANDLE;
-
-//Handles for the advertising timer and the cvar changes.
-new Handle:g_adverttimer = INVALID_HANDLE;
-new Handle:DataTimerF = INVALID_HANDLE;
-new Handle:Cvar_FF = INVALID_HANDLE;
-new Handle:Cvar_COL = INVALID_HANDLE;
-
-new bool:g_bLateLoad = false;
-
-//Cvar settings saved here so we can have default values.
 new bool:j_Enabled = true;
 new bool:j_Advertise = true;
 new bool:j_Cvars = true;
@@ -112,6 +123,7 @@ new bool:j_Balance = true;
 new Float:j_BalanceRatio = 0.5;
 new bool:j_RedMelee = true;
 new bool:j_Warden = false;
+new bool:j_WardenAuto = false;
 new bool:j_WardenModel = true;
 new gWardenColor[3];
 new bool:j_DoorControl = true;
@@ -123,10 +135,13 @@ new bool:j_Rebels = true;
 new gRebelColor[3];
 new Float:j_RebelsTime = 30.0;
 new j_Criticals = 1;
+new j_Criticalstype = 2;
 new Float:j_WVotesNeeded = 0.60;
 new j_WVotesMinPlayers = 0;
 new j_WVotesPostAction = 0;
+new j_WVotesPassedLimit = 3;
 new bool:j_Freekillers = true;
+new gFreedayColor[3];
 new Float:j_FreekillersTime = 6.0;
 new j_FreekillersKills = 6;
 new Float:j_FreekillersWave = 60.0;
@@ -134,12 +149,11 @@ new j_FreekillersAction = 2;
 new j_FreekillersBantime = 60;
 new j_FreekillersBantimeDC = 120;
 new bool:j_LRSEnabled = true;
-new gFreedayColor[3];
-new j_WVotesPassedLimit = 3;
 new j_BlueMute = 2;
 new bool:j_DeadMute = true;
+new j_FreedayLimit = 3;
 
-//Bools setup for different extensions and plugins, the goal is to make this plugin as customizable and functional as possible.
+//Arrays, Handles, Globals, etc.
 new bool:e_sdkhooks;
 new bool:e_tf2items;
 new bool:e_clientprefs;
@@ -153,7 +167,6 @@ new bool:e_filemanager;
 new bool:e_sourcebans;
 new bool:steamtools = false;
 
-//Global bools for the plugin to use to allow/deny/keep track of players where needed.
 new bool:g_IsMapCompatible = false;
 new bool:g_CellDoorTimerActive = false;
 new bool:g_1stRoundFreeday = false;
@@ -170,23 +183,30 @@ new bool:g_IsFreedayActive[MAXPLAYERS + 1];
 new bool:g_IsFreekiller[MAXPLAYERS + 1];
 new bool:g_HasTalked[MAXPLAYERS+1];
 new bool:g_LockedFromWarden[MAXPLAYERS+1];
+new bool:g_bLateLoad = false;
+new bool:g_Voted[MAXPLAYERS+1] = {false, ...};
 
-//Anti-Freekilling System saves for players.
-new g_FirstKill[MAXPLAYERS + 1];
-new g_Killcount[MAXPLAYERS + 1];
-
-//Used by the veto system for Warden.
 new g_Voters = 0;
 new g_Votes = 0;
 new g_VotesNeeded = 0;
 new g_VotesPassed = 0;
-new bool:g_Voted[MAXPLAYERS+1] = {false, ...};
+new g_FirstKill[MAXPLAYERS + 1];
+new g_Killcount[MAXPLAYERS + 1];
+new Warden = -1;
+new WardenLimit = 0;
+new FreedayLimit = 0;
 
-new String:DoorList[][] = {"func_door", "func_door_rotating", "func_movelinear"};	//String for the list of entities our plugin uses for the door opener and map compatibility checks.
+new Handle:g_hArray_Pending = INVALID_HANDLE;
+new Handle:g_fward_onBecome = INVALID_HANDLE;
+new Handle:g_fward_onRemove = INVALID_HANDLE;
+new Handle:g_adverttimer = INVALID_HANDLE;
+new Handle:DataTimerF = INVALID_HANDLE;
+new Handle:Cvar_FF = INVALID_HANDLE;
+new Handle:Cvar_COL = INVALID_HANDLE;
 
-new Warden = -1;	//Save a client as Warden, start with -1 which means there are no Wardens active.
+new String:DoorList[][] = {"func_door", "func_door_rotating", "func_movelinear"};
 
-//Enum to save last requests, this is a lot easier than using bool handles.
+//Last request system
 enum LastRequests
 {
 	LR_Disabled = 0,
@@ -203,7 +223,8 @@ enum LastRequests
 };
 new LastRequests:enumLastRequests;
 
-public Plugin:myinfo =	//You can edit these values in the defines above.
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+public Plugin:myinfo =
 {
 	name = PLUGIN_NAME,
 	author = PLUGIN_AUTHOR,
@@ -217,53 +238,59 @@ public OnPluginStart()
 	LogMessage("%s Jailbreak is now loading...", CLAN_TAG);
 	LoadTranslations("common.phrases");
 	LoadTranslations("TF2Jail.phrases");
+	
+	AutoExecConfig_SetFile("TF2Jail");
 
-	JB_Cvar_Version = CreateConVar("tf2jail_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_PLUGIN|FCVAR_SPONLY);
-	JB_Cvar_Enabled = CreateConVar("sm_jail_enabled", "1", "Status of the plugin: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_Advertise = CreateConVar("sm_jail_advertisement", "1", "Display plugin creator advertisement: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_Cvars = CreateConVar("sm_jail_variables", "1", "Set default cvars: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_Balance = CreateConVar("sm_jail_autobalance", "1", "Should the plugin autobalance teams: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_BalanceRatio = CreateConVar("sm_jail_balance_ratio", "0.5", "Ratio for autobalance: (Example: 0.5 = 2:4)", FCVAR_PLUGIN, true, 0.1, true, 1.0);
-	JB_Cvar_RedMelee = CreateConVar("sm_jail_redmeleeonly", "1", "Strip Red Team of weapons: (1 = strip weapons, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_Warden = CreateConVar("sm_jail_warden", "1", "Allow Wardens: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_WardenModel = CreateConVar("sm_jail_wardenmodel", "1", "Does Warden have a model: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_WardenColor = CreateConVar("sm_jail_wardencolor", "125 150 250", "Color of warden if wardenmodel is off: (0 = off)", FCVAR_PLUGIN);
-	JB_Cvar_Doorcontrol = CreateConVar("sm_jail_doorcontrols", "1", "Allow Wardens and Admins door control: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_DoorOpenTime = CreateConVar("sm_jail_cell_opener", "60", "Time after Arena round start to open doors: (1.0 - 60.0) (0.0 = off)", FCVAR_PLUGIN, true, 0.0, true, 60.0);
-	JB_Cvar_RedMute = CreateConVar("sm_jail_redmute", "2", "Mute Red team: (2 = mute prisoners alive and all dead, 1 = mute prisoners on round start based on redmute_time, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
-	JB_Cvar_RedMuteTime = CreateConVar("sm_jail_redmute_time", "15", "Mute time for redmute: (1.0 - 60.0)", FCVAR_PLUGIN, true, 1.0, true, 60.0);
-	JB_Cvar_MicCheck = CreateConVar("sm_jail_micchecks", "1", "Check blue clients for microphone: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_Rebels = CreateConVar("sm_jail_rebels", "1", "Enable the Rebel system: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_RebelColor = CreateConVar("sm_jail_rebels_color", "0 0 255", "Rebel color flags: (0 = off)", FCVAR_PLUGIN);
-	JB_Cvar_RebelsTime = CreateConVar("sm_jail_rebel_time", "30.0", "Rebel timer: (1.0 - 60.0, 0 = always)", FCVAR_PLUGIN, true, 1.0, true, 60.0);
-	JB_Cvar_Crits = CreateConVar("sm_jail_crits", "1", "Which team gets crits: (0 = off, 1 = blue, 2 = red, 3 = both)", FCVAR_PLUGIN, true, 0.0, true, 3.0);
-	JB_Cvar_VoteNeeded = CreateConVar("sm_jail_voteoffwarden_votesneeded", "0.60", "Percentage of players required for fire warden vote: (default 0.60 - 60%) (0.05 - 1.0)", 0, true, 0.05, true, 1.00);
-	JB_Cvar_VoteMinPlayers = CreateConVar("sm_jail_voteoffwarden_minplayers", "0", "Minimum amount of players required for fire warden vote: (0 - MaxPlayers)", 0, true, 0.0, true, float(MAXPLAYERS));
-	JB_Cvar_VotePostAction = CreateConVar("sm_jail_voteoffwarden_post", "0", "Fire warden instantly on vote success or next round: (0 = instant, 1 = Next round)", _, true, 0.0, true, 1.0);
-	JB_Cvar_Freekillers = CreateConVar("sm_jail_freekillers", "1", "Enable the Freekill system: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_Freekillers_Time = CreateConVar("sm_jail_freekillers_time", "6.0", "Time in seconds minimum for freekill flag on mark: (1.0 - 60.0)", FCVAR_PLUGIN, true, 1.0, true, 60.0);
-	JB_Cvar_Freekillers_Kills = CreateConVar("sm_jail_freekillers_kills", "6", "Number of kills required to flag for freekilling: (1.0 - MaxPlayers)", FCVAR_PLUGIN, true, 1.0, true, float(MAXPLAYERS));
-	JB_Cvar_Freekillers_Wave = CreateConVar("sm_jail_freekillers_wave", "60.0", "Time in seconds until client is banned for being marked: (1.0 - 60.0)", FCVAR_PLUGIN, true, 1.0, true, 60.0);
-	JB_Cvar_Freekillers_Action = CreateConVar("sm_jail_freekillers_action", "2", "Action towards marked freekiller: (2 = Ban client based on cvars, 1 = Slay the client, 0 = remove mark on timer)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
-	JB_Cvar_Freekillers_BanMSG = CreateConVar("sm_jail_freekillers_banreason", "You have been banned for freekilling.", "Message to give the client if they're marked as a freekiller and banned.", FCVAR_PLUGIN);
-	JB_Cvar_Freekillers_BanMSGDC = CreateConVar("sm_jail_freekillers_bandcreason", "You have been banned for freekilling and disconnecting.", "Message to give the client if they're marked as a freekiller/disconnected and banned.", FCVAR_PLUGIN);
-	JB_Cvar_Freekillers_Bantime = CreateConVar("sm_jail_freekillers_bantime", "60", "Time banned after timer ends: (0 = permanent)", FCVAR_PLUGIN, true, 0.0);
-	JB_Cvar_Freekillers_BantimeDC = CreateConVar("sm_jail_freekillers_bantimedc", "120", "Time banned if disconnected after timer ends: (0 = permanent)", FCVAR_PLUGIN, true, 0.0);
-	JB_Cvar_LRS_Enabled = CreateConVar("sm_jail_lr_enabled", "1", "Status of the LR System: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_FreedayColor = CreateConVar("sm_jail_freeday_color", "0 255 0", "Freeday color flags: (0 = off)", FCVAR_PLUGIN);
-	JB_Cvar_VotePassedLimit = CreateConVar("sm_jail_voteoffwarden_limit", "3", "Limit to wardens fired by players via votes: (1 - 10, 0 = unlimited)", FCVAR_PLUGIN, true, 0.0, true, 10.0);
-	JB_Cvar_BlueMute = CreateConVar("sm_jail_bluemute", "2", "Mute Blue team: (2 = always except warden, 1 = while Warden is active, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
-	JB_Cvar_DeadMute = CreateConVar("sm_jail_deadmute", "1", "Dead players being muted: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_Version = AutoExecConfig_CreateConVar("tf2jail_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_DONTRECORD);
+	JB_Cvar_Enabled = AutoExecConfig_CreateConVar("sm_jail_enabled", "1", "Status of the plugin: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_Advertise = AutoExecConfig_CreateConVar("sm_jail_advertisement", "1", "Display plugin creator advertisement: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_Cvars = AutoExecConfig_CreateConVar("sm_jail_variables", "1", "Set default cvars: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_Balance = AutoExecConfig_CreateConVar("sm_jail_autobalance", "1", "Should the plugin autobalance teams: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_BalanceRatio = AutoExecConfig_CreateConVar("sm_jail_balance_ratio", "0.5", "Ratio for autobalance: (Example: 0.5 = 2:4)", FCVAR_PLUGIN, true, 0.1, true, 1.0);
+	JB_Cvar_RedMelee = AutoExecConfig_CreateConVar("sm_jail_redmeleeonly", "1", "Strip Red Team of weapons: (1 = strip weapons, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_Warden = AutoExecConfig_CreateConVar("sm_jail_warden", "1", "Allow Wardens: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_WardenAuto = AutoExecConfig_CreateConVar("sm_jail_warden_auto", "1", "Automatically assign a random warden on round start: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_WardenModel = AutoExecConfig_CreateConVar("sm_jail_wardenmodel", "1", "Does Warden have a model: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_WardenColor = AutoExecConfig_CreateConVar("sm_jail_wardencolor", "125 150 250", "Color of warden if wardenmodel is off: (0 = off)", FCVAR_PLUGIN);
+	JB_Cvar_Doorcontrol = AutoExecConfig_CreateConVar("sm_jail_doorcontrols", "1", "Allow Wardens and Admins door control: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_DoorOpenTime = AutoExecConfig_CreateConVar("sm_jail_cell_opener", "60", "Time after Arena round start to open doors: (1.0 - 60.0) (0.0 = off)", FCVAR_PLUGIN, true, 0.0, true, 60.0);
+	JB_Cvar_RedMute = AutoExecConfig_CreateConVar("sm_jail_redmute", "2", "Mute Red team: (2 = mute prisoners alive and all dead, 1 = mute prisoners on round start based on redmute_time, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
+	JB_Cvar_RedMuteTime = AutoExecConfig_CreateConVar("sm_jail_redmute_time", "15", "Mute time for redmute: (1.0 - 60.0)", FCVAR_PLUGIN, true, 1.0, true, 60.0);
+	JB_Cvar_MicCheck = AutoExecConfig_CreateConVar("sm_jail_micchecks", "1", "Check blue clients for microphone: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_Rebels = AutoExecConfig_CreateConVar("sm_jail_rebels", "1", "Enable the Rebel system: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_RebelColor = AutoExecConfig_CreateConVar("sm_jail_rebels_color", "0 255 0", "Rebel color flags: (0 = off)", FCVAR_PLUGIN);
+	JB_Cvar_RebelsTime = AutoExecConfig_CreateConVar("sm_jail_rebel_time", "30.0", "Rebel timer: (1.0 - 60.0, 0 = always)", FCVAR_PLUGIN, true, 1.0, true, 60.0);
+	JB_Cvar_Crits = AutoExecConfig_CreateConVar("sm_jail_crits", "1", "Which team gets crits: (0 = off, 1 = blue, 2 = red, 3 = both)", FCVAR_PLUGIN, true, 0.0, true, 3.0);
+	JB_Cvar_CritsType = AutoExecConfig_CreateConVar("sm_jail_critstype", "2", "Type of crits given: (1 = mini, 2 = full)", FCVAR_PLUGIN, true, 1.0, true, 2.0);
+	JB_Cvar_VoteNeeded = AutoExecConfig_CreateConVar("sm_jail_voteoffwarden_votesneeded", "0.60", "Percentage of players required for fire warden vote: (default 0.60 - 60%) (0.05 - 1.0)", 0, true, 0.05, true, 1.00);
+	JB_Cvar_VoteMinPlayers = AutoExecConfig_CreateConVar("sm_jail_voteoffwarden_minplayers", "0", "Minimum amount of players required for fire warden vote: (0 - MaxPlayers)", 0, true, 0.0, true, float(MAXPLAYERS));
+	JB_Cvar_VotePostAction = AutoExecConfig_CreateConVar("sm_jail_voteoffwarden_post", "0", "Fire warden instantly on vote success or next round: (0 = instant, 1 = Next round)", _, true, 0.0, true, 1.0);
+	JB_Cvar_VotePassedLimit = AutoExecConfig_CreateConVar("sm_jail_voteoffwarden_limit", "3", "Limit to wardens fired by players via votes: (1 - 10, 0 = unlimited)", FCVAR_PLUGIN, true, 0.0, true, 10.0);
+	JB_Cvar_Freekillers = AutoExecConfig_CreateConVar("sm_jail_freekillers", "1", "Enable the Freekill system: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_FreedayColor = AutoExecConfig_CreateConVar("sm_jail_freeday_color", "125 0 0", "Freeday color flags: (0 = off)", FCVAR_PLUGIN);
+	JB_Cvar_Freekillers_Time = AutoExecConfig_CreateConVar("sm_jail_freekillers_time", "6.0", "Time in seconds minimum for freekill flag on mark: (1.0 - 60.0)", FCVAR_PLUGIN, true, 1.0, true, 60.0);
+	JB_Cvar_Freekillers_Kills = AutoExecConfig_CreateConVar("sm_jail_freekillers_kills", "6", "Number of kills required to flag for freekilling: (1.0 - MaxPlayers)", FCVAR_PLUGIN, true, 1.0, true, float(MAXPLAYERS));
+	JB_Cvar_Freekillers_Wave = AutoExecConfig_CreateConVar("sm_jail_freekillers_wave", "60.0", "Time in seconds until client is banned for being marked: (1.0 - 60.0)", FCVAR_PLUGIN, true, 1.0, true, 60.0);
+	JB_Cvar_Freekillers_Action = AutoExecConfig_CreateConVar("sm_jail_freekillers_action", "2", "Action towards marked freekiller: (2 = Ban client based on cvars, 1 = Slay the client, 0 = remove mark on timer)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
+	JB_Cvar_Freekillers_BanMSG = AutoExecConfig_CreateConVar("sm_jail_freekillers_banreason", "You have been banned for freekilling.", "Message to give the client if they're marked as a freekiller and banned.", FCVAR_PLUGIN);
+	JB_Cvar_Freekillers_BanMSGDC = AutoExecConfig_CreateConVar("sm_jail_freekillers_bandcreason", "You have been banned for freekilling and disconnecting.", "Message to give the client if they're marked as a freekiller/disconnected and banned.", FCVAR_PLUGIN);
+	JB_Cvar_Freekillers_Bantime = AutoExecConfig_CreateConVar("sm_jail_freekillers_bantime", "60", "Time banned after timer ends: (0 = permanent)", FCVAR_PLUGIN, true, 0.0);
+	JB_Cvar_Freekillers_BantimeDC = AutoExecConfig_CreateConVar("sm_jail_freekillers_bantimedc", "120", "Time banned if disconnected after timer ends: (0 = permanent)", FCVAR_PLUGIN, true, 0.0);
+	JB_Cvar_LRS_Enabled = AutoExecConfig_CreateConVar("sm_jail_lr_enabled", "1", "Status of the LR System: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_BlueMute = AutoExecConfig_CreateConVar("sm_jail_bluemute", "2", "Mute Blue team: (2 = always except warden, 1 = while Warden is active, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
+	JB_Cvar_DeadMute = AutoExecConfig_CreateConVar("sm_jail_deadmute", "1", "Dead players being muted: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_Freeday_Limit = AutoExecConfig_CreateConVar("sm_jail_freeday_limit", "3", "Max number of freedays for the lr: (1.0 - 16.0)", FCVAR_PLUGIN, true, 1.0, true, 16.0);
+	AutoExecConfig_ExecuteFile();
 
 	//Colors saved by default, we define them here instead of as a global because we already have one handle setup.
 	gWardenColor[0] = 125;
 	gWardenColor[1] = 150;
 	gWardenColor[2] = 250;
 	gRebelColor[0] = 0;
-	gRebelColor[1] = 0;
-	gRebelColor[2] = 255;
-	gFreedayColor[0] = 0;
-	gFreedayColor[1] = 255;
+	gRebelColor[1] = 255;
+	gRebelColor[2] = 0;
+	gFreedayColor[0] = 125;
+	gFreedayColor[1] = 0;
 	gFreedayColor[2] = 0;
 
 	HookConVarChange(JB_Cvar_Enabled, HandleCvars);
@@ -273,6 +300,7 @@ public OnPluginStart()
 	HookConVarChange(JB_Cvar_BalanceRatio, HandleCvars);
 	HookConVarChange(JB_Cvar_RedMelee, HandleCvars);
 	HookConVarChange(JB_Cvar_Warden, HandleCvars);
+	HookConVarChange(JB_Cvar_WardenAuto, HandleCvars);
 	HookConVarChange(JB_Cvar_WardenModel, HandleCvars);
 	HookConVarChange(JB_Cvar_WardenColor, HandleCvars);
 	HookConVarChange(JB_Cvar_Doorcontrol, HandleCvars);
@@ -284,10 +312,13 @@ public OnPluginStart()
 	HookConVarChange(JB_Cvar_RebelColor, HandleCvars);
 	HookConVarChange(JB_Cvar_RebelsTime, HandleCvars);
 	HookConVarChange(JB_Cvar_Crits, HandleCvars);
+	HookConVarChange(JB_Cvar_CritsType, HandleCvars);
 	HookConVarChange(JB_Cvar_VoteNeeded, HandleCvars);
 	HookConVarChange(JB_Cvar_VoteMinPlayers, HandleCvars);
 	HookConVarChange(JB_Cvar_VotePostAction, HandleCvars);
+	HookConVarChange(JB_Cvar_VotePassedLimit, HandleCvars);
 	HookConVarChange(JB_Cvar_Freekillers, HandleCvars);
+	HookConVarChange(JB_Cvar_FreedayColor, HandleCvars);
 	HookConVarChange(JB_Cvar_Freekillers_Time, HandleCvars);
 	HookConVarChange(JB_Cvar_Freekillers_Kills, HandleCvars);
 	HookConVarChange(JB_Cvar_Freekillers_Wave, HandleCvars);
@@ -295,10 +326,9 @@ public OnPluginStart()
 	HookConVarChange(JB_Cvar_Freekillers_Bantime, HandleCvars);
 	HookConVarChange(JB_Cvar_Freekillers_BantimeDC, HandleCvars);
 	HookConVarChange(JB_Cvar_LRS_Enabled, HandleCvars);
-	HookConVarChange(JB_Cvar_FreedayColor, HandleCvars);
-	HookConVarChange(JB_Cvar_VotePassedLimit, HandleCvars);
 	HookConVarChange(JB_Cvar_BlueMute, HandleCvars);
 	HookConVarChange(JB_Cvar_DeadMute, HandleCvars);
+	HookConVarChange(JB_Cvar_Freeday_Limit, HandleCvars);
 	
 	HookEvent("player_spawn", PlayerSpawn);
 	HookEvent("player_hurt", PlayerHurt);
@@ -310,7 +340,6 @@ public OnPluginStart()
 	
 	AutoExecConfig(true, "TF2Jail");
 
-	RegConsoleCmd("sm_jailbreak", JailbreakMenu);
 	RegConsoleCmd("sm_fire", Command_FireWarden);
 	RegConsoleCmd("sm_firewarden", Command_FireWarden);
 	RegConsoleCmd("sm_w", BecomeWarden);
@@ -345,6 +374,7 @@ public OnPluginStart()
 	RegAdminCmd("sm_jailreset", AdminResetPlugin, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_compatible", MapCompatibilityCheck, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_givefreeday", AdminGiveFreeday, ADMFLAG_GENERIC);
+	RegAdminCmd("sm_removefreeday", AdminRemoveFreeday, ADMFLAG_GENERIC);
 	
 	//Warden can change these if an admin allows it so we make them easier to manage.
 	Cvar_FF = FindConVar("mp_friendlyfire");
@@ -367,6 +397,7 @@ public OnPluginStart()
 	AddServerTag2("Jailbreak");
 	
 	MapCheck();	//We want to check the map to see if it's compatible so lets do that now just in case we reload the plugin.
+	CreateTimer(0.5, HookSpawns);
 
 	g_hArray_Pending = CreateArray();	//Create an array and make it easier to use.
 	
@@ -380,15 +411,7 @@ public OnPluginStart()
 			}
 		}
 	}
-}
-
-public EntityOutput_Ammo(const String:output[], caller, activator, Float:delay)
-{
-	if (activator > 0 && activator <= GetMaxClients() && IsClientInGame(activator) && IsPlayerAlive(activator))
-	{
-		RemoveEdict(caller);
-		RemoveFreeday(activator);
-	}
+	AutoExecConfig_CleanFile();
 }
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
@@ -513,6 +536,7 @@ public OnConfigsExecuted()
 	j_BalanceRatio = GetConVarFloat(JB_Cvar_BalanceRatio);
 	j_RedMelee = GetConVarBool(JB_Cvar_RedMelee);
 	j_Warden = GetConVarBool(JB_Cvar_Warden);
+	j_WardenAuto = GetConVarBool(JB_Cvar_WardenAuto);
 	j_WardenModel = GetConVarBool(JB_Cvar_WardenModel);
 	j_DoorControl = GetConVarBool(JB_Cvar_Doorcontrol);
 	j_DoorOpenTimer = GetConVarFloat(JB_Cvar_DoorOpenTime);
@@ -522,9 +546,11 @@ public OnConfigsExecuted()
 	j_Rebels = GetConVarBool(JB_Cvar_Rebels);
 	j_RebelsTime = GetConVarFloat(JB_Cvar_RebelsTime);
 	j_Criticals = GetConVarInt(JB_Cvar_Crits);
+	j_Criticalstype = GetConVarInt(JB_Cvar_CritsType);
 	j_WVotesNeeded = GetConVarFloat(JB_Cvar_VoteNeeded);
 	j_WVotesMinPlayers = GetConVarInt(JB_Cvar_VoteMinPlayers);
 	j_WVotesPostAction = GetConVarInt(JB_Cvar_VotePostAction);
+	j_WVotesPassedLimit = GetConVarInt(JB_Cvar_VotePassedLimit);
 	j_Freekillers = GetConVarBool(JB_Cvar_Freekillers);
 	j_FreekillersTime = GetConVarFloat(JB_Cvar_Freekillers_Time);
 	j_FreekillersKills = GetConVarInt(JB_Cvar_Freekillers_Kills);
@@ -533,9 +559,9 @@ public OnConfigsExecuted()
 	j_FreekillersBantime = GetConVarInt(JB_Cvar_Freekillers_Bantime);
 	j_FreekillersBantimeDC = GetConVarInt(JB_Cvar_Freekillers_BantimeDC);
 	j_LRSEnabled = GetConVarBool(JB_Cvar_LRS_Enabled);
-	j_WVotesPassedLimit = GetConVarInt(JB_Cvar_VotePassedLimit);
 	j_BlueMute = GetConVarInt(JB_Cvar_BlueMute);
 	j_DeadMute = GetConVarBool(JB_Cvar_DeadMute);
+	j_FreedayLimit = GetConVarInt(JB_Cvar_Freeday_Limit);
 
 	if (e_clientprefs && e_filemanager && e_sdkhooks && e_tf2attributes && e_tf2items)
 	{
@@ -590,18 +616,20 @@ public OnConfigsExecuted()
 		Steam_SetGameDescription(gameDesc);
 	}
 	ResetVotes();	//Lets reset all the votes so Wardens can't get voted off even easier than now.
+	
+	PrecacheSound("ui/system_message_alert.wav", true);
 }
 
 public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[])
 {
 	if (StrEqual(oldValue, newValue, true))
 	{
-		return;	//Obviously, if it's the same, no need to change it.
+		return;
 	}
 	
 	new iNewValue = StringToInt(newValue);
 	
-	if (cvar == JB_Cvar_Enabled)	//Generally hooks and unhooks events, command listeners, and disables everything it should.
+	if (cvar == JB_Cvar_Enabled)
 	{
 		if (iNewValue == 1)
 		{
@@ -659,10 +687,18 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 		if (iNewValue == 1)
 		{
 			j_Advertise = true;
+			if (g_adverttimer == INVALID_HANDLE)
+			{
+				g_adverttimer = CreateTimer(120.0, TimerAdvertisement, _, TIMER_REPEAT);
+			}
 		}
 		else if (iNewValue == 0)
 		{
 			j_Advertise = false;
+			if (g_adverttimer != INVALID_HANDLE)
+			{
+				ClearTimer(g_adverttimer);
+			}
 		}
 	}
 	else if (cvar == JB_Cvar_Cvars)
@@ -727,6 +763,17 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 		else if (iNewValue == 0)
 		{
 			j_Warden = false;
+		}
+	}
+	else if (cvar == JB_Cvar_WardenAuto)
+	{
+		if (iNewValue == 1)
+		{
+			j_WardenAuto = true;
+		}
+		else if (iNewValue == 0)
+		{
+			j_WardenAuto = false;
 		}
 	}
 	else if (cvar == JB_Cvar_WardenModel)
@@ -825,6 +872,10 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		j_Criticals = iNewValue;
 	}
+	else if (cvar == JB_Cvar_CritsType)
+	{
+		j_Criticalstype = iNewValue;
+	}
 	else if (cvar == JB_Cvar_VoteNeeded)
 	{
 		j_WVotesNeeded = StringToFloat(newValue);
@@ -837,6 +888,10 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		j_WVotesPostAction = iNewValue;
 	}
+	else if (cvar == JB_Cvar_VotePassedLimit)
+	{
+		j_WVotesPassedLimit = iNewValue;
+	}
 	else if (cvar == JB_Cvar_Freekillers)
 	{
 		if (iNewValue == 1)
@@ -847,6 +902,10 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 		{
 			j_Freekillers = false;
 		}
+	}
+	else if (cvar == JB_Cvar_FreedayColor)
+	{
+		gFreedayColor = SplitColorString(newValue);
 	}
 	else if (cvar == JB_Cvar_Freekillers_Time)
 	{
@@ -883,14 +942,6 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 			j_LRSEnabled = false;
 		}
 	}
-	else if (cvar == JB_Cvar_FreedayColor)
-	{
-		gFreedayColor = SplitColorString(newValue);
-	}
-	else if (cvar == JB_Cvar_VotePassedLimit)
-	{
-		j_WVotesPassedLimit = iNewValue;
-	}
 	else if (cvar == JB_Cvar_BlueMute)
 	{
 		j_BlueMute = iNewValue;
@@ -906,6 +957,10 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 			j_DeadMute = false;
 		}
 	}
+	else if (cvar == JB_Cvar_Freeday_Limit)
+	{
+		j_FreedayLimit = iNewValue;
+	}
 }
 
 SplitColorString(const String:colors[])	//Read the credits above for the name of the person and his plugin I got this from, I just used it to make my plugin more customizable.
@@ -918,6 +973,7 @@ SplitColorString(const String:colors[])	//Read the credits above for the name of
 	return _iColors;
 }
 
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 public OnMapStart()
 {
 	for (new i=1; i<=MaxClients; i++)
@@ -935,6 +991,7 @@ public OnMapStart()
 	g_Voters = 0;
 	g_Votes = 0;
 	g_VotesNeeded = 0;
+	WardenLimit = 0;
 	
 	MapCheck();	//New map, lets check if it's compatible. If it's not, disable door controls and if it is, leave them on.
 }
@@ -1272,6 +1329,7 @@ public Action:RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	Warden = -1;	//New Warden, lets set it.
 	g_bIsLRInUse = false;	//LR is is not currently in use, lets allow Warden again.
+	CreateTimer(0.5, HookSpawns);
 
 	ServerCommand("sm_countdown_enabled 2");	//Messy, I know. Until I convert the countdown plugin into a sub module, this will be here so we know it's on regardless.
 
@@ -1308,12 +1366,40 @@ public Action:RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 		}
 	}
 }
+public Action:HookSpawns(Handle:hTimer)
+{
+	new ent = -1;
+	while ((ent = FindEntityByClassname(ent, "func_respawnroom")) != -1)
+	{
+		SDKUnhook(ent, SDKHook_Touch, SpawnTouch);
+		SDKHook(ent, SDKHook_Touch, SpawnTouch);
+	}
+}
+
+public SpawnTouch(spawn, client)
+{
+	if (client > MaxClients || client < 1)
+	{
+		return;
+	}
+	if (!IsClientInGame(client))
+	{
+		return;
+	}
+	if (GetEntProp(spawn, Prop_Send, "m_iTeamNum") != GetClientTeam(client))
+	{
+		if (g_IsFreedayActive[client])
+		{
+			RemoveFreeday(client);
+		}
+	}
+}
 
 public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (!j_Enabled) return Plugin_Continue;
 
-	g_bIsWardenLocked = false;	//Warden is no longer locked so lets make sure it's not locked.
+	g_bIsWardenLocked = false;
 
 	new Float:Ratio;
 	if (j_Balance)	//Autobalance, needs more work to it but it works for now.
@@ -1330,9 +1416,13 @@ public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadc
 				ChangeClientTeam(i, _:TFTeam_Red);
 				TF2_RespawnPlayer(i);
 				CPrintToChat(i, "%s %t", CLAN_TAG_COLOR, "moved for balance");
-				if (i == Warden)
+				if (i == Warden && j_WardenModel)
 				{
-					WardenUnset(i);
+					RemoveModel(i);
+				}
+				else
+				{
+					SetEntityRenderColor(i, 255, 255, 255, 255);
 				}
 			}
 		}
@@ -1446,10 +1536,18 @@ public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadc
 			enumLastRequests = LR_Disabled;
 		}
 	}
+	
+	if (j_WardenAuto)
+	{
+		new RandomWarden = Client_GetRandom(CLIENTFILTER_TEAMTWO|CLIENTFILTER_ALIVE|CLIENTFILTER_NOBOTS);
+		if (RandomWarden && Warden == -1)
+		{
+			WardenSet(RandomWarden);
+		}
+	}
 	return Plugin_Continue;
 }
 
-//If you're new to plugin development, we do so many checks in timers because clients can disconnect, die or anything during them so lets not have errors spawn.
 public Action:UnmuteReds(Handle:hTimer, any:client)
 {
 	for (new i = 1; i <= MaxClients; i++)
@@ -1525,6 +1623,10 @@ public Action:RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 		ServerCommand("sm_disco");
 		g_bIsDiscoRound = false;
 	}
+	
+	g_bIsWardenLocked = true;
+	FreedayLimit = 0;
+
 	return Plugin_Continue;
 }
 
@@ -1541,15 +1643,18 @@ public OnGameFrame()
 			{
 			case 1:
 				{
-					if (GetClientTeam(i) == _:TFTeam_Blue) TF2_AddCondition(i, TFCond_Kritzkrieged, 0.1);
+					if (GetClientTeam(i) == _:TFTeam_Blue && j_Criticalstype == 2) TF2_AddCondition(i, TFCond_Kritzkrieged, 0.1);
+					else if (GetClientTeam(i) == _:TFTeam_Blue) TF2_AddCondition(i, TFCond_Buffed, 0.1);
 				}
 			case 2:
 				{
-					if (GetClientTeam(i) == _:TFTeam_Red) TF2_AddCondition(i, TFCond_Kritzkrieged, 0.1);
+					if (GetClientTeam(i) == _:TFTeam_Red && j_Criticalstype == 2) TF2_AddCondition(i, TFCond_Kritzkrieged, 0.1);
+					else if (GetClientTeam(i) == _:TFTeam_Red) TF2_AddCondition(i, TFCond_Buffed, 0.1);
 				}
 			case 3:
 				{
-					TF2_AddCondition(i, TFCond_Kritzkrieged, 0.1);
+					if (j_Criticalstype == 2) TF2_AddCondition(i, TFCond_Kritzkrieged, 0.1);
+					else TF2_AddCondition(i, TFCond_Buffed, 0.1);
 				}
 			}
 		}
@@ -1576,92 +1681,18 @@ public bool:OnClientSpeakingEx(client)
 	}
 }
 
-public Action:JailbreakMenu(client, args)
+public Action:InterceptBuild(client, const String:command[], args)
 {
-	if (!j_Enabled)
+	if (!j_Enabled) return Plugin_Continue;
+
+	if (IsValidClient(client) && GetClientTeam(client) == _:TFTeam_Red)
 	{
-		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "plugin disabled");
 		return Plugin_Handled;
 	}
-
-	if (!client)
-	{
-		ReplyToCommand(client, "%t","Command is in-game only");
-		return Plugin_Handled;
-	}
-
-	JB_ShowMenu(client);
-
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
-JB_ShowMenu(client)
-{
-	new Handle:menu = CreateMenu(JB_MenuHandler);
-	SetMenuExitBackButton(menu, false);
-
-	SetMenuTitle(menu, "Jailbreak %s", PLUGIN_VERSION);
-
-	AddMenuItem(menu, "rules",    "Rules & Gameplay");
-	AddMenuItem(menu, "commands", "Commands");
-
-	DisplayMenu(menu, client, 30);
-}
-
-public JB_MenuHandler(Handle:menu, MenuAction:action, param1, param2)
-{
-	switch (action)
-	{
-	case MenuAction_End:
-		{
-			CloseHandle(menu);
-		}
-	case MenuAction_Select:
-		{
-			new Handle:cpanel = CreatePanel();
-			if (param2 == 0)
-			{
-				SetPanelTitle(cpanel, "Rules:");
-				DrawPanelText(cpanel, " ");
-
-				DrawPanelText(cpanel, "This menu is currently being built.");
-			}
-			else if (param2 == 1)
-			{
-				SetPanelTitle(cpanel, "Commands:");
-				DrawPanelText(cpanel, " ");
-			}
-			for (new j = 0; j < 7; ++j)
-			DrawPanelItem(cpanel, " ", ITEMDRAW_NOTEXT);
-			DrawPanelText(cpanel, " ");
-			DrawPanelItem(cpanel, "Back", ITEMDRAW_CONTROL);
-
-			SendPanelToClient(cpanel, param1, Help_MenuHandler, 45);
-			CloseHandle(cpanel);
-		}
-	}
-}
-
-public Help_MenuHandler(Handle:menu, MenuAction:action, param1, param2)
-{
-	switch (action)
-	{
-	case MenuAction_End:
-		{
-			CloseHandle(menu);
-		}
-	case MenuAction_Select:
-		{
-			JB_ShowMenu(param1);
-		}
-	case MenuAction_Cancel:
-		{
-			if (param2 == MenuCancel_ExitBack)
-			JB_ShowMenu(param1);
-		}
-	}
-}
-
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 public Action:Command_FireWarden(client, args)
 {
 	if (!j_Enabled)
@@ -1676,7 +1707,22 @@ public Action:Command_FireWarden(client, args)
 		return Plugin_Handled;
 	}
 
-	AttemptFireWarden(client);
+	if (j_WVotesPassedLimit != 0)
+	{
+		if (WardenLimit < j_WVotesPassedLimit)
+		{
+			AttemptFireWarden(client);
+		}
+		else
+		{
+			PrintToChat(client, "You are not allowed to vote again, the warden fire limit has been reached.");
+			return Plugin_Handled;
+		}
+	}
+	else
+	{
+		AttemptFireWarden(client);
+	}
 
 	return Plugin_Handled;
 }
@@ -1722,6 +1768,7 @@ FireWardenCall()
 		}
 		ResetVotes();
 		g_VotesPassed++;
+		WardenLimit++;
 	}
 }
 
@@ -1735,6 +1782,7 @@ ResetVotes()
 	}
 }
 
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 public Action:MapCompatibilityCheck(client, args)	//I set this up so maps can be setup to be compatible or not without the plugin losing it's mind and players being locked in their cells constantly.
 {
 	if (!j_Enabled)
@@ -2102,8 +2150,57 @@ public MenuHandlerFFAdmin(Handle:menu, MenuAction:action, param1, param2)
 			CloseHandle(menu);
 		}
 	}
-}  
+}
 
+public Action:AdminRemoveFreeday(client, args)
+{
+	if (!j_Enabled)
+	{
+		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "plugin disabled");
+		return Plugin_Handled;
+	}
+	
+	if (!client)
+	{
+		ReplyToCommand(client, "%t","Command is in-game only");
+		return Plugin_Handled;
+	}
+	
+	new Handle:menu = CreateMenu(MenuHandlerFFRAdmin, MENU_ACTIONS_ALL);
+	SetMenuTitle(menu,"Choose a Player");
+	AddTargetsToMenu2(menu, 0, COMMAND_FILTER_ALIVE | COMMAND_FILTER_NO_BOTS | COMMAND_FILTER_NO_IMMUNITY);
+	DisplayMenu(menu, client, 20);
+	
+	return Plugin_Handled;
+}
+
+public MenuHandlerFFRAdmin(Handle:menu, MenuAction:action, param1, param2)
+{
+	switch (action)
+	{
+	case MenuAction_Select:
+		{
+			decl String:info[32];
+			GetMenuItem(menu, param2, info, sizeof(info));
+
+			new target = GetClientOfUserId(StringToInt(info));
+			if (target == 0)
+			{
+				PrintToChat(param1, "Client is not valid.");
+			}
+			else
+			{                     
+				RemoveFreeday(target);
+			}
+		}
+	case MenuAction_End:
+		{
+			CloseHandle(menu);
+		}
+	}
+}
+
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 public Action:BecomeWarden(client, args)
 {
 	if (!j_Enabled)
@@ -2715,35 +2812,40 @@ UnlockCells()
 	CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "doors unlocked");
 }
 
-public Action:InterceptBuild(client, const String:command[], args)
-{
-	if (!j_Enabled) return Plugin_Continue;
-
-	if (IsValidClient(client) && GetClientTeam(client) == _:TFTeam_Red)
-	{
-		return Plugin_Handled;
-	}
-	return Plugin_Continue;
-}
-
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 LastRequestStart(client)
 {
-	new Handle:LRMenu = CreateMenu(MenuHandlerLR, MENU_ACTIONS_ALL);
+	new Handle:LRMenu = CreateMenu(MenuHandlerLR, MENU_ACTIONS_ALL);\
+	decl String:buffer[100];
+
 	SetMenuTitle(LRMenu, "Last Request Menu");
 
-	AddMenuItem(LRMenu, "0", "Freeday for yourself");
-	AddMenuItem(LRMenu, "1", "Freeday for you and others");
-	AddMenuItem(LRMenu, "2", "Freeday for all");
-	AddMenuItem(LRMenu, "3", "Commit Suicide");
-	AddMenuItem(LRMenu, "4", "Guards Melee Only Round");
-	AddMenuItem(LRMenu, "5", "HHH Kill Round");
-	AddMenuItem(LRMenu, "6", "Low Gravity Round");
-	AddMenuItem(LRMenu, "7", "Speed Demon Round");
-	AddMenuItem(LRMenu, "8", "Hunger Games");
-	if (e_betherobot)	AddMenuItem(LRMenu, "9", "Robotic Takeover");
-	AddMenuItem(LRMenu, "10", "Hide & Seek");
-	AddMenuItem(LRMenu, "11", "Disco Day");
-	AddMenuItem(LRMenu, "12", "Custom Request");
+	Format(buffer, sizeof(buffer), "%T", "menu Freeday for yourself", client);
+	AddMenuItem(LRMenu, "0", buffer);
+	Format(buffer, sizeof(buffer), "%T", "menu Freeday for you and others", client);
+	AddMenuItem(LRMenu, "1", buffer);
+	Format(buffer, sizeof(buffer), "%T", "menu Freeday for all", client);
+	AddMenuItem(LRMenu, "2", buffer);
+	Format(buffer, sizeof(buffer), "%T", "menu Commit Suicide", client);
+	AddMenuItem(LRMenu, "3", buffer);
+	Format(buffer, sizeof(buffer), "%T", "menu Guards Melee Only Round", client);
+	AddMenuItem(LRMenu, "4", buffer);
+	Format(buffer, sizeof(buffer), "%T", "menu HHH Kill Round", client);
+	AddMenuItem(LRMenu, "5", buffer);
+	Format(buffer, sizeof(buffer), "%T", "menu Low Gravity Round", client);
+	AddMenuItem(LRMenu, "6", buffer);
+	Format(buffer, sizeof(buffer), "%T", "menu Speed Demon Round", client);
+	AddMenuItem(LRMenu, "7", buffer);
+	Format(buffer, sizeof(buffer), "%T", "menu Hunger Games", client);
+	AddMenuItem(LRMenu, "8", buffer);
+	Format(buffer, sizeof(buffer), "%T", "menu Robotic Takeover", client);
+	if (e_betherobot)	AddMenuItem(LRMenu, "9", buffer);
+	Format(buffer, sizeof(buffer), "%T", "menu Hide & Seek", client);
+	AddMenuItem(LRMenu, "10", buffer);
+	Format(buffer, sizeof(buffer), "%T", "menu Disco Day", client);
+	AddMenuItem(LRMenu, "11", buffer);
+	Format(buffer, sizeof(buffer), "%T", "menu Custom Request", client);
+	AddMenuItem(LRMenu, "12", buffer);
 	
 	SetMenuExitButton(LRMenu, true);
 	DisplayMenu(LRMenu, client, 30 );
@@ -2875,11 +2977,19 @@ public FreedayForClientsMenu_H(Handle:menu, MenuAction:action, client, param2)
 			}
 			else
 			{
-				g_IsFreeday[target] = true;
-				CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "lr freeday picked clients", client, target);
-				if (IsValidClient(client) && !IsClientInKickQueue(client))
+				if (FreedayLimit < j_FreedayLimit)
 				{
-					FreedayforClientsMenu(client);
+					g_IsFreeday[target] = true;
+					FreedayLimit++;
+					CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "lr freeday picked clients", client, target);
+					if (IsValidClient(client) && !IsClientInKickQueue(client))
+					{
+						FreedayforClientsMenu(client);
+					}
+				}
+				else
+				{
+					CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "lr freeday picked clients maxed", client);
 				}
 			}
 		}
@@ -3030,6 +3140,7 @@ public Action:BanClientTimerFreekiller(Handle:hTimer, Handle:hPack)
 	}
 }
 
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 MapCheck()
 {
 	new open_cells = Entity_FindByName("open_cells", "func_button");
@@ -3198,6 +3309,7 @@ stock ClearTimer(&Handle:hTimer)
 	}
 }
 
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 public bool:WardenGroup(const String:strPattern[], Handle:hClients)
 {
 	for (new i = 1; i <= MaxClients; i ++)

@@ -325,6 +325,12 @@
 		"#format"	"{1:N},{2:N}"
 		"en"		"{darkkhaki} {1} has chosen {2} for a freeday."
 	}
+	
+	"lr freeday picked clients maxed"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has reached the maximum number of allowed clients for freeday on this server."
+	}
 
 	"lr free for all executed"
 	{
@@ -662,5 +668,83 @@
 	{
 		"#format"	"{1:N},{2:d}"
 		"en"		"{darkkhaki} {1} has been marked as a Freekiller and will be banned in {2} unless admin pardons it."
+	}
+	
+	"menu Freeday for yourself"
+	{
+		"#format"	""
+		"en"		"Freeday for yourself"
+	}
+
+	"menu Freeday for you and others"
+	{
+		"#format"	""
+		"en"		"Freeday for you and others"
+	}
+
+	"menu Freeday for all"
+	{
+		"#format"	""
+		"en"		"Freeday for all"
+	}
+
+	"menu Commit Suicide"
+	{
+		"#format"	""
+		"en"		"Commit Suicide"
+	}
+
+	"menu Guards Melee Only Round"
+	{
+		"#format"	""
+		"en"		"Guards Melee Only Round"
+	}
+
+	"menu HHH Kill Round"
+	{
+		"#format"	""
+		"en"		"HHH Kill Round"
+	}
+
+	"menu Low Gravity Round"
+	{
+		"#format"	""
+		"en"		"Low Gravity Round"
+	}
+
+	"menu Speed Demon Round"
+	{
+		"#format"	""
+		"en"		"Speed Demon Round"
+	}
+
+	"menu Hunger Games"
+	{
+		"#format"	""
+		"en"		"Hunger Games"
+	}
+
+	"menu Robotic Takeover"
+	{
+		"#format"	""
+		"en"		"Robotic Takeover"
+	}
+	
+	"menu Hide & Seek"
+	{
+		"#format"	""
+		"en"		"Hide & Seek"
+	}
+	
+	"menu Disco Day"
+	{
+		"#format"	""
+		"en"		"Disco Day"
+	}
+	
+	"menu Custom Request"
+	{
+		"#format"	""
+		"en"		"Custom Request"
 	}
 }

@@ -1,9 +1,30 @@
 Update Notes:
 
+++ 09/08/2013
+
 Jailbreak-
 * Added a 0.1 timer to strip ammo after players spawn, easier to use than adding compatibility for tNoUnlocksPls plugin set.
 * Fixed an error in translations. (lr robotic takeover translation having 2 english translations instead of 1 english and 1 spanish)
 * Added a check if the timer handle isn't invalid for Freekillers marked during Player Death.
+* Moved some code to the auto balancer to remove the model regardless if Warden is switched over.
+* Added a new cvar which allows server operators to change the type of crits given.
+* Added a new cvar which allows server operators to set random wardens given on round start.
+* Code has been tightened for the advertisement functions so it should disable when needed.
+* Reformatted top part of the plugin.
+* Fixed the cvar and added a global integer so server operators can set a maximum number of allowed wardens fired by the 'sm_fire' command per map.
+* Warden model should now be removed entirely if team is changed with the model. Warden being locked on round end and unlocked on arena round start.
+* Added AutoExecConfig include by Impact123. This should automatically update the config when new versions are available.
+* Added 'FCVAR_DONTRECORD' to the version cvar.
+* Added an SDKHook function to track 'fun_respawnroom' entity zones and remove freedays if they step into those zones.
+* Fixed a bug where the plugin would remove freedays would get removed if they step into their own respawn rooms instead of the other teams respawn room.
+* Fixed a precache bug for the sound 'ui/system_message_alert.wav' which I assumed was already precached by default.
+* Added a limit of 3 clients maximum for the 'freedays for clients' LR which allows the client to choose other clients for freedays. Will add a cvar later to change the amount.
+* Translated LR names on the menus, will be adding the rest later.
+* Split the source code into sections using ~ lines commented.
+* Removed the 'sm_jailbreak' functionality, will be adding in a sub module for it soon.
+
+Bluebans-
+* Added a new cvar to replace a define to switch between MySQL support or Array support.
 
 ++ 08/29/2013
 

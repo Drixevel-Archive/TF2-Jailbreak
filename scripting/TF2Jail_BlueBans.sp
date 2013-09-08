@@ -17,21 +17,19 @@
 
 #define PLUGIN_NAME     "[TF2] Jailbreak - Bans"												//Plugin name
 #define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"											//Plugin author
-#define PLUGIN_VERSION  "4.8.8"																	//Plugin version
+#define PLUGIN_VERSION  "4.9.1"																	//Plugin version
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."									//Plugin description
 #define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"											//Plugin contact URL
 
 #define CLAN_TAG_COLOR	"{community}[TF2Jail-Bans]"
 #define CLAN_TAG		"[TF2Jail-Bans]"
 
-#define OCAOFF 0
-#define USESQL 1
-
 new Handle:JBB_Cvar_Enabled = INVALID_HANDLE;
 new Handle:JBB_Cvar_SoundName = INVALID_HANDLE;
 new Handle:JBB_Cvar_JoinBanMessage = INVALID_HANDLE;
 new Handle:JBB_Cvar_Database_Driver = INVALID_HANDLE;
 new Handle:JBB_Cvar_Debugger = INVALID_HANDLE;
+new Handle:JBB_Cvar_MySQL = INVALID_HANDLE;
 new Handle:JBB_Cvar_Table_Prefix = INVALID_HANDLE;
 
 new Handle:Guard_Cookie = INVALID_HANDLE;
@@ -46,14 +44,13 @@ new iCookieIndex;
 new bool:bAuthIdNativeExists = false;
 new Handle:TimedBanLocalList = INVALID_HANDLE;
 new LocalTimeRemaining[MAXPLAYERS+1];
-#if USESQL == 0
 new Handle:TimedBanSteamList = INVALID_HANDLE;
-#endif
 new GuardBanTargetUserId[MAXPLAYERS+1];
 new GuardBanTimeLength[MAXPLAYERS+1];
 new String:sLogTableName[32];
 new String:sTimesTableName[32];
 new bool:debugging;
+new bool:mysql_cvar = true;
 
 new bool:RoundActive = false;
 
@@ -78,6 +75,7 @@ public OnPluginStart()
 	JBB_Cvar_Table_Prefix = CreateConVar("sm_jail_blueban_tableprefix", "", "Prefix for database to use: (def: none)", FCVAR_PLUGIN);
 	JBB_Cvar_Database_Driver = CreateConVar("sm_jail_blueban_sqldriver", "default", "Name of the sql driver to use: (def: default)", FCVAR_PLUGIN);
 	JBB_Cvar_Debugger = CreateConVar("sm_jail_blueban_debug", "1", "Debugging logs status: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JBB_Cvar_MySQL = CreateConVar("sm_jail_blueban_debug", "1", "Debugging logs status: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	
 	HookEvent("player_spawn", PlayerSpawn);
 	HookEvent("teamplay_round_start", RoundStart);
@@ -85,12 +83,12 @@ public OnPluginStart()
 
 	AutoExecConfig(true, "TF2Jail_BlueBans");
 
-	RegAdminCmd("sm_banguard", Command_CTBan, ADMFLAG_SLAY, "sm_banguard <player> <optional: time> - Bans a player from guards(blue) team.");
-	RegAdminCmd("sm_banstatus", Command_IsCTBanned, ADMFLAG_GENERIC, "sm_banstatus <player> - Gives you information if player is banned or not from guards(blue) team.");
-	RegAdminCmd("sm_unbanguard", Command_UnCTBan, ADMFLAG_SLAY, "sm_unbanguard <player> - Unbans a player from guards(blue) team.");
+	RegAdminCmd("sm_banguard", Command_LiveBan, ADMFLAG_SLAY, "sm_banguard <player> <optional: time> - Bans a player from guards(blue) team.");
+	RegAdminCmd("sm_banstatus", Command_IsBanned, ADMFLAG_GENERIC, "sm_banstatus <player> - Gives you information if player is banned or not from guards(blue) team.");
+	RegAdminCmd("sm_unbanguard", Command_LiveUnban, ADMFLAG_SLAY, "sm_unbanguard <player> - Unbans a player from guards(blue) team.");
 	RegAdminCmd("sm_ragebanguard", Command_RageBan, ADMFLAG_SLAY, "sm_ragebanguard <player> - Lists recently disconnected players and allows you to ban them from guards(blue) team.");
-	RegAdminCmd("sm_banguard_offline", Command_Offline_CTBan, ADMFLAG_KICK, "sm_banguard_offline <steamid> - Allows admins to ban players while not on the server from guards(blue) team.");
-	RegAdminCmd("sm_unbanguard_offline", Command_Offline_UnCTBan, ADMFLAG_KICK, "sm_unbanguard_offline <steamid> - Allows admins to unban players while not on the server from guards(blue) team.");
+	RegAdminCmd("sm_banguard_offline", Command_Offline_Ban, ADMFLAG_KICK, "sm_banguard_offline <steamid> - Allows admins to ban players while not on the server from guards(blue) team.");
+	RegAdminCmd("sm_unbanguard_offline", Command_Offline_Unban, ADMFLAG_KICK, "sm_unbanguard_offline <steamid> - Allows admins to unban players while not on the server from guards(blue) team.");
 
 	Guard_Cookie = RegClientCookie("TF2Jail_GuardBanned", "Are you banned from blue team? This cookies gives the information.", CookieAccess_Protected);
 
@@ -105,9 +103,7 @@ public OnPluginStart()
 		GuardBanTargetUserId[idx] = 0;
 	}
 
-	#if USESQL == 0
 	TimedBanSteamList = CreateArray(23);
-	#endif
 		
 	new Handle:topmenu;
 	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE))
@@ -125,7 +121,6 @@ public OnAllPluginsLoaded()
 
 public OnClientAuthorized(client, const String:sSteamID[])
 {
-	#if OCAOFF == 0	
 	new iNeedle = FindStringInArray(DSteamIDs, sSteamID);
 	if (iNeedle != -1)
 	{
@@ -133,20 +128,22 @@ public OnClientAuthorized(client, const String:sSteamID[])
 		RemoveFromArray(DSteamIDs, iNeedle);
 		if (debugging) LogMessage("removed %N from Rage Bannable player list for re-connecting to the server", client);
 	}
-	#endif
 	
-	#if USESQL == 1
-	decl String:query[255];
-	Format(query, sizeof(query), "SELECT ban_time FROM %s WHERE steamid = '%s'", sTimesTableName, sSteamID);
-	SQL_TQuery(BanDatabase, DB_Callback_OnClientAuthed, query, _:client);
-	#else
-	new iSteamArrayIndex = FindStringInArray(TimedBanSteamList, sSteamID);
-	if (iSteamArrayIndex != -1)
+	if (mysql_cvar)
 	{
-		LocalTimeRemaining[client] = GetArrayCell(TimedBanSteamList, iSteamArrayIndex, 22);
-		if (debugging) LogMessage("%N joined with %i time remaining on ban", client, LocalTimeRemaining[client]);
+		decl String:query[255];
+		Format(query, sizeof(query), "SELECT ban_time FROM %s WHERE steamid = '%s'", sTimesTableName, sSteamID);
+		SQL_TQuery(BanDatabase, DB_Callback_OnClientAuthed, query, _:client);
 	}
-	#endif
+	else
+	{
+		new iSteamArrayIndex = FindStringInArray(TimedBanSteamList, sSteamID);
+		if (iSteamArrayIndex != -1)
+		{
+			LocalTimeRemaining[client] = GetArrayCell(TimedBanSteamList, iSteamArrayIndex, 22);
+			if (debugging) LogMessage("%N joined with %i time remaining on ban", client, LocalTimeRemaining[client]);
+		}
+	}
 }
 
 public DB_Callback_OnClientAuthed(Handle:owner, Handle:hndl, const String:error[], any:client)
@@ -300,12 +297,13 @@ public CP_Callback_CheckBan(Handle:owner, Handle:hndl, const String:error[], any
 		decl String:adminSteamID[22];
 		GetClientAuthString(iAdminIndex, adminSteamID, sizeof(adminSteamID));
 
-		#if USESQL == 1
-		decl String:logQuery[350];
-		Format(logQuery, sizeof(logQuery), "INSERT INTO %s (timestamp, offender_steamid, offender_name, admin_steamid, admin_name, bantime, timeleft, reason) VALUES (%d, '%s', '%s', '%s', 'Console', 0, 0, 'Rage ban')", sLogTableName, iTimeStamp, authID, sTargetName, adminSteamID, iAdminIndex);
-		if (debugging) LogMessage("log query: %s", logQuery);
-		SQL_TQuery(BanDatabase, DB_Callback_CTBan, logQuery, iAdminIndex);
-		#endif
+		if (mysql_cvar)
+		{
+			decl String:logQuery[350];
+			Format(logQuery, sizeof(logQuery), "INSERT INTO %s (timestamp, offender_steamid, offender_name, admin_steamid, admin_name, bantime, timeleft, reason) VALUES (%d, '%s', '%s', '%s', 'Console', 0, 0, 'Rage ban')", sLogTableName, iTimeStamp, authID, sTargetName, adminSteamID, iAdminIndex);
+			if (debugging) LogMessage("log query: %s", logQuery);
+			SQL_TQuery(BanDatabase, DB_Callback_CTBan, logQuery, iAdminIndex);
+		}
 		
 		LogMessage("%N (%s) has issued a rage ban on %s (%s) indefinitely.", iAdminIndex, adminSteamID, sTargetName, authID);
 
@@ -329,7 +327,7 @@ public CP_Callback_IssueBan(Handle:owner, Handle:hndl, const String:error[], any
 	}
 }
 
-public Action:Command_Offline_CTBan(client, args)
+public Action:Command_Offline_Ban(client, args)
 {
 	decl String:sAuthId[32];
 	GetCmdArgString(sAuthId, sizeof(sAuthId));
@@ -345,7 +343,7 @@ public Action:Command_Offline_CTBan(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Command_Offline_UnCTBan(client, args)
+public Action:Command_Offline_Unban(client, args)
 {
 	decl String:sAuthId[32];
 	GetCmdArgString(sAuthId, sizeof(sAuthId));
@@ -418,6 +416,7 @@ public Action:CheckTimedGuardBans(Handle:timer)
 public OnConfigsExecuted()
 {
 	debugging = GetConVarBool(JBB_Cvar_Debugger);
+	mysql_cvar = GetConVarBool(JBB_Cvar_MySQL);
 
 	SQL_TConnect(CP_Callback_Connect, "clientprefs");
 	
@@ -809,26 +808,27 @@ public OnClientDisconnect(client)
 		WritePackCell(ClientDisconnectPack, client);
 		WritePackString(ClientDisconnectPack, sDisconnectSteamID);
 		
-		#if USESQL == 1
-		decl String:query[255];
-		Format(query, sizeof(query), "SELECT ban_time FROM %s WHERE steamid = '%s'", sTimesTableName, sDisconnectSteamID);
-		SQL_TQuery(BanDatabase, DB_Callback_ClientDisconnect, query, ClientDisconnectPack);
-		
-		#else
-		
-		new iSteamArrayIndex = FindStringInArray(TimedBanSteamList, sDisconnectSteamID);
-		if (iSteamArrayIndex != -1)
+		if (mysql_cvar)
 		{
-			if (LocalTimeRemaining[client] <= 0)
+			decl String:query[255];
+			Format(query, sizeof(query), "SELECT ban_time FROM %s WHERE steamid = '%s'", sTimesTableName, sDisconnectSteamID);
+			SQL_TQuery(BanDatabase, DB_Callback_ClientDisconnect, query, ClientDisconnectPack);
+		}
+		else
+		{
+			new iSteamArrayIndex = FindStringInArray(TimedBanSteamList, sDisconnectSteamID);
+			if (iSteamArrayIndex != -1)
 			{
-				RemoveFromArray(TimedBanSteamList, iSteamArrayIndex);
-			}
-			else
-			{
-				SetArrayCell(TimedBanSteamList, iSteamArrayIndex, LocalTimeRemaining[client], 22);
+				if (LocalTimeRemaining[client] <= 0)
+				{
+					RemoveFromArray(TimedBanSteamList, iSteamArrayIndex);
+				}
+				else
+				{
+					SetArrayCell(TimedBanSteamList, iSteamArrayIndex, LocalTimeRemaining[client], 22);
+				}
 			}
 		}
-		#endif
 	}
 }
 
@@ -936,7 +936,7 @@ ProcessBanCookies(client)
 	}
 }
 
-public Action:Command_UnCTBan(client, args)
+public Action:Command_LiveUnban(client, args)
 {
 	if (args < 1)
 	{
@@ -980,14 +980,15 @@ Remove_CTBan(adminIndex, targetIndex, bExpired=false)
 		decl String:targetSteam[22];
 		GetClientAuthString(targetIndex, targetSteam, sizeof(targetSteam));
 		
-		#if USESQL == 1
-		decl String:logQuery[350];
-		Format(logQuery, sizeof(logQuery), "UPDATE %s SET timeleft=-1 WHERE offender_steamid = '%s' and timeleft >= 0", sLogTableName, targetSteam);
+		if (mysql_cvar)
+		{
+			decl String:logQuery[350];
+			Format(logQuery, sizeof(logQuery), "UPDATE %s SET timeleft=-1 WHERE offender_steamid = '%s' and timeleft >= 0", sLogTableName, targetSteam);
 
-		if (debugging) LogMessage("log query: %s", logQuery);
+			if (debugging) LogMessage("log query: %s", logQuery);
 
-		SQL_TQuery(BanDatabase, DB_Callback_RemoveCTBan, logQuery, targetIndex);
-		#endif
+			SQL_TQuery(BanDatabase, DB_Callback_RemoveCTBan, logQuery, targetIndex);
+		}
 		
 		LogMessage("%N has removed the Guard ban on %N (%s).", adminIndex, targetIndex, targetSteam);
 		
@@ -1027,7 +1028,7 @@ public DB_Callback_RemoveCTBan(Handle:owner, Handle:hndl, const String:error[], 
 	}
 }
 
-public Action:Command_CTBan(client, args)
+public Action:Command_LiveBan(client, args)
 {
 	if (args < 1)
 	{
@@ -1150,22 +1151,24 @@ PerformCTBan(client, adminclient, banTime=0, reason=0, String:manualReason[]="")
 		decl String:adminSteam[32];
 		GetClientAuthString(adminclient, adminSteam, sizeof(adminSteam));
 		
-		#if USESQL == 1
-		decl String:logQuery[350];
-		Format(logQuery, sizeof(logQuery), "INSERT INTO %s (timestamp, offender_steamid, offender_name, admin_steamid, admin_name, bantime, timeleft, reason) VALUES (%d, '%s', '%N', '%s', '%N', %d, %d, '%s')", sLogTableName, timestamp, targetSteam, client, adminSteam, adminclient, banTime, banTime, sReason);
-		if (debugging)	LogMessage("log query: %s", logQuery);
-		SQL_TQuery(BanDatabase, DB_Callback_CTBan, logQuery, client);
-		#endif
+		if (mysql_cvar)
+		{
+			decl String:logQuery[350];
+			Format(logQuery, sizeof(logQuery), "INSERT INTO %s (timestamp, offender_steamid, offender_name, admin_steamid, admin_name, bantime, timeleft, reason) VALUES (%d, '%s', '%N', '%s', '%N', %d, %d, '%s')", sLogTableName, timestamp, targetSteam, client, adminSteam, adminclient, banTime, banTime, sReason);
+			if (debugging)	LogMessage("log query: %s", logQuery);
+			SQL_TQuery(BanDatabase, DB_Callback_CTBan, logQuery, client);
+		}
 		LogMessage("%N (%s) has issued a Guard ban on %N (%s) for %d minutes for %s.", adminclient, adminSteam, client, targetSteam, banTime, sReason);
 	}
 	else
 	{
-		#if USESQL == 1
-		decl String:logQuery[350];
-		Format(logQuery, sizeof(logQuery), "INSERT INTO %s (timestamp, offender_steamid, offender_name, admin_steamid, admin_name, bantime, reason) VALUES (%d, '%s', '%N', 'STEAM_0:1:1', 'Console', %d, %d, '%s')", sLogTableName, timestamp, targetSteam, client, banTime, banTime, sReason);
-		if (debugging)	LogMessage("log query: %s", logQuery);
-		SQL_TQuery(BanDatabase, DB_Callback_CTBan, logQuery, client);
-		#endif
+		if (mysql_cvar)
+		{
+			decl String:logQuery[350];
+			Format(logQuery, sizeof(logQuery), "INSERT INTO %s (timestamp, offender_steamid, offender_name, admin_steamid, admin_name, bantime, reason) VALUES (%d, '%s', '%N', 'STEAM_0:1:1', 'Console', %d, %d, '%s')", sLogTableName, timestamp, targetSteam, client, banTime, banTime, sReason);
+			if (debugging)	LogMessage("log query: %s", logQuery);
+			SQL_TQuery(BanDatabase, DB_Callback_CTBan, logQuery, client);
+		}
 		LogMessage("Console has issued a Guard ban on %N (%s) for %d.", client, targetSteam, banTime);
 	}
 
@@ -1175,17 +1178,16 @@ PerformCTBan(client, adminclient, banTime=0, reason=0, String:manualReason[]="")
 		PushArrayCell(TimedBanLocalList, client);
 		LocalTimeRemaining[client] = banTime;
 		
-		#if USESQL == 1
-		decl String:query[255];
-		Format(query, sizeof(query), "INSERT INTO %s (steamid, ban_time) VALUES ('%s', %d)", sTimesTableName, targetSteam, banTime);
-		if (debugging)	LogMessage("ctban query: %s", query);
-		SQL_TQuery(BanDatabase, DB_Callback_CTBan, query, client);
-		
-		#else
+		if (mysql_cvar)
+		{
+			decl String:query[255];
+			Format(query, sizeof(query), "INSERT INTO %s (steamid, ban_time) VALUES ('%s', %d)", sTimesTableName, targetSteam, banTime);
+			if (debugging)	LogMessage("ctban query: %s", query);
+			SQL_TQuery(BanDatabase, DB_Callback_CTBan, query, client);
+		}
 		
 		new iSteamArrayIndex = PushArrayString(TimedBanSteamList, targetSteam);
 		SetArrayCell(TimedBanSteamList, iSteamArrayIndex, banTime, 22);
-		#endif
 	}
 	else
 	{
@@ -1208,7 +1210,7 @@ public DB_Callback_CTBan(Handle:owner, Handle:hndl, const String:error[], any:cl
 	}
 }
 
-public Action:Command_IsCTBanned(client, args)
+public Action:Command_IsBanned(client, args)
 {
 	if ((args < 1) || !args)
 	{
