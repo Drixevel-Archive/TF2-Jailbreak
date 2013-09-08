@@ -68,7 +68,7 @@
 //Defines
 #define PLUGIN_NAME     "[TF2] Jailbreak"
 #define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"
-#define PLUGIN_VERSION  "4.9.1"
+#define PLUGIN_VERSION  "4.9.1a"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"
 
@@ -183,6 +183,7 @@ new bool:g_IsFreedayActive[MAXPLAYERS + 1];
 new bool:g_IsFreekiller[MAXPLAYERS + 1];
 new bool:g_HasTalked[MAXPLAYERS+1];
 new bool:g_LockedFromWarden[MAXPLAYERS+1];
+new bool:g_HasModel[MAXPLAYERS+1];
 new bool:g_bLateLoad = false;
 new bool:g_Voted[MAXPLAYERS+1] = {false, ...};
 
@@ -397,7 +398,6 @@ public OnPluginStart()
 	AddServerTag2("Jailbreak");
 	
 	MapCheck();	//We want to check the map to see if it's compatible so lets do that now just in case we reload the plugin.
-	CreateTimer(0.5, HookSpawns);
 
 	g_hArray_Pending = CreateArray();	//Create an array and make it easier to use.
 	
@@ -1329,7 +1329,13 @@ public Action:RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	Warden = -1;	//New Warden, lets set it.
 	g_bIsLRInUse = false;	//LR is is not currently in use, lets allow Warden again.
-	CreateTimer(0.5, HookSpawns);
+
+	new ent = -1;
+	while ((ent = FindEntityByClassname(ent, "func_respawnroom")) != -1)
+	{
+		SDKHook(ent, SDKHook_TouchPost, SpawnTouch);
+		SDKHook(ent, SDKHook_StartTouchPost, SpawnTouch);
+	}
 
 	ServerCommand("sm_countdown_enabled 2");	//Messy, I know. Until I convert the countdown plugin into a sub module, this will be here so we know it's on regardless.
 
@@ -1366,27 +1372,14 @@ public Action:RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 		}
 	}
 }
-public Action:HookSpawns(Handle:hTimer)
-{
-	new ent = -1;
-	while ((ent = FindEntityByClassname(ent, "func_respawnroom")) != -1)
-	{
-		SDKUnhook(ent, SDKHook_Touch, SpawnTouch);
-		SDKHook(ent, SDKHook_Touch, SpawnTouch);
-	}
-}
 
-public SpawnTouch(spawn, client)
+public SpawnTouch(entity, client)
 {
-	if (client > MaxClients || client < 1)
+	if(client < 1 || client > MaxClients || !IsPlayerAlive(client))
 	{
 		return;
 	}
-	if (!IsClientInGame(client))
-	{
-		return;
-	}
-	if (GetEntProp(spawn, Prop_Send, "m_iTeamNum") != GetClientTeam(client))
+	if(GetEntProp(entity, Prop_Send, "m_iTeamNum") != GetClientTeam(client))
 	{
 		if (g_IsFreedayActive[client])
 		{
@@ -1416,13 +1409,9 @@ public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadc
 				ChangeClientTeam(i, _:TFTeam_Red);
 				TF2_RespawnPlayer(i);
 				CPrintToChat(i, "%s %t", CLAN_TAG_COLOR, "moved for balance");
-				if (i == Warden && j_WardenModel)
+				if (g_HasModel[i])
 				{
 					RemoveModel(i);
-				}
-				else
-				{
-					SetEntityRenderColor(i, 255, 255, 255, 255);
 				}
 			}
 		}
@@ -2208,16 +2197,16 @@ public Action:BecomeWarden(client, args)
 		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "plugin disabled");
 		return Plugin_Handled;
 	}
-
-	if (!j_Warden)
-	{
-		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "Warden disabled");
-		return Plugin_Handled;
-	}
 	
 	if (!client)
 	{
 		ReplyToCommand(client, "%t","Command is in-game only");
+		return Plugin_Handled;
+	}
+
+	if (!j_Warden)
+	{
+		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "Warden disabled");
 		return Plugin_Handled;
 	}
 	
@@ -2703,21 +2692,23 @@ WardenUnset(client)
 
 public Action:SetModel(client, const String:model[])
 {
-	if (IsValidClient(client) && IsPlayerAlive(client) && client == Warden)
+	if (IsValidClient(client) && IsPlayerAlive(client) && client == Warden && !g_HasModel[client])
 	{
 		SetVariantString(model);
 		AcceptEntityInput(client, "SetCustomModel");
 		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
 		SetWearableAlpha(client, 255);
+		g_HasModel[client] = true;
 	}
 }
 public Action:RemoveModel(client)
 {
-	if (IsValidClient(client))
+	if (IsValidClient(client) && g_HasModel[client])
 	{
 		SetVariantString("");
 		AcceptEntityInput(client, "SetCustomModel");
 		SetWearableAlpha(client, 0);
+		g_HasModel[client] = false;
 	}
 }
 
