@@ -48,10 +48,22 @@
 		"es"		"{darkkhaki} Los controles de las puertas estan actualmente deshabilitados."
 	}
 	
+	"microphone check warden block"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Please verify your microphone in order to become Warden."
+	}
+	
 	"freekillers system disabled"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} The Anti-Freekill system is currently disabled."
+	}
+	
+	"freekiller flagged while void"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has been marked as a freekiller during a void period."
 	}
 	
 	"lr system disabled"
@@ -64,6 +76,18 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Muting is currently disabled on this server. Everyone may talk."
+	}
+	
+	"last guard"
+	{
+		"#format"	""
+		"en"		"One guard left..."
+	}
+	
+	"warden friendly fire manage disabled"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Friendly fire management is currently disabled."
 	}
 
 	"admin deny lr"

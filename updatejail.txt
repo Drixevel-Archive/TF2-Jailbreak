@@ -1,5 +1,15 @@
 Update Notes:
 
+Jailbreak-
+* Freedays for Clients should now list off the names of the clients at the start of the arena round in chat.
+* Moved the last prisoner last request feature to it's own command variable. New variable is 'sm_tf2jail_lastrequest_automatic'.
+* All command variables have been changed to one specific format.
+* Tons of small fixes and changes. Too many to list in terms of value.
+* Updated Anti-Freekilling system to void in certain scenarios such as some Last request rounds and last guard alive, etc.
+* Last request for current round is now saved instead of wiped as soon as it starts.
+* Removed SDKHooks and ClientPreferences checks.
+* Added a microphone type cvar which allows server operators to set if lack of a microphone should block them from blue entirely or just Warden.
+
 ++ 09/08/2013
 
 Jailbreak-
