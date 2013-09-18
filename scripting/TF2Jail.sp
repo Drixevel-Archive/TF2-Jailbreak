@@ -66,7 +66,7 @@
 
 #define PLUGIN_NAME     "[TF2] Jailbreak"
 #define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"
-#define PLUGIN_VERSION  "4.9.3"
+#define PLUGIN_VERSION  "4.9.3a"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"
 
@@ -84,7 +84,7 @@ new Handle:JB_Cvar_Warden = INVALID_HANDLE;
 new Handle:JB_Cvar_WardenAuto = INVALID_HANDLE;
 new Handle:JB_Cvar_WardenModel = INVALID_HANDLE;
 new Handle:JB_Cvar_WardenFF = INVALID_HANDLE;
-new Handle:JB_Cvar_WardenColor = INVALID_HANDLE;
+new Handle:JB_Cvar_WardenLimit = INVALID_HANDLE;
 new Handle:JB_Cvar_Doorcontrol = INVALID_HANDLE;
 new Handle:JB_Cvar_DoorOpenTime = INVALID_HANDLE;
 new Handle:JB_Cvar_RedMute = INVALID_HANDLE;
@@ -94,7 +94,6 @@ new Handle:JB_Cvar_DeadMute = INVALID_HANDLE;
 new Handle:JB_Cvar_MicCheck = INVALID_HANDLE;
 new Handle:JB_Cvar_MicCheckType = INVALID_HANDLE;
 new Handle:JB_Cvar_Rebels = INVALID_HANDLE;
-new Handle:JB_Cvar_RebelColor = INVALID_HANDLE;
 new Handle:JB_Cvar_RebelsTime = INVALID_HANDLE;
 new Handle:JB_Cvar_Crits = INVALID_HANDLE;
 new Handle:JB_Cvar_CritsType = INVALID_HANDLE;
@@ -113,8 +112,11 @@ new Handle:JB_Cvar_Freekillers_Bantime = INVALID_HANDLE;
 new Handle:JB_Cvar_Freekillers_BantimeDC = INVALID_HANDLE;
 new Handle:JB_Cvar_LRS_Enabled = INVALID_HANDLE;
 new Handle:JB_Cvar_LRS_Automatic = INVALID_HANDLE;
-new Handle:JB_Cvar_FreedayColor = INVALID_HANDLE;
 new Handle:JB_Cvar_Freeday_Limit = INVALID_HANDLE;
+
+new Handle:JB_Cvar_Color_Warden = INVALID_HANDLE;
+new Handle:JB_Cvar_Color_Rebel = INVALID_HANDLE;
+new Handle:JB_Cvar_Color_Freeday = INVALID_HANDLE;
 
 new bool:j_Enabled = true;
 new bool:j_Advertise = true;
@@ -126,7 +128,7 @@ new bool:j_Warden = false;
 new bool:j_WardenAuto = false;
 new bool:j_WardenModel = true;
 new bool:j_WardenFF = true;
-new gWardenColor[3];
+new j_WardenLimit = 0;
 new bool:j_DoorControl = true;
 new Float:j_DoorOpenTimer = 60.0;
 new j_RedMute = 2;
@@ -136,7 +138,6 @@ new bool:j_DeadMute = true;
 new bool:j_MicCheck = true;
 new bool:j_MicCheckType = true;
 new bool:j_Rebels = true;
-new gRebelColor[3];
 new Float:j_RebelsTime = 30.0;
 new j_Criticals = 1;
 new j_Criticalstype = 2;
@@ -153,8 +154,11 @@ new j_FreekillersBantime = 60;
 new j_FreekillersBantimeDC = 120;
 new bool:j_LRSEnabled = true;
 new bool:j_LRSAutomatic = true;
-new gFreedayColor[3];
 new j_FreedayLimit = 3;
+
+new gWardenColor[3];
+new gRebelColor[3];
+new gFreedayColor[3];
 
 new bool:e_tf2items;
 new bool:e_tf2attributes;
@@ -198,6 +202,7 @@ new g_Killcount[MAXPLAYERS + 1];
 new Warden = -1;
 new WardenLimit = 0;
 new FreedayLimit = 0;
+new g_HasBeenWarden[MAXPLAYERS + 1];
 
 new Handle:g_hArray_Pending = INVALID_HANDLE;
 new Handle:g_fward_onBecome = INVALID_HANDLE;
@@ -255,7 +260,7 @@ public OnPluginStart()
 	JB_Cvar_WardenAuto = AutoExecConfig_CreateConVar("sm_tf2jail_warden_auto", "1", "Automatically assign a random warden on round start: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_Cvar_WardenModel = AutoExecConfig_CreateConVar("sm_tf2jail_warden_model", "1", "Does Warden have a model: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_Cvar_WardenFF = AutoExecConfig_CreateConVar("sm_tf2jail_warden_friendlyfire", "1", "Allow warden to manage friendly fire: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_WardenColor = AutoExecConfig_CreateConVar("sm_tf2jail_warden_color", "125 150 250", "Color of warden if wardenmodel is off: (0 = off)", FCVAR_PLUGIN);
+	JB_Cvar_WardenLimit = AutoExecConfig_CreateConVar("sm_tf2jail_warden_limit", "3", "Number of allowed wardens per user per map: (1.0 - 12.0) (0.0 = unlimited)", FCVAR_PLUGIN, true, 0.0, true, 12.0);
 	JB_Cvar_Doorcontrol = AutoExecConfig_CreateConVar("sm_tf2jail_door_controls", "1", "Allow Wardens and Admins door control: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_Cvar_DoorOpenTime = AutoExecConfig_CreateConVar("sm_tf2jail_cell_timer", "60", "Time after Arena round start to open doors: (1.0 - 60.0) (0.0 = off)", FCVAR_PLUGIN, true, 0.0, true, 60.0);
 	JB_Cvar_RedMute = AutoExecConfig_CreateConVar("sm_tf2jail_mute_red", "2", "Mute Red team: (2 = mute prisoners alive and all dead, 1 = mute prisoners on round start based on redmute_time, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
@@ -265,7 +270,6 @@ public OnPluginStart()
 	JB_Cvar_MicCheck = AutoExecConfig_CreateConVar("sm_tf2jail_microphonecheck_enable", "1", "Check blue clients for microphone: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_Cvar_MicCheckType = AutoExecConfig_CreateConVar("sm_tf2jail_microphonecheck_type", "1", "Block blue team or warden if no microphone: (1 = Blue, 0 = Warden only)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_Cvar_Rebels = AutoExecConfig_CreateConVar("sm_tf2jail_rebelling_enable", "1", "Enable the Rebel system: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_RebelColor = AutoExecConfig_CreateConVar("sm_tf2jail_rebelling_color", "0 255 0", "Rebel color flags: (0 = off)", FCVAR_PLUGIN);
 	JB_Cvar_RebelsTime = AutoExecConfig_CreateConVar("sm_tf2jail_rebelling_time", "30.0", "Rebel timer: (1.0 - 60.0, 0 = always)", FCVAR_PLUGIN, true, 1.0, true, 60.0);
 	JB_Cvar_Crits = AutoExecConfig_CreateConVar("sm_tf2jail_criticals", "1", "Which team gets crits: (0 = off, 1 = blue, 2 = red, 3 = both)", FCVAR_PLUGIN, true, 0.0, true, 3.0);
 	JB_Cvar_CritsType = AutoExecConfig_CreateConVar("sm_tf2jail_criticals_type", "2", "Type of crits given: (1 = mini, 2 = full)", FCVAR_PLUGIN, true, 1.0, true, 2.0);
@@ -284,8 +288,11 @@ public OnPluginStart()
 	JB_Cvar_Freekillers_BantimeDC = AutoExecConfig_CreateConVar("sm_tf2jail_freekilling_duration_dc", "120", "Time banned if disconnected after timer ends: (0 = permanent)", FCVAR_PLUGIN, true, 0.0);
 	JB_Cvar_LRS_Enabled = AutoExecConfig_CreateConVar("sm_tf2jail_lastrequest_enable", "1", "Status of the LR System: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_Cvar_LRS_Automatic = AutoExecConfig_CreateConVar("sm_tf2jail_lastrequest_automatic", "1", "Automatically grant last request to last prisoner alive: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_Cvar_FreedayColor = AutoExecConfig_CreateConVar("sm_tf2jail_freeday_color", "125 0 0", "Freeday color flags: (0 = off)", FCVAR_PLUGIN);
 	JB_Cvar_Freeday_Limit = AutoExecConfig_CreateConVar("sm_tf2jail_freeday_limit", "3", "Max number of freedays for the lr: (1.0 - 16.0)", FCVAR_PLUGIN, true, 1.0, true, 16.0);
+
+	JB_Cvar_Color_Warden = AutoExecConfig_CreateConVar("sm_tf2jail_color_warden", "125 150 250", "Warden color flags: (0 = off) (Disabled if Warden model enabled)", FCVAR_PLUGIN);
+	JB_Cvar_Color_Rebel = AutoExecConfig_CreateConVar("sm_tf2jail_color_rebel", "0 255 0", "Rebel color flags: (0 = off)", FCVAR_PLUGIN);
+	JB_Cvar_Color_Freeday = AutoExecConfig_CreateConVar("sm_tf2jail_color_freeday", "125 0 0", "Freeday color flags: (0 = off)", FCVAR_PLUGIN);
 
 	AutoExecConfig_ExecuteFile();
 
@@ -309,7 +316,7 @@ public OnPluginStart()
 	HookConVarChange(JB_Cvar_WardenAuto, HandleCvars);
 	HookConVarChange(JB_Cvar_WardenModel, HandleCvars);
 	HookConVarChange(JB_Cvar_WardenFF, HandleCvars);
-	HookConVarChange(JB_Cvar_WardenColor, HandleCvars);
+	HookConVarChange(JB_Cvar_WardenLimit, HandleCvars);
 	HookConVarChange(JB_Cvar_Doorcontrol, HandleCvars);
 	HookConVarChange(JB_Cvar_DoorOpenTime, HandleCvars);
 	HookConVarChange(JB_Cvar_RedMute, HandleCvars);
@@ -319,7 +326,6 @@ public OnPluginStart()
 	HookConVarChange(JB_Cvar_MicCheck, HandleCvars);
 	HookConVarChange(JB_Cvar_MicCheckType, HandleCvars);
 	HookConVarChange(JB_Cvar_Rebels, HandleCvars);
-	HookConVarChange(JB_Cvar_RebelColor, HandleCvars);
 	HookConVarChange(JB_Cvar_RebelsTime, HandleCvars);
 	HookConVarChange(JB_Cvar_Crits, HandleCvars);
 	HookConVarChange(JB_Cvar_CritsType, HandleCvars);
@@ -336,9 +342,12 @@ public OnPluginStart()
 	HookConVarChange(JB_Cvar_Freekillers_BantimeDC, HandleCvars);
 	HookConVarChange(JB_Cvar_LRS_Enabled, HandleCvars);
 	HookConVarChange(JB_Cvar_LRS_Automatic, HandleCvars);
-	HookConVarChange(JB_Cvar_FreedayColor, HandleCvars);
 	HookConVarChange(JB_Cvar_Freeday_Limit, HandleCvars);
 	
+	HookConVarChange(JB_Cvar_Color_Warden, HandleCvars);
+	HookConVarChange(JB_Cvar_Color_Rebel, HandleCvars);
+	HookConVarChange(JB_Cvar_Color_Freeday, HandleCvars);
+
 	HookEvent("player_spawn", PlayerSpawn);
 	HookEvent("player_hurt", PlayerHurt);
 	HookEvent("player_death", PlayerDeath);
@@ -452,15 +461,45 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 
 public OnAllPluginsLoaded()
 {	
-	if (LibraryExists("betherobot"))				e_betherobot = true;
-	if (LibraryExists("tf2items"))					e_tf2items = true;
-	if (LibraryExists("voiceannounce_ex"))			e_voiceannounce_ex = true;
-	if (LibraryExists("filesmanagementinterface"))	e_filemanager = true;
-	if (LibraryExists("tf2attributes"))				e_tf2attributes = true;
-	if (LibraryExists("sourcebans"))				e_sourcebans = true;
-	if (LibraryExists("sourcecomms"))				e_sourcecomms = true;
-	if (LibraryExists("basecomm"))					e_basecomm = true;
-	if (LibraryExists("basebans"))					e_basebans = true;
+	if (LibraryExists("betherobot")) e_betherobot = true;
+	if (LibraryExists("tf2items")) e_tf2items = true;
+	if (LibraryExists("voiceannounce_ex")) e_voiceannounce_ex = true;
+	if (LibraryExists("filesmanagementinterface")) e_filemanager = true;
+	if (LibraryExists("tf2attributes")) e_tf2attributes = true;
+	if (LibraryExists("sourcebans")) e_sourcebans = true;
+	if (LibraryExists("sourcecomms")) e_sourcecomms = true;
+	if (LibraryExists("basecomm")) e_basecomm = true;
+	if (LibraryExists("basebans")) e_basebans = true;
+}
+
+public OnLibraryAdded(const String:name[])
+{
+	if (StrEqual(name, "sourcebans")) e_sourcebans = true;
+	if (StrEqual(name, "sourcecomms")) e_sourcecomms = true;
+	if (StrEqual(name, "basecomm")) e_basecomm = true;
+	if (StrEqual(name, "basebans")) e_basebans = true;
+	if (StrEqual(name, "filesmanagementinterface")) e_filemanager = true;
+	if (StrEqual(name, "voiceannounce_ex")) e_voiceannounce_ex = true;
+	if (StrEqual(name, "betherobot")) e_betherobot = true;
+	if (StrEqual(name, "tf2attributes")) e_tf2attributes = true;
+	if (StrEqual(name, "tf2items")) e_tf2items = true;
+	
+	if (strcmp(name, "SteamTools", false) == 0)	steamtools = true;
+}
+
+public OnLibraryRemoved(const String:name[])
+{
+	if (StrEqual(name, "sourcebans")) e_sourcebans = false;
+	if (StrEqual(name, "basecomm")) e_basecomm = false;
+	if (StrEqual(name, "basebans")) e_basebans = false;
+	if (StrEqual(name, "tf2items"))	e_tf2items = false;
+	if (StrEqual(name, "tf2attributes")) e_tf2attributes = false;
+	if (StrEqual(name, "sourcecomms")) e_sourcecomms = false;
+	if (StrEqual(name, "betherobot")) e_betherobot = false;
+	if (StrEqual(name, "voiceannounce_ex"))	e_voiceannounce_ex = false;
+	if (StrEqual(name, "filesmanagementinterface"))	e_filemanager = false;
+	
+	if (strcmp(name, "SteamTools", false) == 0)	steamtools = false;
 }
 
 public OnPluginEnd()
@@ -492,36 +531,6 @@ stock ConvarsOff()
 	SetConVarInt(FindConVar("tf_scout_air_dash_count"), 1);
 }
 
-public OnLibraryAdded(const String:name[])
-{
-	if (StrEqual(name, "sourcebans"))				e_sourcebans = true;
-	if (StrEqual(name, "sourcecomms"))				e_sourcecomms = true;
-	if (StrEqual(name, "basecomm"))					e_basecomm = true;
-	if (StrEqual(name, "basebans"))					e_basebans = true;
-	if (StrEqual(name, "filesmanagementinterface"))	e_filemanager = true;
-	if (StrEqual(name, "voiceannounce_ex"))			e_voiceannounce_ex = true;
-	if (StrEqual(name, "betherobot"))				e_betherobot = true;
-	if (StrEqual(name, "tf2attributes"))			e_tf2attributes = true;
-	if (StrEqual(name, "tf2items"))					e_tf2items = true;
-	
-	if (strcmp(name, "SteamTools", false) == 0)	steamtools = true;
-}
-
-public OnLibraryRemoved(const String:name[])
-{
-	if (StrEqual(name, "sourcebans"))				e_sourcebans = false;
-	if (StrEqual(name, "basecomm"))					e_basecomm = false;
-	if (StrEqual(name, "basebans"))					e_basebans = false;
-	if (StrEqual(name, "tf2items"))					e_tf2items = false;
-	if (StrEqual(name, "tf2attributes"))			e_tf2attributes = false;
-	if (StrEqual(name, "sourcecomms"))				e_sourcecomms = false;
-	if (StrEqual(name, "betherobot"))				e_betherobot = false;
-	if (StrEqual(name, "voiceannounce_ex"))			e_voiceannounce_ex = false;
-	if (StrEqual(name, "filesmanagementinterface"))	e_filemanager = false;
-	
-	if (strcmp(name, "SteamTools", false) == 0)	steamtools = false;
-}
-
 public OnConfigsExecuted()
 {
 	SetConVarString(JB_Cvar_Version, PLUGIN_VERSION);
@@ -536,7 +545,7 @@ public OnConfigsExecuted()
 	j_WardenAuto = GetConVarBool(JB_Cvar_WardenAuto);
 	j_WardenModel = GetConVarBool(JB_Cvar_WardenModel);
 	j_WardenFF = GetConVarBool(JB_Cvar_WardenFF);
-	//JB_Cvar_WardenColor
+	j_WardenLimit = GetConVarInt(JB_Cvar_WardenLimit);
 	j_DoorControl = GetConVarBool(JB_Cvar_Doorcontrol);
 	j_DoorOpenTimer = GetConVarFloat(JB_Cvar_DoorOpenTime);
 	j_RedMute = GetConVarInt(JB_Cvar_RedMute);
@@ -546,7 +555,6 @@ public OnConfigsExecuted()
 	j_MicCheck = GetConVarBool(JB_Cvar_MicCheck);
 	j_MicCheckType = GetConVarBool(JB_Cvar_MicCheckType);
 	j_Rebels = GetConVarBool(JB_Cvar_Rebels);
-	//JB_Cvar_RebelColor
 	j_RebelsTime = GetConVarFloat(JB_Cvar_RebelsTime);
 	j_Criticals = GetConVarInt(JB_Cvar_Crits);
 	j_Criticalstype = GetConVarInt(JB_Cvar_CritsType);
@@ -563,7 +571,6 @@ public OnConfigsExecuted()
 	j_FreekillersBantimeDC = GetConVarInt(JB_Cvar_Freekillers_BantimeDC);
 	j_LRSEnabled = GetConVarBool(JB_Cvar_LRS_Enabled);
 	j_LRSAutomatic = GetConVarBool(JB_Cvar_LRS_Automatic);
-	//JB_Cvar_FreedayColor
 	j_FreedayLimit = GetConVarInt(JB_Cvar_Freeday_Limit);
 
 	if (e_filemanager && e_tf2attributes && e_tf2items)
@@ -808,9 +815,9 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 			j_WardenFF = false;
 		}
 	}
-	else if (cvar == JB_Cvar_WardenColor)
+	else if (cvar == JB_Cvar_WardenLimit)
 	{
-		gWardenColor = SplitColorString(newValue);
+		j_WardenLimit = iNewValue;
 	}
 	else if (cvar == JB_Cvar_Doorcontrol)
 	{
@@ -890,10 +897,6 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 				}
 			}
 		}
-	}
-	else if (cvar == JB_Cvar_RebelColor)
-	{
-		gRebelColor = SplitColorString(newValue);
 	}
 	else if (cvar == JB_Cvar_RebelsTime)
 	{
@@ -980,13 +983,23 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 			j_LRSAutomatic = false;
 		}
 	}
-	else if (cvar == JB_Cvar_FreedayColor)
-	{
-		gFreedayColor = SplitColorString(newValue);
-	}
 	else if (cvar == JB_Cvar_Freeday_Limit)
 	{
 		j_FreedayLimit = iNewValue;
+	}
+	
+	//Color Console Variables
+	if (cvar == JB_Cvar_Color_Warden)
+	{
+		gWardenColor = SplitColorString(newValue);
+	}
+	else if (cvar == JB_Cvar_Color_Rebel)
+	{
+		gRebelColor = SplitColorString(newValue);
+	}
+	else if (cvar == JB_Cvar_Color_Freeday)
+	{
+		gFreedayColor = SplitColorString(newValue);
 	}
 }
 
@@ -1008,6 +1021,7 @@ public OnMapStart()
 		if (IsClientConnected(i))
 		{
 			OnClientConnected(i);
+			g_HasBeenWarden[i] = 0;
 		}
 	}
 	if (j_Enabled && j_Advertise)	g_adverttimer = CreateTimer(120.0, TimerAdvertisement, _, TIMER_REPEAT);
@@ -1018,6 +1032,7 @@ public OnMapStart()
 	g_Votes = 0;
 	g_VotesNeeded = 0;
 	WardenLimit = 0;
+	
 	
 	MapCheck();
 }
@@ -1116,6 +1131,7 @@ public OnClientDisconnect(client)
 	g_IsFreeday[client] = false;
 	g_Killcount[client] = 0;
 	g_FirstKill[client] = 0;
+	g_HasBeenWarden[client] = 0;
 }
 
 public Action:PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
@@ -1440,7 +1456,7 @@ public SpawnTouch(entity, client)
 public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (!j_Enabled) return Plugin_Continue;
-
+	
 	g_bIsWardenLocked = false;
 
 	new Float:Ratio;
@@ -2284,6 +2300,12 @@ public Action:BecomeWarden(client, args)
 	if (!j_Warden)
 	{
 		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "Warden disabled");
+		return Plugin_Handled;
+	}
+	
+	if (g_HasBeenWarden[client] >= j_WardenLimit && j_WardenLimit != 0.0)
+	{	
+		CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "warden limit reached", client, j_WardenLimit);
 		return Plugin_Handled;
 	}
 	

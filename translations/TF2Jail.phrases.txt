@@ -268,6 +268,12 @@
 		"es"		"{darkkhaki} Tu eres el nuevo guardia! Escribe !wlist en el chat para ver la lista de comandos disponibles"
 	}
 	
+	"warden limit reached"
+	{
+		"#format"	"{1:N},{2:d}"
+		"en"		"{darkkhaki} {1} has reached his limit for Warden this map which is set to {2} on the server."
+	}
+	
 	"last request invalid client"
 	{
 		"#format"	""
@@ -490,40 +496,6 @@
 		"#format"	""
 		"en"		"{darkkhaki} Please verifiy that you have a microphone by talking in chat or enabling voice input."
 		"es"		"{darkkhaki} Por favor compruebe que tiene un microfono hablando en el chat o habilitando la entrada de voz."	
-	}
-	
-	"bans add user usage"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Use: sm_ban_add <#userid|name>"
-	}
-	
-	"bans add user"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} %N [%s] has been added to the the Guards blacklist."
-		"es"		"{darkkhaki} %N [%s] ha sido agregado a la lista negra de guardias."
-	}
-	
-	"bans reloaded"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} %d SteamIDs have been reloaded from the list."
-		"es"		"{darkkhaki} %d La lista de SteamIDs ha sido recargada."
-	}
-	
-	"bans file failed"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} Failed to open %s for writing."
-		"es"		"{darkkhaki} Fallo al abrir %s por escribir."
-	}
-
-	"banned from guards"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} You have been banned from Guards team! Contact an admin to dispute the ban."
-		"es"		"{darkkhaki} Usted ha sido expulsado del equipo de guardias! Contacte al administrador para impugnar la penalizacion."
 	}
 
 	"muted player"

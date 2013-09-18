@@ -9,6 +9,9 @@ Jailbreak-
 * Last request for current round is now saved instead of wiped as soon as it starts.
 * Removed SDKHooks and ClientPreferences checks.
 * Added a microphone type cvar which allows server operators to set if lack of a microphone should block them from blue entirely or just Warden.
+* Added a new console variable which allows server operators to set a limit on the amount of Wardens available per map. 'sm_tf2jail_warden_limit'
+* Fixed Warden being locked when the round ends and until the round fully starts on arena.
+* Fixed a few small errors.
 
 ++ 09/08/2013
 
