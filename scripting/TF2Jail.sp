@@ -17,7 +17,6 @@
 	**
 	 * =============================================================================
 	 * TF2 Jailbreak Plugin Set (TF2Jail)
-	 * Displays and searches SourceMod commands and descriptions.
 	 *
 	 * Created and developed by Keith Warren (Jack of Designs).
 	 * =============================================================================
@@ -48,6 +47,7 @@
 #include <morecolors>
 #include <smlib>
 #include <autoexecconfig>
+#include <TF2Jail>
 #undef REQUIRE_EXTENSIONS
 #tryinclude <clientprefs>
 #tryinclude <tf2items>
@@ -66,7 +66,7 @@
 
 #define PLUGIN_NAME     "[TF2] Jailbreak"
 #define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"
-#define PLUGIN_VERSION  "4.9.3a"
+#define PLUGIN_VERSION  "4.9.4"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"
 
@@ -83,6 +83,7 @@ new Handle:JB_Cvar_RedMelee = INVALID_HANDLE;
 new Handle:JB_Cvar_Warden = INVALID_HANDLE;
 new Handle:JB_Cvar_WardenAuto = INVALID_HANDLE;
 new Handle:JB_Cvar_WardenModel = INVALID_HANDLE;
+new Handle:JB_Cvar_WardenSoldier = INVALID_HANDLE;
 new Handle:JB_Cvar_WardenFF = INVALID_HANDLE;
 new Handle:JB_Cvar_WardenLimit = INVALID_HANDLE;
 new Handle:JB_Cvar_Doorcontrol = INVALID_HANDLE;
@@ -127,6 +128,7 @@ new bool:j_RedMelee = true;
 new bool:j_Warden = false;
 new bool:j_WardenAuto = false;
 new bool:j_WardenModel = true;
+new bool:j_WardenForceSoldier = true;
 new bool:j_WardenFF = true;
 new j_WardenLimit = 0;
 new bool:j_DoorControl = true;
@@ -244,8 +246,8 @@ public Plugin:myinfo =
 public OnPluginStart()
 {
 	LogMessage("%s Jailbreak is now loading...", CLAN_TAG);
-	LoadTranslations("common.phrases");
-	LoadTranslations("TF2Jail.phrases");
+	File_LoadTranslations("common.phrases");
+	File_LoadTranslations("TF2Jail.phrases");
 	
 	AutoExecConfig_SetFile("TF2Jail");
 
@@ -259,6 +261,7 @@ public OnPluginStart()
 	JB_Cvar_Warden = AutoExecConfig_CreateConVar("sm_tf2jail_warden_enable", "1", "Allow Wardens: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_Cvar_WardenAuto = AutoExecConfig_CreateConVar("sm_tf2jail_warden_auto", "1", "Automatically assign a random warden on round start: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_Cvar_WardenModel = AutoExecConfig_CreateConVar("sm_tf2jail_warden_model", "1", "Does Warden have a model: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_Cvar_WardenSoldier = AutoExecConfig_CreateConVar("sm_tf2jail_warden_forcesoldier", "1", "Force Warden to be Soldier class: (1 = yes, 0 = no)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_Cvar_WardenFF = AutoExecConfig_CreateConVar("sm_tf2jail_warden_friendlyfire", "1", "Allow warden to manage friendly fire: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_Cvar_WardenLimit = AutoExecConfig_CreateConVar("sm_tf2jail_warden_limit", "3", "Number of allowed wardens per user per map: (1.0 - 12.0) (0.0 = unlimited)", FCVAR_PLUGIN, true, 0.0, true, 12.0);
 	JB_Cvar_Doorcontrol = AutoExecConfig_CreateConVar("sm_tf2jail_door_controls", "1", "Allow Wardens and Admins door control: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
@@ -315,6 +318,7 @@ public OnPluginStart()
 	HookConVarChange(JB_Cvar_Warden, HandleCvars);
 	HookConVarChange(JB_Cvar_WardenAuto, HandleCvars);
 	HookConVarChange(JB_Cvar_WardenModel, HandleCvars);
+	HookConVarChange(JB_Cvar_WardenSoldier, HandleCvars);
 	HookConVarChange(JB_Cvar_WardenFF, HandleCvars);
 	HookConVarChange(JB_Cvar_WardenLimit, HandleCvars);
 	HookConVarChange(JB_Cvar_Doorcontrol, HandleCvars);
@@ -544,6 +548,7 @@ public OnConfigsExecuted()
 	j_Warden = GetConVarBool(JB_Cvar_Warden);
 	j_WardenAuto = GetConVarBool(JB_Cvar_WardenAuto);
 	j_WardenModel = GetConVarBool(JB_Cvar_WardenModel);
+	j_WardenForceSoldier = GetConVarBool(JB_Cvar_WardenSoldier);
 	j_WardenFF = GetConVarBool(JB_Cvar_WardenFF);
 	j_WardenLimit = GetConVarInt(JB_Cvar_WardenLimit);
 	j_DoorControl = GetConVarBool(JB_Cvar_Doorcontrol);
@@ -623,10 +628,7 @@ public OnConfigsExecuted()
 
 public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[])
 {
-	if (StrEqual(oldValue, newValue, true))
-	{
-		return;
-	}
+	if (StrEqual(oldValue, newValue, true)) return;
 	
 	new iNewValue = StringToInt(newValue);
 	
@@ -634,6 +636,7 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		if (iNewValue == 1)
 		{
+			j_Enabled = true;
 			CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "plugin enabled");
 			HookEvent("player_spawn", PlayerSpawn);
 			HookEvent("player_hurt", PlayerHurt);
@@ -642,7 +645,6 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 			HookEvent("arena_round_start", ArenaRoundStart);
 			HookEvent("teamplay_round_win", RoundEnd);
 			AddCommandListener(InterceptBuild, "build");
-			j_Enabled = true;
 			if (steamtools)
 			{
 				decl String:gameDesc[64];
@@ -651,14 +653,12 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 			}
 			for (new i = 1; i <= MaxClients; i++)
 			{
-				if (i == Warden && j_WardenModel)
-				{
-					SetModel(i, "models/jailbreak/warden/warden_v2.mdl");
-				}
+				if (i == Warden && j_WardenModel) SetModel(i, "models/jailbreak/warden/warden_v2.mdl");
 			}
 		}
 		else if (iNewValue == 0)
 		{
+			j_Enabled = false;
 			CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "plugin disabled");
 			UnhookEvent("player_spawn", PlayerSpawn);
 			UnhookEvent("player_hurt", PlayerHurt);
@@ -667,14 +667,10 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 			UnhookEvent("arena_round_start", ArenaRoundStart);
 			UnhookEvent("teamplay_round_win", RoundEnd);
 			RemoveCommandListener(InterceptBuild, "build");
-			j_Enabled = false;
 			if (steamtools) Steam_SetGameDescription("Team Fortress");
 			for (new i = 1; i <= MaxClients; i++)
 			{
-				if (i == Warden && j_WardenModel)
-				{
-					RemoveModel(i);
-				}
+				if (i == Warden && j_WardenModel) RemoveModel(i);
 				if (g_IsRebel[i] && j_Rebels)
 				{
 					SetEntityRenderColor(i, 255, 255, 255, 255);
@@ -683,26 +679,22 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 			}
 		}
 	}
-	else if (cvar == JB_Cvar_Advertise)
+	
+	if (cvar == JB_Cvar_Advertise)
 	{
 		if (iNewValue == 1)
 		{
 			j_Advertise = true;
-			if (g_adverttimer == INVALID_HANDLE)
-			{
-				g_adverttimer = CreateTimer(120.0, TimerAdvertisement, _, TIMER_REPEAT);
-			}
+			if (g_adverttimer == INVALID_HANDLE) g_adverttimer = CreateTimer(120.0, TimerAdvertisement, _, TIMER_REPEAT);
 		}
 		else if (iNewValue == 0)
 		{
 			j_Advertise = false;
-			if (g_adverttimer != INVALID_HANDLE)
-			{
-				ClearTimer(g_adverttimer);
-			}
+			if (g_adverttimer != INVALID_HANDLE) ClearTimer(g_adverttimer);
 		}
 	}
-	else if (cvar == JB_Cvar_Cvars)
+	
+	if (cvar == JB_Cvar_Cvars)
 	{
 		if (iNewValue == 1)
 		{
@@ -715,32 +707,23 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 			ConvarsOff();
 		}
 	}
-	else if (cvar == JB_Cvar_Balance)
+	
+	if (cvar == JB_Cvar_Balance)
 	{
-		if (iNewValue == 1)
-		{
-			j_Balance = true;
-		}
-		else if (iNewValue == 0)
-		{
-			j_Balance = false;
-		}
+		if (iNewValue == 1) j_Balance = true;
+		else if (iNewValue == 0) j_Balance = false;
 	}
-	else if (cvar == JB_Cvar_BalanceRatio)
-	{
-		j_BalanceRatio = StringToFloat(newValue);
-	}
-	else if (cvar == JB_Cvar_RedMelee)
+	
+	if (cvar == JB_Cvar_BalanceRatio) j_BalanceRatio = StringToFloat(newValue);
+	
+	if (cvar == JB_Cvar_RedMelee)
 	{
 		if (iNewValue == 1)
 		{
 			j_RedMelee = true;
 			for (new i = 1; i <= MaxClients; i++)
 			{
-				if (IsValidClient(i) && GetClientTeam(i) == _:TFTeam_Red && IsPlayerAlive(i))
-				{
-					RedSpawnStrip(i);
-				}
+				if (IsValidClient(i) && GetClientTeam(i) == _:TFTeam_Red && IsPlayerAlive(i)) RedSpawnStrip(i);
 			}
 		}
 		else if (iNewValue == 0)
@@ -748,36 +731,24 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 			j_RedMelee = false;
 			for (new i = 1; i <= MaxClients; i++)
 			{
-				if (IsValidClient(i) && GetClientTeam(i) == _:TFTeam_Red && IsPlayerAlive(i))
-				{
-					TF2_RegeneratePlayer(i);
-				}
+				if (IsValidClient(i) && GetClientTeam(i) == _:TFTeam_Red && IsPlayerAlive(i)) TF2_RegeneratePlayer(i);
 			}
 		}
 	}
-	else if (cvar == JB_Cvar_Warden)
+	
+	if (cvar == JB_Cvar_Warden)
 	{
-		if (iNewValue == 1)
-		{
-			j_Warden = true;
-		}
-		else if (iNewValue == 0)
-		{
-			j_Warden = false;
-		}
+		if (iNewValue == 1) j_Warden = true;
+		else if (iNewValue == 0) j_Warden = false;
 	}
-	else if (cvar == JB_Cvar_WardenAuto)
+	
+	if (cvar == JB_Cvar_WardenAuto)
 	{
-		if (iNewValue == 1)
-		{
-			j_WardenAuto = true;
-		}
-		else if (iNewValue == 0)
-		{
-			j_WardenAuto = false;
-		}
+		if (iNewValue == 1) j_WardenAuto = true;
+		else if (iNewValue == 0) j_WardenAuto = false;
 	}
-	else if (cvar == JB_Cvar_WardenModel)
+	
+	if (cvar == JB_Cvar_WardenModel)
 	{
 		if (iNewValue == 1)
 		{
@@ -804,87 +775,53 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 			}
 		}
 	}
-	else if (cvar == JB_Cvar_WardenFF)
+	
+	if (cvar == JB_Cvar_WardenSoldier)
 	{
-		if (iNewValue == 1)
-		{
-			j_WardenFF = true;
-		}
-		else if (iNewValue == 0)
-		{
-			j_WardenFF = false;
-		}
+		if (iNewValue == 1) j_WardenForceSoldier = true;
+		else if (iNewValue == 0) j_WardenForceSoldier = false;
 	}
-	else if (cvar == JB_Cvar_WardenLimit)
+	
+	if (cvar == JB_Cvar_WardenFF)
 	{
-		j_WardenLimit = iNewValue;
+		if (iNewValue == 1) j_WardenFF = true;
+		else if (iNewValue == 0) j_WardenFF = false;
 	}
-	else if (cvar == JB_Cvar_Doorcontrol)
+	
+	if (cvar == JB_Cvar_WardenLimit) j_WardenLimit = iNewValue;
+	
+	if (cvar == JB_Cvar_Doorcontrol)
 	{
-		if (iNewValue == 1)
-		{
-			j_DoorControl = false;
-		}
-		else if (iNewValue == 0)
-		{
-			j_DoorControl = true;
-		}
+		if (iNewValue == 1) j_DoorControl = false;
+		else if (iNewValue == 0)j_DoorControl = true;
 	}
-	else if (cvar == JB_Cvar_DoorOpenTime)
+	
+	if (cvar == JB_Cvar_DoorOpenTime) j_DoorOpenTimer = StringToFloat(newValue);
+	if (cvar == JB_Cvar_RedMute) j_RedMute = iNewValue;
+	if (cvar == JB_Cvar_RedMuteTime) j_RedMuteTime = StringToFloat(newValue);
+	if (cvar == JB_Cvar_BlueMute) j_BlueMute = iNewValue;
+	
+	if (cvar == JB_Cvar_DeadMute)
 	{
-		j_DoorOpenTimer = StringToFloat(newValue);
+		if (iNewValue == 1) j_DeadMute = true;
+		else if (iNewValue == 0) j_DeadMute = false;
 	}
-	else if (cvar == JB_Cvar_RedMute)
+	
+	if (cvar == JB_Cvar_MicCheck)
 	{
-		j_RedMute = iNewValue;
+		if (iNewValue == 1) j_MicCheck = true;
+		else if (iNewValue == 0) j_MicCheck = false;
 	}
-	else if (cvar == JB_Cvar_RedMuteTime)
+	
+	if (cvar == JB_Cvar_MicCheck)
 	{
-		j_RedMuteTime = StringToFloat(newValue);
+		if (iNewValue == 1) j_MicCheckType = true;
+		else if (iNewValue == 0) j_MicCheckType = false;
 	}
-	else if (cvar == JB_Cvar_BlueMute)
+	
+	if (cvar == JB_Cvar_Rebels)
 	{
-		j_BlueMute = iNewValue;
-	}
-	else if (cvar == JB_Cvar_DeadMute)
-	{
-		if (iNewValue == 1)
-		{
-			j_DeadMute = true;
-		}
-		else if (iNewValue == 0)
-		{
-			j_DeadMute = false;
-		}
-	}
-	else if (cvar == JB_Cvar_MicCheck)
-	{
-		if (iNewValue == 1)
-		{
-			j_MicCheck = true;
-		}
-		else if (iNewValue == 0)
-		{
-			j_MicCheck = false;
-		}
-	}
-	else if (cvar == JB_Cvar_MicCheck)
-	{
-		if (iNewValue == 1)
-		{
-			j_MicCheckType = true;
-		}
-		else if (iNewValue == 0)
-		{
-			j_MicCheckType = false;
-		}
-	}
-	else if (cvar == JB_Cvar_Rebels)
-	{
-		if (iNewValue == 1)
-		{
-			j_Rebels = true;
-		}
+		if (iNewValue == 1) j_Rebels = true;
 		else if (iNewValue == 0)
 		{
 			j_Rebels = false;
@@ -898,119 +835,45 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 			}
 		}
 	}
-	else if (cvar == JB_Cvar_RebelsTime)
+	
+	if (cvar == JB_Cvar_RebelsTime) j_RebelsTime = StringToFloat(newValue);
+	if (cvar == JB_Cvar_Crits) j_Criticals = iNewValue;
+	if (cvar == JB_Cvar_CritsType) j_Criticalstype = iNewValue;
+	if (cvar == JB_Cvar_VoteNeeded) j_WVotesNeeded = StringToFloat(newValue);
+	if (cvar == JB_Cvar_VoteMinPlayers) j_WVotesMinPlayers = iNewValue;
+	if (cvar == JB_Cvar_VotePostAction) j_WVotesPostAction = iNewValue;
+	if (cvar == JB_Cvar_VotePassedLimit) j_WVotesPassedLimit = iNewValue;
+	
+	if (cvar == JB_Cvar_Freekillers)
 	{
-		j_RebelsTime = StringToFloat(newValue);
-	}
-	else if (cvar == JB_Cvar_Crits)
-	{
-		j_Criticals = iNewValue;
-	}
-	else if (cvar == JB_Cvar_CritsType)
-	{
-		j_Criticalstype = iNewValue;
-	}
-	else if (cvar == JB_Cvar_VoteNeeded)
-	{
-		j_WVotesNeeded = StringToFloat(newValue);
-	}
-	else if (cvar == JB_Cvar_VoteMinPlayers)
-	{
-		j_WVotesMinPlayers = iNewValue;
-	}
-	else if (cvar == JB_Cvar_VotePostAction)
-	{
-		j_WVotesPostAction = iNewValue;
-	}
-	else if (cvar == JB_Cvar_VotePassedLimit)
-	{
-		j_WVotesPassedLimit = iNewValue;
-	}
-	else if (cvar == JB_Cvar_Freekillers)
-	{
-		if (iNewValue == 1)
-		{
-			j_Freekillers = true;
-		}
-		else if (iNewValue == 0)
-		{
-			j_Freekillers = false;
-		}
-	}
-	else if (cvar == JB_Cvar_Freekillers_Time)
-	{
-		j_FreekillersTime = StringToFloat(newValue);
-	}
-	else if (cvar == JB_Cvar_Freekillers_Kills)
-	{
-		j_FreekillersKills = iNewValue;
-	}
-	else if (cvar == JB_Cvar_Freekillers_Wave)
-	{
-		j_FreekillersWave = StringToFloat(newValue);
-	}
-	else if (cvar == JB_Cvar_Freekillers_Action)
-	{
-		j_FreekillersAction = iNewValue;
-	}
-	else if (cvar == JB_Cvar_Freekillers_Bantime)
-	{
-		j_FreekillersBantime = iNewValue;
-	}
-	else if (cvar == JB_Cvar_Freekillers_BantimeDC)
-	{
-		j_FreekillersBantimeDC = iNewValue;
-	}
-	else if (cvar == JB_Cvar_LRS_Enabled)
-	{
-		if (iNewValue == 1)
-		{
-			j_LRSEnabled = true;
-		}
-		else if (iNewValue == 0)
-		{
-			j_LRSEnabled = false;
-		}
-	}
-	else if (cvar == JB_Cvar_LRS_Automatic)
-	{
-		if (iNewValue == 1)
-		{
-			j_LRSAutomatic = true;
-		}
-		else if (iNewValue == 0)
-		{
-			j_LRSAutomatic = false;
-		}
-	}
-	else if (cvar == JB_Cvar_Freeday_Limit)
-	{
-		j_FreedayLimit = iNewValue;
+		if (iNewValue == 1) j_Freekillers = true;
+		else if (iNewValue == 0) j_Freekillers = false;
 	}
 	
-	//Color Console Variables
-	if (cvar == JB_Cvar_Color_Warden)
+	if (cvar == JB_Cvar_Freekillers_Time) j_FreekillersTime = StringToFloat(newValue);
+	if (cvar == JB_Cvar_Freekillers_Kills) j_FreekillersKills = iNewValue;
+	if (cvar == JB_Cvar_Freekillers_Wave) j_FreekillersWave = StringToFloat(newValue);
+	if (cvar == JB_Cvar_Freekillers_Action) j_FreekillersAction = iNewValue;
+	if (cvar == JB_Cvar_Freekillers_Bantime) j_FreekillersBantime = iNewValue;
+	if (cvar == JB_Cvar_Freekillers_BantimeDC) j_FreekillersBantimeDC = iNewValue;
+	
+	if (cvar == JB_Cvar_LRS_Enabled)
 	{
-		gWardenColor = SplitColorString(newValue);
+		if (iNewValue == 1) j_LRSEnabled = true;
+		else if (iNewValue == 0) j_LRSEnabled = false;
 	}
-	else if (cvar == JB_Cvar_Color_Rebel)
+	
+	if (cvar == JB_Cvar_LRS_Automatic)
 	{
-		gRebelColor = SplitColorString(newValue);
+		if (iNewValue == 1) j_LRSAutomatic = true;
+		else if (iNewValue == 0) j_LRSAutomatic = false;
 	}
-	else if (cvar == JB_Cvar_Color_Freeday)
-	{
-		gFreedayColor = SplitColorString(newValue);
-	}
-}
+	
+	if (cvar == JB_Cvar_Freeday_Limit) j_FreedayLimit = iNewValue;
 
-SplitColorString(const String:colors[])
-{
-	decl _iColors[3], String:_sBuffer[3][4];
-	ExplodeString(colors, " ", _sBuffer, 3, 4);
-	for (new i = 0; i <= 2; i++)
-	_iColors[i] = StringToInt(_sBuffer[i]);
-	
-	return _iColors;
+	if (cvar == JB_Cvar_Color_Warden) gWardenColor = SplitColorString(newValue);
+	if (cvar == JB_Cvar_Color_Rebel) gRebelColor = SplitColorString(newValue);
+	if (cvar == JB_Cvar_Color_Freeday) gFreedayColor = SplitColorString(newValue);
 }
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -1027,14 +890,14 @@ public OnMapStart()
 	if (j_Enabled && j_Advertise)	g_adverttimer = CreateTimer(120.0, TimerAdvertisement, _, TIMER_REPEAT);
 	
 	g_1stRoundFreeday = true;
-
 	g_Voters = 0;
 	g_Votes = 0;
 	g_VotesNeeded = 0;
 	WardenLimit = 0;
-	
-	
+
 	MapCheck();
+	
+	return;
 }
 
 public OnMapEnd()
@@ -1050,7 +913,7 @@ public OnMapEnd()
 		}
 	}
 
-	if (j_Cvars)	ConvarsOff();
+	if (j_Cvars) ConvarsOff();
 	if (steamtools)	Steam_SetGameDescription("Team Fortress");
 
 	g_IsMapCompatible = false;
@@ -1058,19 +921,17 @@ public OnMapEnd()
 	ClearTimer(g_adverttimer);
 	
 	ResetVotes();
+	
+	return;
 }
 
-public Action:TimerAdvertisement (Handle:hTimer, any:client)
-{
-	CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "plugin advertisement");
-}
+public Action:TimerAdvertisement (Handle:hTimer, any:client) CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "plugin advertisement");
 
 public OnClientConnected(client)
 {
 	if (IsFakeClient(client)) return;
 	
 	g_Voted[client] = false;
-
 	g_Voters++;
 	g_VotesNeeded = RoundToFloor(float(g_Voters) * j_WVotesNeeded);
 	
@@ -1087,33 +948,31 @@ public OnClientPutInServer(client)
 	g_IsFreekiller[client] = false;
 	g_HasTalked[client] = false;
 	g_LockedFromWarden[client] = false;
+	
+	return;
 }
 
 public OnClientPostAdminCheck(client)
 {
-	if (j_Enabled)	CreateTimer(4.0, Timer_Welcome, client, TIMER_FLAG_NO_MAPCHANGE);
+	if (j_Enabled) CreateTimer(4.0, Timer_Welcome, client, TIMER_FLAG_NO_MAPCHANGE);
+	
+	return;
 }
 
-public Action:Timer_Welcome(Handle:hTimer, any:client)
-{
-	if (IsValidClient(client))	CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "welcome message");
-}
+public Action:Timer_Welcome(Handle:hTimer, any:client) if (IsValidClient(client)) CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "welcome message");
 
 public OnClientDisconnect(client)
 {
 	if (IsFakeClient(client)) return;
 	
-	if (g_Voted[client])	g_Votes--;
+	if (g_Voted[client]) g_Votes--;
 	g_Voters--;
 
 	g_VotesNeeded = RoundToFloor(float(g_Voters) * j_WVotesNeeded);
 	
 	if (g_Votes && g_Voters && g_Votes >= g_VotesNeeded )
 	{
-		if (j_WVotesPostAction == 1)
-		{
-			return;
-		}
+		if (j_WVotesPostAction == 1) return;
 		FireWardenCall();
 	}
 
@@ -1132,6 +991,8 @@ public OnClientDisconnect(client)
 	g_Killcount[client] = 0;
 	g_FirstKill[client] = 0;
 	g_HasBeenWarden[client] = 0;
+	
+	return;
 }
 
 public Action:PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
@@ -1162,14 +1023,10 @@ public Action:PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 			SetEntityFlags(client, notarget);
 
 			new ent = -1;
-			while ((ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1)
-			{
-				AcceptEntityInput(ent, "kill");
-			}
-			if (TF2_GetPlayerClass(client) == TFClass_Spy && TF2_IsPlayerInCondition(client, TFCond_Cloaked))
-			{
-				TF2_RemoveCondition(client, TFCond_Cloaked);
-			}
+			while ((ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1) AcceptEntityInput(ent, "kill");
+
+			if (TF2_GetPlayerClass(client) == TFClass_Spy && TF2_IsPlayerInCondition(client, TFCond_Cloaked)) TF2_RemoveCondition(client, TFCond_Cloaked);
+
 			if (j_RedMute != 0) MutePlayer(client);
 			if (g_IsFreeday[client]) GiveFreeday(client);
 			if (j_RedMelee) CreateTimer(0.1, StripWeaponsReds, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -1194,15 +1051,12 @@ public Action:PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 	return Plugin_Continue;
 }
 
-public Action:StripWeaponsReds(Handle:hTimer, any:client)
-{
-	RedSpawnStrip(client);
-}
+public Action:StripWeaponsReds(Handle:hTimer, any:client) RedSpawnStrip(client);
 
 RedSpawnStrip(client)
 {
 	new TFClassType:class = TF2_GetPlayerClass(client);
-	new index = -1;
+
 	switch(class)
 	{
 	case TFClass_DemoMan:
@@ -1266,6 +1120,8 @@ RedSpawnStrip(client)
 			SetAmmo(client, 1, 0, client);
 		}
 	}
+	
+	new index = -1;
 	new primary = GetPlayerWeaponSlot(client, TFWeaponSlot_Primary);
 	if (primary > MaxClients && IsValidEdict(primary))
 	{
@@ -1275,6 +1131,7 @@ RedSpawnStrip(client)
 		case 56, 1005: SetClip(client, 0, 0, client);
 		}
 	}
+
 	TF2_SwitchtoSlot(client, TFWeaponSlot_Melee);
 	TF2_RemoveWeaponSlot(client, 3);
 	TF2_RemoveWeaponSlot(client, 4);
@@ -1282,42 +1139,20 @@ RedSpawnStrip(client)
 	CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "stripped weapons and ammo");
 }
 
-stock TF2_SwitchtoSlot(client, slot)
-{
-	if (slot >= 0 && slot <= 5 && IsValidClient(client) && IsPlayerAlive(client))
-	{
-		decl String:classname[64];
-		new wep = GetPlayerWeaponSlot(client, slot);
-		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, classname, sizeof(classname)))
-		{
-			FakeClientCommandEx(client, "use %s", classname);
-			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
-		}
-	}
-}
-
 public Action:PlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	new client_attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 
-	if (!j_Enabled || !IsValidClient(client) || !IsValidClient(client_attacker))
-	{
-		return Plugin_Continue;
-	}
+	if (!j_Enabled || !IsValidClient(client) || !IsValidClient(client_attacker)) return Plugin_Continue;
 
 	if (client_attacker != client)
 	{
-		if (g_IsFreedayActive[client_attacker])
-		{
-			RemoveFreeday(client_attacker);
-		}
+		if (g_IsFreedayActive[client_attacker]) RemoveFreeday(client_attacker);
+
 		if (j_Rebels)
 		{
-			if (GetClientTeam(client_attacker) == _:TFTeam_Red && GetClientTeam(client) == _:TFTeam_Blue && !g_IsRebel[client_attacker])
-			{
-				MarkRebel(client_attacker);
-			}
+			if (GetClientTeam(client_attacker) == _:TFTeam_Red && GetClientTeam(client) == _:TFTeam_Blue && !g_IsRebel[client_attacker]) MarkRebel(client_attacker);
 		}
 	}
 	return Plugin_Continue;
@@ -1329,10 +1164,7 @@ public Action:PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 	new client_killer = GetClientOfUserId(GetEventInt(event, "attacker"));
 	new time = GetTime();
 	
-	if (!j_Enabled || !IsValidClient(client) || !IsValidClient(client_killer))
-	{
-		return Plugin_Continue;
-	}
+	if (!j_Enabled || !IsValidClient(client) || !IsValidClient(client_killer)) return Plugin_Continue;
 
 	if (j_Freekillers)
 	{
@@ -1342,14 +1174,8 @@ public Action:PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 			{
 				if (++g_Killcount[client_killer] == j_FreekillersKills)
 				{
-					if (!g_VoidFreekills)
-					{
-						MarkFreekiller(client_killer);
-					}
-					else
-					{
-						CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "freekiller flagged while void", client_killer);
-					}
+					if (!g_VoidFreekills) MarkFreekiller(client_killer);
+					else CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "freekiller flagged while void", client_killer);
 				}
 			}
 			else
@@ -1360,15 +1186,6 @@ public Action:PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 		}
 	}
 	
-	if (client == Warden)
-	{
-		WardenUnset(Warden);
-		PrintCenterTextAll("%t", "warden killed", Warden);
-	}
-
-	if (j_DeadMute) MutePlayer(client);
-	if (g_IsFreedayActive[client]) RemoveFreeday(client);
-
 	if (j_LRSAutomatic)
 	{
 		new lastprisoner = Team_GetClientCount(_:TFTeam_Red, CLIENTFILTER_ALIVE);
@@ -1381,12 +1198,21 @@ public Action:PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 		}
 	}
 	
-	new lastguard = Team_GetClientCount(_:TFTeam_Blue, CLIENTFILTER_ALIVE);
-	if (lastguard == 1)
+	if (client == Warden)
+	{
+		WardenUnset(Warden);
+		PrintCenterTextAll("%t", "warden killed", Warden);
+	}
+	
+	if (Team_GetClientCount(_:TFTeam_Blue, CLIENTFILTER_ALIVE) == 1)
 	{
 		g_VoidFreekills = true;
 		PrintCenterTextAll("%t", "last guard");
 	}
+
+	if (j_DeadMute) MutePlayer(client);
+	if (g_IsFreedayActive[client]) RemoveFreeday(client);
+
 	return Plugin_Continue;
 }
 
@@ -1402,14 +1228,13 @@ public Action:RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 		SDKHook(ent, SDKHook_StartTouchPost, SpawnTouch);
 	}
 
-	ServerCommand("sm_countdown_enabled 2");
-
 	if (j_Enabled && g_1stRoundFreeday)
 	{
 		OpenCells();
 		PrintCenterTextAll("1st round freeday");
 		g_1stRoundFreeday = false;
 	}
+
 	if (g_IsMapCompatible)
 	{
 		new open_cells = Entity_FindByName("open_cells", "func_button");
@@ -1425,10 +1250,8 @@ public Action:RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 			}
 		}
 	}
-	else
-	{
-		LogError("Map is incompatible, disabling check for door controls command variable.");
-	}
+	else LogError("Map is incompatible, disabling check for door controls command variable.");
+	
 	for (new i = 1; i <= MaxClients; i++)
 	{
 		if (IsValidClient(i))
@@ -1436,6 +1259,10 @@ public Action:RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 			if (g_HasModel[i])	RemoveModel(i);
 		}
 	}
+
+	ServerCommand("sm_countdown_enabled 2");
+	
+	return Plugin_Continue;
 }
 
 public SpawnTouch(entity, client)
@@ -1451,6 +1278,8 @@ public SpawnTouch(entity, client)
 			RemoveFreeday(client);
 		}
 	}
+	
+	return;
 }
 
 public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
@@ -1465,19 +1294,13 @@ public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadc
 		for (new i = 1; i <= MaxClients; i++)
 		{
 			Ratio = Float:GetTeamClientCount(_:TFTeam_Blue)/Float:GetTeamClientCount(_:TFTeam_Red);
-			if (Ratio <= j_BalanceRatio || GetTeamClientCount(_:TFTeam_Red) == 1)
-			{
-				break;
-			}
+			if (Ratio <= j_BalanceRatio || GetTeamClientCount(_:TFTeam_Red) == 1) break;
 			if (IsValidClient(i) && GetClientTeam(i) == _:TFTeam_Blue)
 			{
 				ChangeClientTeam(i, _:TFTeam_Red);
 				TF2_RespawnPlayer(i);
 				CPrintToChat(i, "%s %t", CLAN_TAG_COLOR, "moved for balance");
-				if (g_HasModel[i])
-				{
-					RemoveModel(i);
-				}
+				if (g_HasModel[i]) RemoveModel(i);
 			}
 		}
 	}
@@ -1492,20 +1315,14 @@ public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadc
 
 	switch(j_RedMute)
 	{
-	case 0:
-		{
-			CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "red mute system disabled");
-		}
+	case 0: CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "red mute system disabled");
 	case 1:
 		{
 			new time = RoundFloat(j_RedMuteTime);
 			CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "red team muted temporarily", time);
 			CreateTimer(j_RedMuteTime, UnmuteReds, _, TIMER_FLAG_NO_MAPCHANGE);
 		}
-	case 2:
-		{
-			CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "red team muted");
-		}
+	case 2: CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "red team muted");
 	}
 	
 	switch(enumLastRequests)
@@ -1614,10 +1431,10 @@ public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadc
 	
 	if (j_WardenAuto)
 	{
-		new RandomWarden = Client_GetRandom(CLIENTFILTER_TEAMTWO|CLIENTFILTER_ALIVE|CLIENTFILTER_NOBOTS);
-		if (RandomWarden && Warden == -1)
+		new Random = Client_GetRandom(CLIENTFILTER_TEAMTWO|CLIENTFILTER_ALIVE|CLIENTFILTER_NOBOTS);
+		if (Random && Warden == -1)
 		{
-			if (IsValidClient(RandomWarden)) WardenSet(RandomWarden);
+			if (IsValidClient(Random)) WardenSet(Random);
 		}
 	}
 	return Plugin_Continue;
@@ -1627,12 +1444,10 @@ public Action:UnmuteReds(Handle:hTimer, any:client)
 {
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsValidClient(i) && IsPlayerAlive(i) && GetClientTeam(i) == _:TFTeam_Red)
-		{
-			UnmutePlayer(i);
-		}
+		if (IsValidClient(i) && IsPlayerAlive(i) && GetClientTeam(i) == _:TFTeam_Red) UnmutePlayer(i);
 	}
 	CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "red team unmuted");
+
 	return Plugin_Continue;
 }
 
@@ -1651,10 +1466,7 @@ public Action:LockBlueteam(Handle:hTimer, any:client)
 {
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsValidClient(i) && IsPlayerAlive(i) && GetClientTeam(i) == _:TFTeam_Red)
-		{
-			TF2_StunPlayer(i, 120.0, 0.0, TF_STUNFLAGS_LOSERSTATE, 0);
-		}
+		if (IsValidClient(i) && IsPlayerAlive(i) && GetClientTeam(i) == _:TFTeam_Red) TF2_StunPlayer(i, 120.0, 0.0, TF_STUNFLAGS_LOSERSTATE, 0);
 	}
 }
 
@@ -1664,8 +1476,7 @@ public Action:RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 
 	if (GetConVarBool(Cvar_FF)) SetConVarBool(Cvar_FF, false);
 	if (GetConVarBool(Cvar_COL)) SetConVarBool(Cvar_COL, false);
-
-	if (g_VoidFreekills)	g_VoidFreekills = false;
+	if (g_VoidFreekills) g_VoidFreekills = false;
 
 	for (new i = 1; i <= MaxClients; i++)
 	{
@@ -1678,10 +1489,7 @@ public Action:RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 				g_RobotRoundClients[i] = false;
 			}
 		}
-		if (g_IsFreedayActive[i])
-		{
-			RemoveFreeday(i);
-		}
+		if (g_IsFreedayActive[i]) RemoveFreeday(i);
 	}
 	
 	if (g_IsLRRound)
@@ -1689,7 +1497,6 @@ public Action:RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 		g_IsLRRound = false;
 		enumLastRequests = LR_Disabled;
 	}
-	
 	if (g_bIsLowGravRound)
 	{
 		ServerCommand("sv_gravity 800");
@@ -1747,10 +1554,7 @@ public OnEntityCreated(entity, const String:classname[])
 {
 	if (j_Enabled && IsValidEntity(entity))
 	{
-		if (StrContains(classname, "tf_ammo_pack", false) != -1)
-		{
-			AcceptEntityInput(entity, "Kill");
-		}
+		if (StrContains(classname, "tf_ammo_pack", false) != -1) AcceptEntityInput(entity, "Kill");
 	}
 }
 
@@ -1767,10 +1571,7 @@ public Action:InterceptBuild(client, const String:command[], args)
 {
 	if (!j_Enabled) return Plugin_Continue;
 
-	if (IsValidClient(client) && GetClientTeam(client) == _:TFTeam_Red)
-	{
-		return Plugin_Handled;
-	}
+	if (IsValidClient(client) && GetClientTeam(client) == _:TFTeam_Red) return Plugin_Handled;
 	return Plugin_Continue;
 }
 
@@ -1791,20 +1592,14 @@ public Action:Command_FireWarden(client, args)
 
 	if (j_WVotesPassedLimit != 0)
 	{
-		if (WardenLimit < j_WVotesPassedLimit)
-		{
-			AttemptFireWarden(client);
-		}
+		if (WardenLimit < j_WVotesPassedLimit) AttemptFireWarden(client);
 		else
 		{
 			PrintToChat(client, "You are not allowed to vote again, the warden fire limit has been reached.");
 			return Plugin_Handled;
 		}
 	}
-	else
-	{
-		AttemptFireWarden(client);
-	}
+	else AttemptFireWarden(client);
 
 	return Plugin_Handled;
 }
@@ -1830,10 +1625,7 @@ AttemptFireWarden(client)
 
 	CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "fire warden requested", name, g_Votes, g_VotesNeeded);
 
-	if (g_Votes >= g_VotesNeeded)
-	{
-		FireWardenCall();
-	}	
+	if (g_Votes >= g_VotesNeeded) FireWardenCall();
 }
 
 FireWardenCall()
@@ -1857,11 +1649,7 @@ FireWardenCall()
 ResetVotes()
 {
 	g_Votes = 0;
-	
-	for (new i=1; i<=MAXPLAYERS; i++)
-	{
-		g_Voted[i] = false;
-	}
+	for (new i=1; i<=MAXPLAYERS; i++) g_Voted[i] = false;
 }
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -1875,47 +1663,23 @@ public Action:MapCompatibilityCheck(client, args)
 	
 	new open_cells = Entity_FindByName("open_cells", "func_button");
 	new cell_door = Entity_FindByName("cell_door", "func_door");
-	
 	if (!client)
 	{
-		if (Entity_IsValid(open_cells))
-		{
-			PrintToServer("%s Cell Opener = Detected", CLAN_TAG);
-		}
-		else
-		{
-			PrintToServer("%s Cell Opener = Undetected", CLAN_TAG);
-		}
+		if (Entity_IsValid(open_cells)) PrintToServer("%s Cell Opener = Detected", CLAN_TAG);
+		else PrintToServer("%s Cell Opener = Undetected", CLAN_TAG);
 		
-		if (Entity_IsValid(cell_door))
-		{
-			PrintToServer("%s Cell Doors = Detected", CLAN_TAG);
-		}
-		else
-		{
-			PrintToServer("%s Cell Doors = Undetected", CLAN_TAG);
-		}
+		if (Entity_IsValid(cell_door)) PrintToServer("%s Cell Doors = Detected", CLAN_TAG);
+		else PrintToServer("%s Cell Doors = Undetected", CLAN_TAG);
 	}
 	else
 	{
-		if (Entity_IsValid(open_cells))
-		{
-			CPrintToChat(client, "%s Cell Opener = Detected", CLAN_TAG);
-		}
-		else
-		{
-			CPrintToChat(client, "%s Cell Opener = Undetected", CLAN_TAG);
-		}
+		if (Entity_IsValid(open_cells)) CPrintToChat(client, "%s Cell Opener = Detected", CLAN_TAG);
+		else CPrintToChat(client, "%s Cell Opener = Undetected", CLAN_TAG);
 		
-		if (Entity_IsValid(cell_door))
-		{
-			CPrintToChat(client, "%s Cell Doors = Detected", CLAN_TAG);
-		}
-		else
-		{
-			CPrintToChat(client, "%s Cell Doors = Undetected", CLAN_TAG);
-		}
+		if (Entity_IsValid(cell_door)) CPrintToChat(client, "%s Cell Doors = Detected", CLAN_TAG);
+		else CPrintToChat(client, "%s Cell Doors = Undetected", CLAN_TAG);
 	}
+
 	return Plugin_Handled;
 }
 
@@ -1932,14 +1696,7 @@ public Action:AdminResetPlugin(client, args)
 		ReplyToCommand(client, "%t","Command is in-game only");
 		return Plugin_Handled;
 	}
-	
-	g_CellDoorTimerActive = false;
-	g_1stRoundFreeday = false;
-	g_bIsLRInUse = false;
-	g_bIsWardenLocked = false;
-	g_bIsSpeedDemonRound = false;
-	
-	g_bIsLowGravRound = false;
+
 	for (new i = 1; i <= MaxClients; i++)
 	{
 		g_RobotRoundClients[i] = false;
@@ -1951,9 +1708,16 @@ public Action:AdminResetPlugin(client, args)
 	}
 	
 	Warden = -1;
+	g_CellDoorTimerActive = false;
+	g_1stRoundFreeday = false;
+	g_bIsLRInUse = false;
+	g_bIsWardenLocked = false;
+	g_bIsSpeedDemonRound = false;
+	g_bIsLowGravRound = false;
 	enumLastRequests = LR_Disabled;
 
 	CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "admin reset plugin");
+
 	return Plugin_Handled;
 }
 
@@ -1971,14 +1735,8 @@ public Action:AdminOpenCells(client, args)
 		return Plugin_Handled;
 	}
 	
-	if (g_IsMapCompatible)
-	{
-		OpenCells();
-	}
-	else
-	{
-		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "incompatible map");
-	}
+	if (g_IsMapCompatible) OpenCells();
+	else CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "incompatible map");
 
 	return Plugin_Handled;
 }
@@ -1997,14 +1755,9 @@ public Action:AdminCloseCells(client, args)
 		return Plugin_Handled;
 	}
 	
-	if (g_IsMapCompatible)
-	{
-		CloseCells();
-	}
-	else
-	{
-		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "incompatible map");
-	}
+	if (g_IsMapCompatible) CloseCells();
+	else CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "incompatible map");
+
 	return Plugin_Handled;
 }
 
@@ -2022,14 +1775,8 @@ public Action:AdminLockCells(client, args)
 		return Plugin_Handled;
 	}
 	
-	if (g_IsMapCompatible)
-	{
-		LockCells();
-	}
-	else
-	{
-		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "incompatible map");
-	}
+	if (g_IsMapCompatible) LockCells();
+	else CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "incompatible map");
 	
 	return Plugin_Handled;
 }
@@ -2048,14 +1795,8 @@ public Action:AdminUnlockCells(client, args)
 		return Plugin_Handled;
 	}
 
-	if (g_IsMapCompatible)
-	{
-		UnlockCells();
-	}
-	else
-	{
-		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "incompatible map");
-	}
+	if (g_IsMapCompatible) UnlockCells();
+	else CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "incompatible map");
 
 	return Plugin_Handled;
 }
@@ -2074,18 +1815,17 @@ public Action:AdminForceWarden(client, args)
 		return Plugin_Handled;
 	}
 
-	if (Warden == -1)
-	{
-		new randomplayer = Client_GetRandom(CLIENTFILTER_TEAMTWO|CLIENTFILTER_ALIVE);
-		if (randomplayer)
-		{
-			WardenSet(randomplayer);
-			CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "forced warden", client, randomplayer);
-		}
-	}
-	else
+	if (Warden != -1)
 	{
 		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "current warden", Warden);
+		return Plugin_Handled;
+	}
+	
+	new Random = Client_GetRandom(CLIENTFILTER_TEAMTWO|CLIENTFILTER_ALIVE);
+	if (Random)
+	{
+		WardenSet(Random);
+		CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "forced warden", client, Random);
 	}
 	
 	return Plugin_Handled;
@@ -2124,11 +1864,6 @@ public Action:AdminDenyLR(client, args)
 		return Plugin_Handled;
 	}
 	
-	g_bIsLRInUse = false;
-	g_bIsWardenLocked = false;
-	
-	enumLastRequests = LR_Disabled;
-	
 	for (new i = 1; i <= MaxClients; i++)
 	{
 		if (g_RobotRoundClients[i])
@@ -2143,6 +1878,10 @@ public Action:AdminDenyLR(client, args)
 			g_IsFreedayActive[i] = false;
 		}
 	}
+	
+	g_bIsLRInUse = false;
+	g_bIsWardenLocked = false;
+	enumLastRequests = LR_Disabled;
 	
 	CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "admin deny lr");
 
@@ -2163,25 +1902,24 @@ public Action:AdminPardonFreekiller(client, args)
 		return Plugin_Handled;
 	}
 	
-	if (j_Freekillers)
-	{
-		for (new i = 1; i <= MaxClients; i++)
-		{
-			if (g_IsFreekiller[i])
-			{
-				SetEntityRenderColor(i, 255, 255, 255, 255);
-				TF2_RegeneratePlayer(i);
-				ServerCommand("sm_beacon #%d", GetClientUserId(i));
-				g_IsFreekiller[i] = false;
-				ClearTimer(DataTimerF);
-			}
-		}
-		CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "admin pardoned freekillers");
-	}
-	else
+	if (!j_Freekillers)
 	{
 		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "freekillers system disabled");
+		return Plugin_Handled;
 	}
+	
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		if (g_IsFreekiller[i])
+		{
+			SetEntityRenderColor(i, 255, 255, 255, 255);
+			TF2_RegeneratePlayer(i);
+			ServerCommand("sm_beacon #%d", GetClientUserId(i));
+			g_IsFreekiller[i] = false;
+			ClearTimer(DataTimerF);
+		}
+	}
+	CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "admin pardoned freekillers");
 	
 	return Plugin_Handled;
 }
@@ -2218,19 +1956,10 @@ public MenuHandlerFFAdmin(Handle:menu, MenuAction:action, param1, param2)
 			GetMenuItem(menu, param2, info, sizeof(info));
 
 			new target = GetClientOfUserId(StringToInt(info));
-			if (target == 0)
-			{
-				PrintToChat(param1, "Client is not valid.");
-			}
-			else
-			{                     
-				GiveFreeday(target);
-			}
+			if (target == 0) PrintToChat(param1, "Client is not valid.");
+			else GiveFreeday(target);
 		}
-	case MenuAction_End:
-		{
-			CloseHandle(menu);
-		}
+	case MenuAction_End: CloseHandle(menu);
 	}
 }
 
@@ -2266,19 +1995,10 @@ public MenuHandlerFFRAdmin(Handle:menu, MenuAction:action, param1, param2)
 			GetMenuItem(menu, param2, info, sizeof(info));
 
 			new target = GetClientOfUserId(StringToInt(info));
-			if (target == 0)
-			{
-				PrintToChat(param1, "Client is not valid.");
-			}
-			else
-			{                     
-				RemoveFreeday(target);
-			}
+			if (target == 0) PrintToChat(param1, "Client is not valid.");
+			else RemoveFreeday(target);
 		}
-	case MenuAction_End:
-		{
-			CloseHandle(menu);
-		}
+	case MenuAction_End: CloseHandle(menu);
 	}
 }
 
@@ -2315,43 +2035,40 @@ public Action:BecomeWarden(client, args)
 		return Plugin_Handled;
 	}
 	
-	if (!g_1stRoundFreeday || !g_bIsWardenLocked)
+	if (g_1stRoundFreeday || g_bIsWardenLocked)
 	{
-		if (Warden == -1)
+		CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "warden locked");
+		return Plugin_Handled;
+	}
+		
+	if (Warden != -1)
+	{
+		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "current warden", Warden);
+		return Plugin_Handled;
+	}
+			
+	if (g_LockedFromWarden[client])
+	{
+		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "voted off of warden");
+		return Plugin_Handled;
+	}
+		
+	if (GetClientTeam(client) == _:TFTeam_Blue)
+	{
+		if (IsValidClient(client) && IsPlayerAlive(client))
 		{
-			if (!g_LockedFromWarden[client])
-			{
-				if (GetClientTeam(client) == _:TFTeam_Blue)
-				{
-					if (IsValidClient(client) && IsPlayerAlive(client))
-					{
-						CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "new warden", client);
-						CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "warden message");
-						WardenSet(client);
-					}
-					else
-					{
-						CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "dead warden");
-					}
-				}
-				else
-				{
-					CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "guards only");
-				}
-			}
-			else
-			{
-				CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "voted off of warden");
-			}
+			CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "new warden", client);
+			CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "warden message");
+			WardenSet(client);
 		}
 		else
 		{
-			CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "current warden", Warden);
+			CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "dead warden");
 		}
 	}
 	else
 	{
-		CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "warden locked");
+		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "guards only");
 	}
 	
 	return Plugin_Handled;
@@ -2371,14 +2088,8 @@ public Action:WardenMenuC(client, args)
 		return Plugin_Handled;
 	}
 	
-	if (client == Warden)
-	{
-		WardenMenu(client);
-	}
-	else
-	{
-		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
-	}
+	if (client == Warden) WardenMenu(client);
+	else CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
 
 	return Plugin_Handled;
 }
@@ -2403,32 +2114,14 @@ public WardenMenuHandler(Handle:menu, MenuAction:action, client, param2)
 		{
 			switch (param2)
 			{
-			case 0:
-				{
-					FakeClientCommandEx(client, "say /open");
-				}
-			case 1:
-				{
-					FakeClientCommandEx(client, "say /close");
-				}
-			case 2:
-				{
-					FakeClientCommandEx(client, "say /wff");
-				}
-			case 3:
-				{
-					FakeClientCommandEx(client, "say /wcc");
-				}
+			case 0: FakeClientCommandEx(client, "say /open");
+			case 1: FakeClientCommandEx(client, "say /close");
+			case 2: FakeClientCommandEx(client, "say /wff");
+			case 3: FakeClientCommandEx(client, "say /wcc");
 			}
 		}
-	case MenuAction_Cancel:
-		{
-
-		}
-	case MenuAction_End:
-		{
-			CloseHandle(menu);
-		}
+	//case MenuAction_Cancel:
+	case MenuAction_End: CloseHandle(menu);
 	}
 }
 
@@ -2446,33 +2139,30 @@ public Action:WardenFriendlyFire(client, args)
 		return Plugin_Handled;
 	}
 
-	if (j_WardenFF)
+	if (!j_WardenFF)
 	{
-		if (client == Warden)
-		{
-			if (!GetConVarBool(Cvar_FF))
-			{
-				SetConVarBool(Cvar_FF, true);
-				CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "friendlyfire enabled");
-				LogMessage("%s %N has enabled friendly fire as Warden.", CLAN_TAG_COLOR, Warden);
-			}
-			else
-			{
-				SetConVarBool(Cvar_FF, false);
-				CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "friendlyfire disabled");
-				LogMessage("%s %N has disabled friendly fire as Warden.", CLAN_TAG_COLOR, Warden);
-			}
-		}
-		else
-		{
-			CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
-		}
+		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "warden friendly fire manage disabled");
+		return Plugin_Handled;
+	}
+		
+	if (client != Warden)
+	{
+		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
+	}
+	
+	if (!GetConVarBool(Cvar_FF))
+	{
+		SetConVarBool(Cvar_FF, true);
+		CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "friendlyfire enabled");
+		LogMessage("%s %N has enabled friendly fire as Warden.", CLAN_TAG_COLOR, Warden);
 	}
 	else
 	{
-		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "warden friendly fire manage disabled");
+		SetConVarBool(Cvar_FF, false);
+		CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "friendlyfire disabled");
+		LogMessage("%s %N has disabled friendly fire as Warden.", CLAN_TAG_COLOR, Warden);
 	}
-
+			
 	return Plugin_Handled;
 }
 
@@ -2490,24 +2180,23 @@ public Action:WardenCollision(client, args)
 		return Plugin_Handled;
 	}
 	
-	if (client == Warden)
+	if (client != Warden)
 	{
-		if (!GetConVarBool(Cvar_COL))
-		{
-			SetConVarBool(Cvar_COL, true);
-			CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "collision enabled");
-			LogMessage("%s %N has enabled collision as Warden.", CLAN_TAG_COLOR, Warden);
-		}
-		else
-		{
-			SetConVarBool(Cvar_COL, false);
-			CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "collision disabled");
-			LogMessage("%s %N has disabled collision fire as Warden.", CLAN_TAG_COLOR, Warden);
-		}
+		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
+		return Plugin_Handled;
+	}
+		
+	if (!GetConVarBool(Cvar_COL))
+	{
+		SetConVarBool(Cvar_COL, true);
+		CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "collision enabled");
+		LogMessage("%s %N has enabled collision as Warden.", CLAN_TAG_COLOR, Warden);
 	}
 	else
 	{
-		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
+		SetConVarBool(Cvar_COL, false);
+		CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "collision disabled");
+		LogMessage("%s %N has disabled collision fire as Warden.", CLAN_TAG_COLOR, Warden);
 	}
 
 	return Plugin_Handled;
@@ -2533,10 +2222,7 @@ public Action:ExitWarden(client, args)
 		PrintCenterTextAll("%t", "warden retired center");
 		WardenUnset(client);
 	}
-	else
-	{
-		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
-	}
+	else CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
 
 	return Plugin_Handled;
 }
@@ -2561,10 +2247,7 @@ public Action:AdminRemoveWarden(client, args)
 		PrintCenterTextAll("%t", "warden fired center");
 		WardenUnset(Warden);
 	}
-	else
-	{
-		CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "no warden current");
-	}
+	else CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "no warden current");
 
 	return Plugin_Handled;
 }
@@ -2587,24 +2270,12 @@ public Action:OnOpenCommand(client, args)
 	{
 		if (j_DoorControl)
 		{
-			if (client == Warden)
-			{
-				OpenCells();
-			}
-			else
-			{
-				CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
-			}
+			if (client == Warden) OpenCells();
+			else CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
 		}
-		else
-		{
-			CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "door controls disabled");
-		}
+		else CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "door controls disabled");
 	}
-	else
-	{
-		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "incompatible map");
-	}
+	else CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "incompatible map");
 
 	return Plugin_Handled;
 }
@@ -2627,24 +2298,12 @@ public Action:OnCloseCommand(client, args)
 	{
 		if (j_DoorControl)
 		{
-			if (client == Warden)
-			{
-				CloseCells();
-			}
-			else
-			{
-				CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
-			}
+			if (client == Warden) CloseCells();
+			else CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
 		}
-		else
-		{
-			CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "door controls disabled");
-		}
+		else CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "door controls disabled");
 	}
-	else
-	{
-		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "incompatible map");
-	}
+	else CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "incompatible map");
 
 	return Plugin_Handled;
 }
@@ -2678,15 +2337,9 @@ public Action:GiveLR(client, args)
 			AddTargetsToMenu2(menu, 0, COMMAND_FILTER_ALIVE | COMMAND_FILTER_NO_BOTS | COMMAND_FILTER_NO_IMMUNITY);
 			DisplayMenu(menu, client, 20);
 		}
-		else
-		{
-			CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "last request in use");
-		}
+		else CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "last request in use");
 	}
-	else
-	{
-		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
-	}
+	else CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
 
 	return Plugin_Handled;
 }
@@ -2703,10 +2356,7 @@ public GiveLRMenuHandler(Handle:menu, MenuAction:action, client, itemNum)
 			new iInfo = StringToInt(info);
 			new iUserid = GetClientOfUserId(iInfo);
 			GetClientName(iUserid, Name, sizeof(Name));    
-			if (GetClientTeam(iUserid) != _:TFTeam_Red)
-			{
-				PrintToChat(client,"You cannot give LR to a guard or spectator!");
-			}
+			if (GetClientTeam(iUserid) != _:TFTeam_Red) PrintToChat(client,"You cannot give LR to a guard or spectator!");
 			else
 			{
 				LastRequestStart(iUserid);
@@ -2730,19 +2380,18 @@ public Action:RemoveLR(client, args)
 		return Plugin_Handled;
 	}
 	
-	if (client == Warden)
-	{
-		g_bIsLRInUse = false;
-		g_bIsWardenLocked = false;
-		enumLastRequests = LR_Disabled;
-		g_IsFreeday[client] = false;
-		g_IsFreedayActive[client] = false;
-		CPrintToChat(Warden, "%s %t", CLAN_TAG_COLOR, "warden removed lr");
-	}
-	else
+	if (client != Warden)
 	{
 		CPrintToChat(client, "%s %t", CLAN_TAG_COLOR, "not warden");
+		return Plugin_Handled;
 	}
+	
+	g_bIsLRInUse = false;
+	g_bIsWardenLocked = false;
+	enumLastRequests = LR_Disabled;
+	g_IsFreeday[client] = false;
+	g_IsFreedayActive[client] = false;
+	CPrintToChat(Warden, "%s %t", CLAN_TAG_COLOR, "warden removed lr");
 
 	return Plugin_Handled;
 }
@@ -2751,27 +2400,22 @@ WardenSet(client)
 {
 	Warden = client;
 	SetClientListeningFlags(client, VOICE_NORMAL);
-	if (j_WardenModel)
-	{
-		SetModel(client, "models/jailbreak/warden/warden_v2.mdl");
-	}
-	else
-	{
-		SetEntityRenderColor(client, gWardenColor[0], gWardenColor[1], gWardenColor[2], 255);
-	}
-	WardenMenu(client);
-	Forward_OnWardenCreation(client);
+	
+	if (j_WardenForceSoldier) TF2_SetPlayerClass(client, TFClass_Soldier);
+
+	if (j_WardenModel) SetModel(client, "models/jailbreak/warden/warden_v2.mdl");
+	else SetEntityRenderColor(client, gWardenColor[0], gWardenColor[1], gWardenColor[2], 255);
 	
 	if (j_BlueMute == 1)
 	{
 		for (new i=1; i<=MaxClients; i++)
 		{
-			if (IsValidClient(i) && GetClientTeam(i) == _:TFTeam_Blue && i != Warden)
-			{
-				MutePlayer(i);
-			}
+			if (IsValidClient(i) && GetClientTeam(i) == _:TFTeam_Blue && i != Warden) MutePlayer(i);
 		}
 	}
+	
+	WardenMenu(client);
+	Forward_OnWardenCreation(client);
 }
 
 WardenUnset(client)
@@ -2779,27 +2423,19 @@ WardenUnset(client)
 	if (Warden != -1)
 	{
 		Warden = -1;
-		if (j_WardenModel)
-		{
-			RemoveModel(client);
-		}
-		else
-		{
-			SetEntityRenderColor(client, 255, 255, 255, 255);
-		}
+		if (j_WardenModel) RemoveModel(client);
+		else SetEntityRenderColor(client, 255, 255, 255, 255);
 	}
-	Forward_OnWardenRemoved(client);
 	
 	if (j_BlueMute == 1)
 	{
 		for (new i=1; i<=MaxClients; i++)
 		{
-			if (IsValidClient(i) && GetClientTeam(i) == _:TFTeam_Blue && i != Warden)
-			{
-				UnmutePlayer(i);
-			}
+			if (IsValidClient(i) && GetClientTeam(i) == _:TFTeam_Blue && i != Warden) UnmutePlayer(i);
 		}
 	}
+	
+	Forward_OnWardenRemoved(client);
 }
 
 public Action:SetModel(client, const String:model[])
@@ -2809,7 +2445,7 @@ public Action:SetModel(client, const String:model[])
 		SetVariantString(model);
 		AcceptEntityInput(client, "SetCustomModel");
 		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
-		SetWearableAlpha(client, 255);
+		RemoveValveHat(client, true);
 		g_HasModel[client] = true;
 	}
 }
@@ -2819,27 +2455,9 @@ public Action:RemoveModel(client)
 	{
 		SetVariantString("");
 		AcceptEntityInput(client, "SetCustomModel");
-		SetWearableAlpha(client, 0);
+		RemoveValveHat(client, false);
 		g_HasModel[client] = false;
 	}
-}
-
-stock SetWearableAlpha(client, alpha, bool:override = false)
-{
-	if (!override) return 0;
-	new count;
-	for (new z = MaxClients + 1; z <= 2048; z++)
-	{
-		if (!IsValidEntity(z)) continue;
-		decl String:cls[35];
-		GetEntityClassname(z, cls, sizeof(cls));
-		if (!StrEqual(cls, "tf_wearable") && !StrEqual(cls, "tf_powerup_bottle")) continue;
-		if (client != GetEntPropEnt(z, Prop_Send, "m_hOwnerEntity")) continue;
-		SetEntityRenderMode(z, RENDER_TRANSCOLOR);
-		SetEntityRenderColor(z, 255, 255, 255, alpha);
-		count++;
-	}
-	return count;
 }
 
 OpenCells()
@@ -2850,10 +2468,7 @@ OpenCells()
 		while((ent = FindEntityByClassname(ent, DoorList[i])) != -1)
 		{
 			GetEntPropString(ent, Prop_Data, "m_iName", buffer, sizeof(buffer));
-			if (StrEqual(buffer, "cell_door", false) || StrEqual(buffer, "cd", false))
-			{
-				AcceptEntityInput(ent, "Open");
-			}
+			if (StrEqual(buffer, "cell_door", false) || StrEqual(buffer, "cd", false)) AcceptEntityInput(ent, "Open");
 		}
 	}
 	if (g_CellDoorTimerActive)
@@ -2872,10 +2487,7 @@ CloseCells()
 		while((ent = FindEntityByClassname(ent, DoorList[i])) != -1)
 		{
 			GetEntPropString(ent, Prop_Data, "m_iName", buffer, sizeof(buffer));
-			if (StrEqual(buffer, "cell_door", false) || StrEqual(buffer, "cd", false))
-			{
-				AcceptEntityInput(ent, "Close");
-			}
+			if (StrEqual(buffer, "cell_door", false) || StrEqual(buffer, "cd", false)) AcceptEntityInput(ent, "Close");
 		}
 	}
 	CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "doors closed");
@@ -2889,10 +2501,7 @@ LockCells()
 		while((ent = FindEntityByClassname(ent, DoorList[i])) != -1)
 		{
 			GetEntPropString(ent, Prop_Data, "m_iName", buffer, sizeof(buffer));
-			if (StrEqual(buffer, "cell_door", false) || StrEqual(buffer, "cd", false))
-			{
-				AcceptEntityInput(ent, "Lock");
-			}
+			if (StrEqual(buffer, "cell_door", false) || StrEqual(buffer, "cd", false)) AcceptEntityInput(ent, "Lock");
 		}
 	}
 	CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "doors locked");
@@ -2906,10 +2515,7 @@ UnlockCells()
 		while((ent = FindEntityByClassname(ent, DoorList[i])) != -1)
 		{
 			GetEntPropString(ent, Prop_Data, "m_iName", buffer, sizeof(buffer));
-			if (StrEqual(buffer, "cell_door", false) || StrEqual(buffer, "cd", false))
-			{
-				AcceptEntityInput(ent, "Unlock");
-			}
+			if (StrEqual(buffer, "cell_door", false) || StrEqual(buffer, "cd", false)) AcceptEntityInput(ent, "Unlock");
 		}
 	}
 	CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "doors unlocked");
@@ -3029,10 +2635,7 @@ public MenuHandlerLR(Handle:LRMenu, MenuAction:action, client, item)
 					CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "lr disco day queued", client);
 					enumLastRequests = LR_DiscoDay;
 				}
-			case 12:
-				{
-					CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "lr custom message", client);
-				}
+			case 12: CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "lr custom message", client);
 			}
 			g_bIsWardenLocked = true;
 		}
@@ -3041,10 +2644,7 @@ public MenuHandlerLR(Handle:LRMenu, MenuAction:action, client, item)
 			g_bIsLRInUse = false;
 			CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "last request closed");
 		}
-	case MenuAction_End:
-		{
-			CloseHandle(LRMenu);
-		}
+	case MenuAction_End: CloseHandle(LRMenu);
 	}
 }
 
@@ -3064,10 +2664,7 @@ public FreedayForClientsMenu_H(Handle:menu, MenuAction:action, client, param2)
 {
 	switch(action)
 	{
-	case MenuAction_End:
-		{
-			CloseHandle(menu);
-		}
+	case MenuAction_End: CloseHandle(menu);
 	case MenuAction_Select:
 		{
 			decl String:info[32];
@@ -3086,15 +2683,9 @@ public FreedayForClientsMenu_H(Handle:menu, MenuAction:action, client, param2)
 					g_IsFreeday[target] = true;
 					FreedayLimit++;
 					CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "lr freeday picked clients", client, target);
-					if (IsValidClient(client) && !IsClientInKickQueue(client))
-					{
-						FreedayforClientsMenu(client);
-					}
+					if (IsValidClient(client) && !IsClientInKickQueue(client)) FreedayforClientsMenu(client);
 				}
-				else
-				{
-					CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "lr freeday picked clients maxed", client);
-				}
+				else CPrintToChatAll("%s %t", CLAN_TAG_COLOR, "lr freeday picked clients maxed", client);
 			}
 		}
 	}
@@ -3124,31 +2715,7 @@ RemoveFreeday(client)
 	g_IsFreedayActive[client] = false;
 }
 
-stock ResetPlayerSpeed()
-{
-	for (new i = 1; i <= MaxClients; i++)
-	{
-		if (!IsValidClient(i) || !IsPlayerAlive(i)) continue;
-		new TFClassType:class = TF2_GetPlayerClass(i);
-		switch(class)
-		{
-		case TFClass_DemoMan: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 280.0);
-		case TFClass_Engineer: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 300.0);
-		case TFClass_Heavy: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 230.0);
-		case TFClass_Medic: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 320.0);
-		case TFClass_Pyro: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 300.0);
-		case TFClass_Scout: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 400.0);
-		case TFClass_Sniper: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 300.0);
-		case TFClass_Soldier: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 240.0);
-		case TFClass_Spy: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 300.0);
-		}
-	}
-}
-
-public Action:EnableFFTimer(Handle:hTimer)
-{
-	SetConVarBool(Cvar_FF, true);
-}
+public Action:EnableFFTimer(Handle:hTimer) SetConVarBool(Cvar_FF, true);
 
 MarkRebel(client)
 {
@@ -3245,7 +2812,7 @@ public Action:BanClientTimerFreekiller(Handle:hTimer, Handle:hPack)
 }
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-MapCheck()
+stock MapCheck()
 {
 	new open_cells = Entity_FindByName("open_cells", "func_button");
 	new cell_door = Entity_FindByName("cell_door", "func_door");
@@ -3367,22 +2934,6 @@ stock RemoveServerTag2(const String:tag[])
 	}
 }
 
-stock IsValidClient(client, bool:replaycheck = true)
-{
-	if (client <= 0 || client > MaxClients || !IsClientInGame(client) || GetEntProp(client, Prop_Send, "m_bIsCoaching") || IsFakeClient(client) || !IsValidEntity(client))
-	{
-		return false;
-	}
-	if (replaycheck)
-	{
-		if (IsClientSourceTV(client) || IsClientReplay(client))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
 stock SetClip(client, wepslot, newAmmo, admin)
 {
 	new weapon = GetPlayerWeaponSlot(client, wepslot);
@@ -3413,15 +2964,81 @@ stock ClearTimer(&Handle:hTimer)
 	}
 }
 
+stock RemoveValveHat(client, bool:unhide = false)
+{
+	new edict = MaxClients+1;
+	while((edict = FindEntityByClassnameSafe(edict, "tf_wearable")) != -1)
+	{
+		decl String:netclass[32];
+		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && strcmp(netclass, "CTFWearable") == 0)
+		{
+			new idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
+			if (idx != 57 && idx != 133 && idx != 231 && idx != 444 && idx != 405 && idx != 608 && GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client)
+			{
+				SetEntityRenderMode(edict, (unhide ? RENDER_NORMAL : RENDER_TRANSCOLOR));
+				SetEntityRenderColor(edict, 255, 255, 255, (unhide ? 255 : 0));
+			}
+		}
+	}
+}
+
+stock FindEntityByClassnameSafe(iStart, const String:strClassname[])
+{
+	while (iStart > -1 && !IsValidEntity(iStart)) iStart--;
+	return FindEntityByClassname(iStart, strClassname);
+}
+
+stock ResetPlayerSpeed()
+{
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		if (!IsValidClient(i) || !IsPlayerAlive(i)) continue;
+		new TFClassType:class = TF2_GetPlayerClass(i);
+		switch(class)
+		{
+		case TFClass_DemoMan: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 280.0);
+		case TFClass_Engineer: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 300.0);
+		case TFClass_Heavy: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 230.0);
+		case TFClass_Medic: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 320.0);
+		case TFClass_Pyro: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 300.0);
+		case TFClass_Scout: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 400.0);
+		case TFClass_Sniper: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 300.0);
+		case TFClass_Soldier: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 240.0);
+		case TFClass_Spy: SetEntPropFloat(i, Prop_Data, "m_flMaxspeed", 300.0);
+		}
+	}
+}
+
+SplitColorString(const String:colors[])
+{
+	decl _iColors[3], String:_sBuffer[3][4];
+	ExplodeString(colors, " ", _sBuffer, 3, 4);
+	for (new i = 0; i <= 2; i++)
+	_iColors[i] = StringToInt(_sBuffer[i]);
+	
+	return _iColors;
+}
+
+stock TF2_SwitchtoSlot(client, slot)
+{
+	if (slot >= 0 && slot <= 5 && IsValidClient(client) && IsPlayerAlive(client))
+	{
+		decl String:classname[64];
+		new wep = GetPlayerWeaponSlot(client, slot);
+		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, classname, sizeof(classname)))
+		{
+			FakeClientCommandEx(client, "use %s", classname);
+			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
+		}
+	}
+}
+
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 public bool:WardenGroup(const String:strPattern[], Handle:hClients)
 {
 	for (new i = 1; i <= MaxClients; i ++)
 	{
-		if (IsValidClient(i) && Warden != -1 && i == Warden)
-		{
-			PushArrayCell(hClients, i);
-		}
+		if (IsValidClient(i) && Warden != -1 && i == Warden) PushArrayCell(hClients, i);
 	}
 	return true;
 }
@@ -3430,10 +3047,7 @@ public bool:NotWardenGroup(const String:strPattern[], Handle:hClients)
 {
 	for (new i = 1; i <= MaxClients; i ++)
 	{
-		if (IsValidClient(i) && Warden != -1 && i != Warden)
-		{
-			PushArrayCell(hClients, i);
-		}
+		if (IsValidClient(i) && Warden != -1 && i != Warden) PushArrayCell(hClients, i);
 	}
 	return true;
 }
@@ -3442,10 +3056,7 @@ public bool:RebelsGroup(const String:strPattern[], Handle:hClients)
 {
 	for (new i = 1; i <= MaxClients; i ++)
 	{
-		if (IsValidClient(i) && g_IsRebel[i])
-		{
-			PushArrayCell(hClients, i);
-		}
+		if (IsValidClient(i) && g_IsRebel[i]) PushArrayCell(hClients, i);
 	}
 	return true;
 }
@@ -3454,10 +3065,7 @@ public bool:NotRebelsGroup(const String:strPattern[], Handle:hClients)
 {
 	for (new i = 1; i <= MaxClients; i ++)
 	{
-		if (IsValidClient(i) && !g_IsRebel[i])
-		{
-			PushArrayCell(hClients, i);
-		}
+		if (IsValidClient(i) && !g_IsRebel[i]) PushArrayCell(hClients, i);
 	}
 	return true;
 }
@@ -3466,10 +3074,7 @@ public bool:FreedaysGroup(const String:strPattern[], Handle:hClients)
 {
 	for (new i = 1; i <= MaxClients; i ++)
 	{
-		if (IsValidClient(i) && g_IsFreeday[i] || IsValidClient(i) && g_IsFreedayActive[i])
-		{
-			PushArrayCell(hClients, i);
-		}
+		if (IsValidClient(i) && g_IsFreeday[i] || IsValidClient(i) && g_IsFreedayActive[i])PushArrayCell(hClients, i);
 	}
 	return true;
 }
@@ -3478,27 +3083,26 @@ public bool:NotFreedaysGroup(const String:strPattern[], Handle:hClients)
 {
 	for (new i = 1; i <= MaxClients; i ++)
 	{
-		if (IsValidClient(i) && !g_IsFreeday[i] || IsValidClient(i) && !g_IsFreedayActive[i])
-		{
-			PushArrayCell(hClients, i);
-		}
+		if (IsValidClient(i) && !g_IsFreeday[i] || IsValidClient(i) && !g_IsFreedayActive[i]) PushArrayCell(hClients, i);
 	}
 	return true;
 }
 
-
 public Native_ExistWarden(Handle:plugin, numParams)
 {
+	if (!j_Enabled || !j_Warden)
+	ThrowNativeError(SP_ERROR_INDEX, "Plugin or Warden System is disabled");
+
 	if (Warden != -1) return true;
 	return false;
 }
 
 public Native_IsWarden(Handle:plugin, numParams)
 {
+	if (!j_Enabled || !j_Warden) ThrowNativeError(SP_ERROR_INDEX, "Plugin or Warden System is disabled");
+
 	new client = GetNativeCell(1);
-	
-	if (!IsClientInGame(client) && !IsClientConnected(client))
-	ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+	if (!IsClientInGame(client) && !IsClientConnected(client)) ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	
 	if (client == Warden) return true;
 	return false;
@@ -3506,30 +3110,30 @@ public Native_IsWarden(Handle:plugin, numParams)
 
 public Native_SetWarden(Handle:plugin, numParams)
 {
+	if (!j_Enabled || !j_Warden) ThrowNativeError(SP_ERROR_INDEX, "Plugin or Warden System is disabled");
+
 	new client = GetNativeCell(1);
-	
-	if (!IsClientInGame(client) && !IsClientConnected(client))
-	ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+	if (!IsClientInGame(client) && !IsClientConnected(client)) ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	
 	if (Warden == -1) WardenSet(client);
 }
 
 public Native_RemoveWarden(Handle:plugin, numParams)
 {
+	if (!j_Enabled || !j_Warden) ThrowNativeError(SP_ERROR_INDEX, "Plugin or Warden System is disabled");
+
 	new client = GetNativeCell(1);
-	
-	if (!IsClientInGame(client) && !IsClientConnected(client))
-	ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+	if (!IsClientInGame(client) && !IsClientConnected(client)) ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	
 	if (client == Warden) WardenUnset(client);
 }
 
 public Native_IsFreeday(Handle:plugin, numParams)
 {
+	if (!j_Enabled || !j_LRSEnabled) ThrowNativeError(SP_ERROR_INDEX, "Plugin or Last Request System is disabled");
+
 	new client = GetNativeCell(1);
-	
-	if (!IsClientInGame(client) && !IsClientConnected(client))
-	ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+	if (!IsClientInGame(client) && !IsClientConnected(client)) ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	
 	if (g_IsFreeday[client] || g_IsFreedayActive[client]) return true;
 	return false;
@@ -3537,20 +3141,20 @@ public Native_IsFreeday(Handle:plugin, numParams)
 
 public Native_GiveFreeday(Handle:plugin, numParams)
 {
+	if (!j_Enabled || !j_LRSEnabled) ThrowNativeError(SP_ERROR_INDEX, "Plugin or Last Request System is disabled");
+
 	new client = GetNativeCell(1);
-	
-	if (!IsClientInGame(client) && !IsClientConnected(client))
-	ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+	if (!IsClientInGame(client) && !IsClientConnected(client)) ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	
 	if (!g_IsFreeday[client] || !g_IsFreedayActive[client]) GiveFreeday(client);
 }
 
 public Native_IsRebel(Handle:plugin, numParams)
 {
+	if (!j_Enabled || !j_Rebels) ThrowNativeError(SP_ERROR_INDEX, "Plugin or Rebel System is disabled");
+
 	new client = GetNativeCell(1);
-	
-	if (!IsClientInGame(client) && !IsClientConnected(client))
-	ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+	if (!IsClientInGame(client) && !IsClientConnected(client)) ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	
 	if (g_IsRebel[client]) return true;
 	return false;
@@ -3558,20 +3162,20 @@ public Native_IsRebel(Handle:plugin, numParams)
 
 public Native_MarkRebel(Handle:plugin, numParams)
 {
+	if (!j_Enabled || !j_Rebels) ThrowNativeError(SP_ERROR_INDEX, "Plugin or Rebel System is disabled");
+
 	new client = GetNativeCell(1);
-	
-	if (!IsClientInGame(client) && !IsClientConnected(client))
-	ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+	if (!IsClientInGame(client) && !IsClientConnected(client)) ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	
 	if (!g_IsRebel[client]) MarkRebel(client);
 }
 
 public Native_IsFreekiller(Handle:plugin, numParams)
 {
+	if (!j_Enabled || !j_Freekillers) ThrowNativeError(SP_ERROR_INDEX, "Plugin or Anti-Freekill System is disabled");
+
 	new client = GetNativeCell(1);
-	
-	if (!IsClientInGame(client) && !IsClientConnected(client))
-	ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+	if (!IsClientInGame(client) && !IsClientConnected(client)) ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	
 	if (g_IsFreekiller[client]) return true;
 	return false;
@@ -3579,10 +3183,10 @@ public Native_IsFreekiller(Handle:plugin, numParams)
 
 public Native_MarkFreekill(Handle:plugin, numParams)
 {
+	if (!j_Enabled || !j_Freekillers) ThrowNativeError(SP_ERROR_INDEX, "Plugin or Anti-Freekill System is disabled");
+
 	new client = GetNativeCell(1);
-	
-	if (!IsClientInGame(client) && !IsClientConnected(client))
-	ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+	if (!IsClientInGame(client) && !IsClientConnected(client)) ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	
 	if (!g_IsFreekiller[client]) MarkFreekiller(client);
 }

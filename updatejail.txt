@@ -1,5 +1,7 @@
 Update Notes:
 
+++ 10/04/2013
+
 Jailbreak-
 * Freedays for Clients should now list off the names of the clients at the start of the arena round in chat.
 * Moved the last prisoner last request feature to it's own command variable. New variable is 'sm_tf2jail_lastrequest_automatic'.
@@ -12,6 +14,7 @@ Jailbreak-
 * Added a new console variable which allows server operators to set a limit on the amount of Wardens available per map. 'sm_tf2jail_warden_limit'
 * Fixed Warden being locked when the round ends and until the round fully starts on arena.
 * Fixed a few small errors.
+* Tons of undocumented changes to the plugin.
 
 ++ 09/08/2013
 
