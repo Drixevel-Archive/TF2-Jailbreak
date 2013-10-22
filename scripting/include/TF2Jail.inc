@@ -24,7 +24,7 @@ native TF2Jail_IsWarden(client);
  * Sets a client to Warden.
  *
  * @param client		Client to receive Warden.
- * @return		N/A
+ * @noreturn
  **/
 native TF2Jail_WardenSet(client);
 
@@ -32,7 +32,7 @@ native TF2Jail_WardenSet(client);
  * Remove the Warden if there is one.
  *
  * @param client		Client to remove from Warden.
- * @return		N/A
+ * @noreturn
  **/
 native TF2Jail_WardenUnset(client);
 
@@ -40,7 +40,7 @@ native TF2Jail_WardenUnset(client);
  * Returns if the client is a Freeday.
  *
  * @param client		Client returned.
- * @return		True if active, false if not.
+ * @noreturn
  **/
 native TF2Jail_IsFreeday(client);
 
@@ -48,7 +48,7 @@ native TF2Jail_IsFreeday(client);
  * Sets a client to Freeday.
  *
  * @param client		Client to set as Freeday.
- * @return		N/A
+ * @noreturn
  **/
 native TF2Jail_GiveFreeday(client);
 
@@ -83,3 +83,20 @@ native TF2Jail_IsFreekiller(client);
  * @return		N/A
  **/
 native TF2Jail_MarkFreekiller(client);
+
+//Stock functions for all the plugins to use, saves lines.
+stock IsValidClient(client, bool:replaycheck = true)
+{
+	if (client <= 0 || client > MaxClients || !IsClientInGame(client) || GetEntProp(client, Prop_Send, "m_bIsCoaching") || IsFakeClient(client) || !IsValidEntity(client))
+	{
+		return false;
+	}
+	if (replaycheck)
+	{
+		if (IsClientSourceTV(client) || IsClientReplay(client))
+		{
+			return false;
+		}
+	}
+	return true;
+}
