@@ -7,17 +7,35 @@
 
 #pragma semicolon 1
 
+//Required Includes
 #include <sourcemod>
-#include <clientprefs>
 #include <sdktools>
-#include <adminmenu>
+#include <sdkhooks>
 #include <tf2>
 #include <tf2_stocks>
+#include <morecolors>
+#include <smlib>
+#include <autoexecconfig>
 #include <TF2Jail>
+#include <tf2items>
+#include <banning>
+
+//Optional Extensions
+#undef REQUIRE_EXTENSIONS
+#include <clientprefs>
+#define REQUIRE_EXTENSIONS
+
+//Optional Plugins
+#undef REQUIRE_PLUGIN
+#tryinclude <sourcebans>
+#tryinclude <adminmenu>
+#tryinclude <sourcecomms>
+#tryinclude <basecomm>
+#define REQUIRE_PLUGIN
 
 #define PLUGIN_NAME     "[TF2] Jailbreak - Bans"												//Plugin name
 #define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"											//Plugin author
-#define PLUGIN_VERSION  "4.9.1"																	//Plugin version
+#define PLUGIN_VERSION  "4.9.7"																	//Plugin version
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."									//Plugin description
 #define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"											//Plugin contact URL
 
@@ -75,7 +93,7 @@ public OnPluginStart()
 	JBB_Cvar_Table_Prefix = CreateConVar("sm_jail_blueban_tableprefix", "", "Prefix for database to use: (def: none)", FCVAR_PLUGIN);
 	JBB_Cvar_Database_Driver = CreateConVar("sm_jail_blueban_sqldriver", "default", "Name of the sql driver to use: (def: default)", FCVAR_PLUGIN);
 	JBB_Cvar_Debugger = CreateConVar("sm_jail_blueban_debug", "1", "Debugging logs status: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JBB_Cvar_MySQL = CreateConVar("sm_jail_blueban_debug", "1", "Debugging logs status: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JBB_Cvar_MySQL = CreateConVar("sm_jail_blueban_sqlprogram", "1", "(1 = MySQL, 0 = SQLite)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	
 	HookEvent("player_spawn", PlayerSpawn);
 	HookEvent("teamplay_round_start", RoundStart);
@@ -334,11 +352,11 @@ public Action:Command_Offline_Ban(client, args)
 	if (bAuthIdNativeExists)
 	{
 		SetAuthIdCookie(sAuthId, Guard_Cookie, "1");
-		ReplyToCommand(client, CLAN_TAG, "Banned AuthId", sAuthId);
+		ReplyToCommand(client, "%s %t", CLAN_TAG, "Banned AuthId", sAuthId);
 	}
 	else
 	{
-		ReplyToCommand(client, CLAN_TAG, "Feature Not Available");
+		ReplyToCommand(client, "%s %t", CLAN_TAG, "Feature Not Available");
 	}
 	return Plugin_Handled;
 }
@@ -350,11 +368,11 @@ public Action:Command_Offline_Unban(client, args)
 	if (bAuthIdNativeExists)
 	{
 		SetAuthIdCookie(sAuthId, Guard_Cookie, "0");
-		ReplyToCommand(client, CLAN_TAG, "Unbanned AuthId", sAuthId);
+		ReplyToCommand(client, "%s %t", CLAN_TAG, "Unbanned AuthId", sAuthId);
 	}
 	else
 	{
-		ReplyToCommand(client, CLAN_TAG, "Feature Not Available");
+		ReplyToCommand(client, "%s %t", CLAN_TAG, "Feature Not Available");
 	}
 	return Plugin_Handled;
 }
@@ -364,7 +382,7 @@ public Action:Command_RageBan(client, args)
 	new iArraySize = GetArraySize(DNames);
 	if (iArraySize == 0)
 	{
-		ReplyToCommand(client, CLAN_TAG, "No Targets");
+		ReplyToCommand(client, "%s %t", CLAN_TAG, "No Targets");
 		return Plugin_Handled;
 	}
 	
@@ -376,7 +394,7 @@ public Action:Command_RageBan(client, args)
 		}
 		else
 		{
-			ReplyToCommand(client, CLAN_TAG, "Feature Not Available On Console");
+			ReplyToCommand(client, "%s %t", CLAN_TAG, "Feature Not Available On Console");
 		}
 		return Plugin_Handled;
 	}
@@ -680,7 +698,7 @@ public MenuHandler_CTBanReasonList(Handle:menu, MenuAction:action, param1, param
 				}
 				else
 				{
-					PrintToChat(param1, CLAN_TAG, "Already Guard Banned", iTargetIndex);
+					PrintToChat(param1, "%s %t", CLAN_TAG, "Already Guard Banned", iTargetIndex);
 				}
 			}
 	}
@@ -930,7 +948,7 @@ ProcessBanCookies(client)
 					ForcePlayerSuicide(client);
 				}
 				ChangeClientTeam(client, _:TFTeam_Red);
-				PrintToChat(client, CLAN_TAG, "Enforcing Guard Ban");
+				PrintToChat(client, "%s %t", CLAN_TAG, "Enforcing Guard Ban");
 			}		
 		}
 	}
@@ -961,7 +979,7 @@ public Action:Command_LiveUnban(client, args)
 			}
 			else
 			{
-				ReplyToCommand(client, CLAN_TAG, "Cookie Status Unavailable");
+				ReplyToCommand(client, "%s %t", CLAN_TAG, "Cookie Status Unavailable");
 			}
 		}	
 	}
@@ -1067,7 +1085,7 @@ public Action:Command_LiveBan(client, args)
 					new banFlag = StringToInt(isBanned);	
 					if (banFlag)
 					{
-						ReplyToCommand(client, CLAN_TAG, "Already Guard Banned", target_list[0]);
+						ReplyToCommand(client, "%s %t", CLAN_TAG, "Already Guard Banned", target_list[0]);
 					}
 					else
 					{
@@ -1076,7 +1094,7 @@ public Action:Command_LiveBan(client, args)
 				}
 				else
 				{
-					ReplyToCommand(client, CLAN_TAG, "Cookie Status Unavailable");
+					ReplyToCommand(client, "%s %t", CLAN_TAG, "Cookie Status Unavailable");
 				}
 			}				
 		}
@@ -1240,26 +1258,26 @@ public Action:Command_IsBanned(client, args)
 					{
 						if (LocalTimeRemaining[target_list[0]] <= 0)
 						{
-							ReplyToCommand(client, CLAN_TAG, "Permanent Guard Ban", target_list[0]);
+							ReplyToCommand(client, "%s %t", CLAN_TAG, "Permanent Guard Ban", target_list[0]);
 						}
 						else
 						{
-							ReplyToCommand(client, CLAN_TAG, "Temporary Guard Ban", target_list[0], LocalTimeRemaining[target_list[0]]);
+							ReplyToCommand(client, "%s %t", CLAN_TAG, "Temporary Guard Ban", target_list[0], LocalTimeRemaining[target_list[0]]);
 						}
 					}
 					else
 					{
-						ReplyToCommand(client, CLAN_TAG, "Not Guard Banned", target_list[0]);
+						ReplyToCommand(client, "%s %t", CLAN_TAG, "Not Guard Banned", target_list[0]);
 					}
 				}
 				else
 				{
-					ReplyToCommand(client, CLAN_TAG, "Cookie Status Unavailable");	
+					ReplyToCommand(client, "%s %t", CLAN_TAG, "Cookie Status Unavailable");	
 				}
 			}
 			else
 			{
-				ReplyToCommand(client, CLAN_TAG, "Unable to target");
+				ReplyToCommand(client, "%s %t", CLAN_TAG, "Unable to target");
 			}				
 		}
 	}
