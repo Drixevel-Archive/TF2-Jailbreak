@@ -35,7 +35,7 @@
 
 #define PLUGIN_NAME     "[TF2] Jailbreak - Bans"												//Plugin name
 #define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"											//Plugin author
-#define PLUGIN_VERSION  "4.9.7"																	//Plugin version
+#define PLUGIN_VERSION  "4.9.1"																	//Plugin version
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."									//Plugin description
 #define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"											//Plugin contact URL
 

@@ -123,19 +123,19 @@
 	"fire warden minimum players not met"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} Minimum players has not been met to fire warden."
+		"en"		"{darkkhaki} Minimum players has not been met to fire Warden."
 	}	
 	
 	"fire warden already voted"
 	{
 		"#format"	"{1:d},{2:d}"
-		"en"		"{darkkhaki} You have already voted to cast off this warden. ({1} votes, {2} required)"
+		"en"		"{darkkhaki} You have already voted to cast off this Warden. ({1} votes, {2} required)"
 	}
 	
 	"fire warden requested"
 	{
 		"#format"	"{1:s},{2:d},{3:d}"
-		"en"		"{darkkhaki} {1} wants to fire the current warden. ({2} votes, {3} required)"
+		"en"		"{darkkhaki} {1} wants to fire the current Warden. ({2} votes, {3} required)"
 	}
 	
 	"voted off of warden"
@@ -189,7 +189,7 @@
 	"warden disconnected"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} The warden has disconnected. You may now choose a new warden by typing !w in chat."
+		"en"		"{darkkhaki} The Warden has disconnected. You may now choose a new Warden by typing !w in chat."
 	}
 	
 	"warden retired center"
@@ -213,7 +213,7 @@
 	"dead warden"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} The warden is now dead. You may now choose a new one by typing !w in chat."
+		"en"		"{darkkhaki} The Warden is now dead. You may now choose a new one by typing !w in chat."
 	}
 	
 	"warden killed"
@@ -603,7 +603,7 @@
 	"no active warden commands"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} No warden commands are currently active."
+		"en"		"{darkkhaki} No Warden commands are currently active."
 	}
 	
 	"freekiller timer start"
@@ -693,13 +693,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//Screen Message
-	"Current Warden Screen Message"
+	"Current warden Screen Message"
 	{
 		"#format"	"{1:N}"
 		"en"		"Current Warden: {1}"
 	}
 	//Admin Activity
-	"Admin Remove Warden"
+	"Admin Remove warden"
 	{
 		"#format"	"{1:N},{2:N}"
 		"en"		"{1} has fired {2} from Warden."
@@ -734,12 +734,12 @@
 		"#format"	"{1:N}"
 		"en"		"{1} has unlocked all cell doors."
 	}
-	"Admin Force Warden Random"
+	"Admin Force warden Random"
 	{
 		"#format"	"{1:N},{2:N}"
 		"en"		"{1} has forced {2} to be Warden by random."
 	}
-	"Admin Force Warden"
+	"Admin Force warden"
 	{
 		"#format"	"{1:N},{2:N}"
 		"en"		"{1} has forced {2} to be Warden manually."
