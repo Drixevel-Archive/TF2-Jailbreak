@@ -3872,7 +3872,7 @@ public bool:NotFreedaysGroup(const String:strPattern[], Handle:hClients)
 }
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-public Native_Existwarden(Handle:plugin, numParams)
+public Native_ExistWarden(Handle:plugin, numParams)
 {
 	if (!j_Enabled || !j_warden)
 	ThrowNativeError(SP_ERROR_INDEX, "Plugin or warden System is disabled");
@@ -3881,7 +3881,7 @@ public Native_Existwarden(Handle:plugin, numParams)
 	return false;
 }
 
-public Native_Iswarden(Handle:plugin, numParams)
+public Native_IsWarden(Handle:plugin, numParams)
 {
 	if (!j_Enabled || !j_warden) ThrowNativeError(SP_ERROR_INDEX, "Plugin or warden System is disabled");
 
@@ -3892,7 +3892,7 @@ public Native_Iswarden(Handle:plugin, numParams)
 	return false;
 }
 
-public Native_Setwarden(Handle:plugin, numParams)
+public Native_SetWarden(Handle:plugin, numParams)
 {
 	if (!j_Enabled || !j_warden) ThrowNativeError(SP_ERROR_INDEX, "Plugin or warden System is disabled");
 
@@ -3902,7 +3902,7 @@ public Native_Setwarden(Handle:plugin, numParams)
 	if (warden == -1) wardenSet(client);
 }
 
-public Native_Removewarden(Handle:plugin, numParams)
+public Native_RemoveWarden(Handle:plugin, numParams)
 {
 	if (!j_Enabled || !j_warden) ThrowNativeError(SP_ERROR_INDEX, "Plugin or warden System is disabled");
 
