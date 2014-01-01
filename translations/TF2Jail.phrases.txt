@@ -15,7 +15,7 @@
 	"plugin advertisement"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} TF2 Jailbreak plugin by Jack of Designs. (www.jackofdesigns.com)."
+		"en"		"{darkkhaki} TF2 Jailbreak plugin by Softerly"
 	}
 
 	"welcome message"
@@ -45,13 +45,13 @@
 	"microphone check warden block"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} Please verify your microphone in order to become Warden."
+		"en"		"{darkkhaki} Please verify your microphone in order to become Warden./אנא בדוק את המיקרופון שלך כדי להפוך לורדן."
 	}
 	
 	"freekillers system disabled"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} The Anti-Freekill system is currently disabled."
+		"en"		"{darkkhaki} the Anti-Freekill system is currently disabled./ הושבתה Anti-Freekill מערכת"
 	}
 	
 	"freekiller flagged while void"
@@ -63,7 +63,7 @@
 	"lr system disabled"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} The Last Request system is currently disabled."
+		"en"		"{darkkhaki} The Last Request system is currently disabled./מערכת הבקשה האחרונה מושבת כרגע."
 	}
 	
 	"red mute system disabled"
@@ -75,7 +75,7 @@
 	"last guard"
 	{
 		"#format"	""
-		"en"		"One guard left..."
+		"en"		"One guard left.../שומר אחד נישאר"
 	}
 	
 	"warden friendly fire manage disabled"
