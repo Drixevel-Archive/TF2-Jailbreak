@@ -119,6 +119,12 @@
 		"#format"	""
 		"en"		"{darkkhaki} Your robot status has been removed by an admin."
 	}
+	
+	"admin removed skeleton"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Your skeleton status has been removed by an admin."
+	}
 
 	"fire warden minimum players not met"
 	{
@@ -166,6 +172,12 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Warden is currently locked."
+	}
+	
+	"warden locked lr round"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Warden is currently locked because it's a last request round."
 	}
 	
 	"warden granted lr"
@@ -250,6 +262,12 @@
 	{
 		"#format"	"{1:N},{2:d}"
 		"en"		"{darkkhaki} {1} has reached his limit for Warden this map which is set to {2} on the server."
+	}
+	
+	"warden voice muted"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} WARNING: {1} is currently muted, they cannot speak on the microphone."
 	}
 	
 	"last request in use"
@@ -405,7 +423,19 @@
 	"lr robotic takeover executed"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} Robots have taken over the eart as a part of a last request!"
+		"en"		"{darkkhaki} Robots have taken over the earth as a part of a last request!"
+	}
+	
+	"lr skeletons attack queued"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has chosen for Skeletons to attack!"
+	}
+	
+	"lr skeletons attack executed"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} SKELETONS ARE ATTACKING as a part of a last request!"
 	}
 	
 	"lr hide and seek queued"
@@ -430,6 +460,18 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Disco Day mode has been activated. PARTY!"
+	}
+	
+	"lr magician wars queued"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has chosen MAGICIAN WARS! We shall dance with the demons!"
+	}
+	
+	"lr magician wars executed"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Magician Wars is now activated. The demons will dance tonight!"
 	}
 
 	"lr custom message"
@@ -612,6 +654,33 @@
 		"en"		"{darkkhaki} {1} has been marked as a Freekiller and will be banned in {2} unless admin pardons it."
 	}
 	
+	"freeday currently queued"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} is already setup for a Freeday next round, please choose a new client."
+	}
+	
+	"Map Compatibility Cell Opener Detected"
+	{
+		"#format"	""
+		"en"		"Cell Opener - Detected"
+	}
+	"Map Compatibility Cell Opener Undetected"
+	{
+		"#format"	""
+		"en"		"Cell Opener - Undetected"
+	}
+	"Map Compatibility Cell Doors Detected"
+	{
+		"#format"	""
+		"en"		"Cell Doors - Detected"
+	}
+	"Map Compatibility Cell Doors Undetected"
+	{
+		"#format"	""
+		"en"		"Cell Doors - Undetected"
+	}
+	
 	"menu Freeday for yourself"
 	{
 		"#format"	""
@@ -672,6 +741,12 @@
 		"en"		"Robotic Takeover"
 	}
 	
+	"menu Skeletons Attack"
+	{
+		"#format"	""
+		"en"		"Skeletons Attack"
+	}
+	
 	"menu Hide & Seek"
 	{
 		"#format"	""
@@ -684,21 +759,36 @@
 		"en"		"Disco Day"
 	}
 	
+	"menu Magician Wars"
+	{
+		"#format"	""
+		"en"		"Magician Wars"
+	}
+	
+	"menu Big Heads Day"
+	{
+		"#format"	""
+		"en"		"Big Heads Day"
+	}
+	
+	"menu Whac A Mole"
+	{
+		"#format"	""
+		"en"		"Whac A Mole"
+	}
+	
 	"menu Custom Request"
 	{
 		"#format"	""
 		"en"		"Custom Request"
 	}
 	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	//Screen Message
 	"Current warden Screen Message"
 	{
 		"#format"	"{1:N}"
 		"en"		"Current Warden: {1}"
 	}
-	//Admin Activity
+
 	"Admin Remove warden"
 	{
 		"#format"	"{1:N},{2:N}"
@@ -793,27 +883,5 @@
 	{
 		"#format"	"{1:N}"
 		"en"		"{1} has cancelled the active Warden command: Collision"
-	}
-	
-	//Replies to Commands
-	"Map Compatibility Cell Opener Detected"
-	{
-		"#format"	""
-		"en"		"Cell Opener - Detected"
-	}
-	"Map Compatibility Cell Opener Undetected"
-	{
-		"#format"	""
-		"en"		"Cell Opener - Undetected"
-	}
-	"Map Compatibility Cell Doors Detected"
-	{
-		"#format"	""
-		"en"		"Cell Doors - Detected"
-	}
-	"Map Compatibility Cell Doors Undetected"
-	{
-		"#format"	""
-		"en"		"Cell Doors - Undetected"
 	}
 }

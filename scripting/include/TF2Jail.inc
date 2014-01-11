@@ -1,7 +1,7 @@
-#if defined _TF2Jail_included
+#if defined _tf2jail_included
   #endinput
 #endif
-#define _TF2Jail_included
+#define _tf2jail_included
 
 // NOTE: Requires you check if the player is in-game, alive, etc.
 
@@ -83,13 +83,3 @@ native TF2Jail_IsFreekiller(client);
  * @noreturn
  **/
 native TF2Jail_MarkFreekiller(client);
-
-//Valid client check
-stock IsValidClient(client, bool:replaycheck = true)
-{
-	if (client <= 0 || client > MaxClients || !IsClientInGame(client) || GetEntProp(client, Prop_Send, "m_bIsCoaching") || IsFakeClient(client) || !IsValidEntity(client))return false;
-	if (replaycheck)
-	{
-		if (IsClientSourceTV(client) || IsClientReplay(client)) return false;
-	}return true;
-}
