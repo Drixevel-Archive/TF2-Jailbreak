@@ -15,13 +15,13 @@
 	"plugin advertisement"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} TF2 Jailbreak plugin by Jack of Designs. (www.jackofdesigns.com)."
+		"en"		"{darkkhaki} TF2 Jailbreak plugin by Keith Warren [Jack of Designs] - (http://www.jackofdesigns.com/)."
 	}
 
 	"welcome message"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} Welcome to Team Fortress 2 Jailbreak! Type !jailbreak in chat for the rules and list of commands."
+		"en"		"{darkkhaki} Welcome to Team Fortress 2 Jailbreak! This server is running the [TF2Jail] plugin!"
 	}
 	
 	"incompatible map"
@@ -288,18 +288,6 @@
 		"en"		"{darkkhaki} {1} has given {2} a last request."
 	}
 	
-	"lr freeday queued"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has chosen freeday next round."
-	}
-	
-	"lr freeday executed"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} Freeday mode is now activated for {1}."
-	}
-	
 	"lr freeday message"
 	{
 		"#format"	""
@@ -318,12 +306,6 @@
 		"en"		"{darkkhaki} {1}'s Freeday has been removed because you attacked a Guard."
 	}
 	
-	"lr free for all queued"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has chosen to grant freeday for all next round."
-	}
-	
 	"lr freeday picking clients"
 	{
 		"#format"	"{1:N}"
@@ -340,144 +322,6 @@
 	{
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1} has reached the maximum number of allowed clients for freeday on this server."
-	}
-
-	"lr free for all executed"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Freeday mode is activated."
-	}
-
-	"lr suicide"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has chosen to kill himself. What a shame..."
-	}	
-	
-	"lr guards melee only queued"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has chosen for guards to use melee only next round."
-	}
-	
-	"lr guards melee only executed"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Guards melee only activated."
-	}
-	
-	"lr hhh kill round queued"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has chosen Horseless Headless Horsemann Kill Round next round."
-	}
-	
-	"lr hhh kill round executed"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Horseless Headless Horsemann Kill round has been activated."
-	}
-
-	"lr low gravity round queued"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has chosen Low Gravity next round."
-	}
-	
-	"lr low gravity round executed"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Low Gravity mode has been activated."
-	}
-	
-	"lr speed demon round queued"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has chosen Speed Demon next round."
-	}
-	
-	"lr speed demon round executed"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Speed Demon mode has been activated."
-	}
-	
-	"lr hunger games queued"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has chosen Hunger Games next round."
-	}
-	
-	"lr hunger games executed"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Hunger games mode activated. Friendly fire will be enabled in 10 seconds."
-	}
-	
-	"lr robotic takeover queued"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has chosen for robots to take over the world!"
-	}
-	
-	"lr robotic takeover executed"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Robots have taken over the earth as a part of a last request!"
-	}
-	
-	"lr skeletons attack queued"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has chosen for Skeletons to attack!"
-	}
-	
-	"lr skeletons attack executed"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} SKELETONS ARE ATTACKING as a part of a last request!"
-	}
-	
-	"lr hide and seek queued"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has chosen Hide & Seek next round!"
-	}
-	
-	"lr hide and seek executed"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Hide & Seek has been activated. Blue's are locked down for 30 seconds, prisoners need to find places to hide."
-	}
-	
-	"lr disco day queued"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has chosen Disco Day next round! PARTY HARD!"
-	}
-	
-	"lr disco day executed"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Disco Day mode has been activated. PARTY!"
-	}
-	
-	"lr magician wars queued"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has chosen MAGICIAN WARS! We shall dance with the demons!"
-	}
-	
-	"lr magician wars executed"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Magician Wars is now activated. The demons will dance tonight!"
-	}
-
-	"lr custom message"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has chosen to type out his/her LR in chat. (Custom)"
 	}
 
 	"microphone verified"
@@ -681,108 +525,6 @@
 		"en"		"Cell Doors - Undetected"
 	}
 	
-	"menu Freeday for yourself"
-	{
-		"#format"	""
-		"en"		"Freeday for yourself"
-	}
-
-	"menu Freeday for you and others"
-	{
-		"#format"	""
-		"en"		"Freeday for you and others"
-	}
-
-	"menu Freeday for all"
-	{
-		"#format"	""
-		"en"		"Freeday for all"
-	}
-
-	"menu Commit Suicide"
-	{
-		"#format"	""
-		"en"		"Commit Suicide"
-	}
-
-	"menu Guards Melee Only Round"
-	{
-		"#format"	""
-		"en"		"Guards Melee Only Round"
-	}
-
-	"menu HHH Kill Round"
-	{
-		"#format"	""
-		"en"		"HHH Kill Round"
-	}
-
-	"menu Low Gravity Round"
-	{
-		"#format"	""
-		"en"		"Low Gravity Round"
-	}
-
-	"menu Speed Demon Round"
-	{
-		"#format"	""
-		"en"		"Speed Demon Round"
-	}
-
-	"menu Hunger Games"
-	{
-		"#format"	""
-		"en"		"Hunger Games"
-	}
-
-	"menu Robotic Takeover"
-	{
-		"#format"	""
-		"en"		"Robotic Takeover"
-	}
-	
-	"menu Skeletons Attack"
-	{
-		"#format"	""
-		"en"		"Skeletons Attack"
-	}
-	
-	"menu Hide & Seek"
-	{
-		"#format"	""
-		"en"		"Hide & Seek"
-	}
-	
-	"menu Disco Day"
-	{
-		"#format"	""
-		"en"		"Disco Day"
-	}
-	
-	"menu Magician Wars"
-	{
-		"#format"	""
-		"en"		"Magician Wars"
-	}
-	
-	"menu Big Heads Day"
-	{
-		"#format"	""
-		"en"		"Big Heads Day"
-	}
-	
-	"menu Whac A Mole"
-	{
-		"#format"	""
-		"en"		"Whac A Mole"
-	}
-	
-	"menu Custom Request"
-	{
-		"#format"	""
-		"en"		"Custom Request"
-	}
-	
 	"Current warden Screen Message"
 	{
 		"#format"	"{1:N}"
@@ -883,5 +625,10 @@
 	{
 		"#format"	"{1:N}"
 		"en"		"{1} has cancelled the active Warden command: Collision"
+	}
+	"last request config invalid"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Last Requests are currently disabled. Please check logs for more information. (Couldn't Parse Config)"
 	}
 }

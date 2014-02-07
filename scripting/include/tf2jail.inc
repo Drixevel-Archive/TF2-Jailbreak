@@ -3,6 +3,9 @@
 #endif
 #define _tf2jail_included
 
+#define TAG_COLORED	"{community}[TF2Jail]"
+#define TAG	"[TF2Jail]"
+
 // NOTE: Requires you check if the player is in-game, alive, etc.
 
 /**
@@ -83,3 +86,30 @@ native TF2Jail_IsFreekiller(client);
  * @noreturn
  **/
 native TF2Jail_MarkFreekiller(client);
+
+public SharedPlugin:__pl_tf2jail = 
+{
+	name = "tf2jail",
+	file = "TF2Jail.smx",
+#if defined REQUIRE_PLUGIN
+	required = 1,
+#else
+	required = 0,
+#endif
+};
+
+#if !defined REQUIRE_PLUGIN
+public __pl_tf2jail_SetNTVOptional()
+{
+	MarkNativeAsOptional("TF2Jail_WardenActive");
+	MarkNativeAsOptional("TF2Jail_IsWarden");
+	MarkNativeAsOptional("TF2Jail_WardenSet");
+	MarkNativeAsOptional("TF2Jail_WardenUnset");
+	MarkNativeAsOptional("TF2Jail_IsFreeday");
+	MarkNativeAsOptional("TF2Jail_GiveFreeday");
+	MarkNativeAsOptional("TF2Jail_IsRebel");
+	MarkNativeAsOptional("TF2Jail_MarkRebel");
+	MarkNativeAsOptional("TF2Jail_IsFreekiller");
+	MarkNativeAsOptional("TF2Jail_MarkFreekiller");
+}
+#endif
