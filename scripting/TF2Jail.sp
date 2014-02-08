@@ -370,7 +370,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	new String:Game[32];
 	GetGameFolderName(Game, sizeof(Game));
 
-	if (!StrEqual(Game, "tf") || !StrEqual(Game, "tf_beta"))
+	if (!StrEqual(Game, "tf") && !StrEqual(Game, "tf_beta"))
 	{
 		Format(error, err_max, "This plugin only works for Team Fortress 2.");
 		return APLRes_Failure;
