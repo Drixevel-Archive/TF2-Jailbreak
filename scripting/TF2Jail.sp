@@ -53,7 +53,7 @@
 
 #define PLUGIN_NAME     "[TF2] Jailbreak"
 #define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"
-#define PLUGIN_VERSION  "5.1.0"
+#define PLUGIN_VERSION  "5.1.1"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"
 
@@ -134,8 +134,6 @@ new bool:g_1stRoundFreeday = false;
 new bool:g_VoidFreekills = false;
 new bool:g_bIsLRInUse = false;
 new bool:g_bIsWardenLocked = false;
-new bool:g_bIsLowGravRound = false;
-new bool:g_bIsDiscoRound = false;
 new bool:g_bOneGuardLeft = false;
 new bool:g_bTimerStatus = true;
 new bool:g_bActiveRound = false;
@@ -358,8 +356,6 @@ public OnPluginStart()
 	
 	BuildPath(Path_SM, LRConfig_File, sizeof(LRConfig_File), "configs/tf2jail/lastrequests.cfg");
 
-	AddServerTag("Jailbreak");
-
 	g_hArray_Pending = CreateArray();
 
 	AutoExecConfig_CleanFile();
@@ -367,10 +363,7 @@ public OnPluginStart()
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
-	new String:Game[32];
-	GetGameFolderName(Game, sizeof(Game));
-
-	if (!StrEqual(Game, "tf") && !StrEqual(Game, "tf_beta"))
+	if (GetEngineVersion() != Engine_TF2)
 	{
 		Format(error, err_max, "This plugin only works for Team Fortress 2.");
 		return APLRes_Failure;
@@ -404,7 +397,7 @@ public OnAllPluginsLoaded()
 	e_tf2attributes = LibraryExists("tf2attributes");
 	e_sourcebans = LibraryExists("sourcebans");
 	if (LibraryExists("sourcecomms")) enumCommsList = Sourcecomms;
-	if (LibraryExists("basecomm")) enumCommsList = Basecomms;
+	else if (LibraryExists("basecomm")) enumCommsList = Basecomms;
 	
 #if defined _updater_included
 	if (LibraryExists("updater")) Updater_AddPlugin(UPDATE_URL);
@@ -414,22 +407,22 @@ public OnAllPluginsLoaded()
 public OnLibraryAdded(const String:name[])
 {
 	if (StrEqual(name, "SteamTools", false)) e_steamtools = true;
-	if (StrEqual(name, "sourcebans")) e_sourcebans = true;
-	if (StrEqual(name, "sourcecomms")) enumCommsList = Sourcecomms;
-	if (StrEqual(name, "basecomm")) enumCommsList = Basecomms;
-	if (StrEqual(name, "voiceannounce_ex")) e_voiceannounce_ex = true;
-	if (StrEqual(name, "tf2attributes")) e_tf2attributes = true;
-	if (StrEqual(name, "tf2items")) e_tf2items = true;
+	else if (StrEqual(name, "sourcebans")) e_sourcebans = true;
+	else if (StrEqual(name, "sourcecomms")) enumCommsList = Sourcecomms;
+	else if (StrEqual(name, "basecomm")) enumCommsList = Basecomms;
+	else if (StrEqual(name, "voiceannounce_ex")) e_voiceannounce_ex = true;
+	else if (StrEqual(name, "tf2attributes")) e_tf2attributes = true;
+	else if (StrEqual(name, "tf2items")) e_tf2items = true;
 }
 
 public OnLibraryRemoved(const String:name[])
 {
 	if (StrEqual(name, "SteamTools", false)) e_steamtools = false;
-	if (StrEqual(name, "sourcecomms") || StrEqual(name, "basecomm")) enumCommsList = None;
-	if (StrEqual(name, "tf2items"))	e_tf2items = false;
-	if (StrEqual(name, "tf2attributes")) e_tf2attributes = false;
-	if (StrEqual(name, "sourcebans")) e_sourcebans = false;
-	if (StrEqual(name, "voiceannounce_ex"))	e_voiceannounce_ex = false;
+	else if (StrEqual(name, "sourcecomms") || StrEqual(name, "basecomm")) enumCommsList = None;
+	else if (StrEqual(name, "tf2items"))	e_tf2items = false;
+	else if (StrEqual(name, "tf2attributes")) e_tf2attributes = false;
+	else if (StrEqual(name, "sourcebans")) e_sourcebans = false;
+	else if (StrEqual(name, "voiceannounce_ex"))	e_voiceannounce_ex = false;
 }
 
 public OnPluginEnd()
@@ -1077,7 +1070,7 @@ public OnMapStart()
 		{
 			if (IsClientConnected(i))
 			{
-				OnClientConnected(i);
+				if (g_bLateLoad) OnClientConnected(i);
 				g_AmmoCount[i] = 0;
 			}
 			g_HasBeenWarden[i] = 0;
@@ -1110,8 +1103,6 @@ public OnMapStart()
 		g_Votes = 0;
 		g_VotesNeeded = 0;
 		WardenLimit = 0;
-
-		ParseConfigs();
 	}
 }
 
@@ -1141,7 +1132,6 @@ public OnMapEnd()
 		ResetVotes();
 		
 		ConvarsSet(false);
-		RemoveServerTag("Jailbreak");
 		ClearTimer(g_checkweapontimer);
 		ClearTimer(g_adverttimer);
 		PrintToServer("%s Jailbreak has been unloaded successfully.", TAG);
@@ -1341,7 +1331,7 @@ public Action:PlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	new client_attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 	
-	if (!IsValidClient(client) || !IsValidClient(client_attacker))
+	if (IsValidClient(client) || IsValidClient(client_attacker))
 	{
 		if (client_attacker != client)
 		{
@@ -1790,18 +1780,6 @@ public Action:RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 		g_VoidFreekills = false;
 	}
 	
-	if (g_bIsLowGravRound)
-	{
-		ResetConVar(JB_EngineConVars[2], true, true);
-		g_bIsLowGravRound = false;
-	}
-	
-	if (g_bIsDiscoRound)
-	{
-		ServerCommand("sm_disco");
-		g_bIsDiscoRound = false;
-	}
-	
 	if (!g_bTimerStatus)
 	{
 		ServerCommand("sm_countdown_enabled 2");
@@ -1998,8 +1976,6 @@ public Action:AdminResetPlugin(client, args)
 	g_VoidFreekills = false;
 	g_bIsLRInUse = false;
 	g_bIsWardenLocked = false;
-	g_bIsLowGravRound = false;
-	g_bIsDiscoRound = false;
 	g_bOneGuardLeft = false;
 	g_bTimerStatus = true;
 	g_bLateLoad = false;
@@ -2970,13 +2946,11 @@ LastRequestStart(client, bool:Timer = true)
 				
 				if (KvJumpToKey(LastRequestConfig, "Parameters"))
 				{
-					if (kvbool(KvGetNum(LastRequestConfig, "Disabled", 0)))
+					new Disabled = KvGetNum(LastRequestConfig, "Disabled", 0);
+					switch (Disabled)
 					{
-						AddMenuItem(LRMenu_Handle, LR_ID, LR_NAME);
-					}
-					else
-					{
-						AddMenuItem(LRMenu_Handle, LR_ID, LR_NAME, ITEMDRAW_DISABLED);
+						case 0:	AddMenuItem(LRMenu_Handle, LR_ID, LR_NAME);
+						case 1:	AddMenuItem(LRMenu_Handle, LR_ID, LR_NAME, ITEMDRAW_DISABLED);
 					}
 					KvGoBack(LastRequestConfig);
 				}
@@ -3025,87 +2999,119 @@ public MenuHandle_LR(Handle:menu, MenuAction:action, client, item)
 					KvGetSectionName(LastRequestConfig, buffer, sizeof(buffer));
 					if (StrEqual(buffer, choice))
 					{
-						decl String:QueueAnnounce[255], String:ClientName[32];
-						if (KvGetString(LastRequestConfig, "Queue_Announce", QueueAnnounce, sizeof(QueueAnnounce)))
-						{
-							GetClientName(client, ClientName, sizeof(ClientName));
-							ReplaceString(QueueAnnounce, sizeof(QueueAnnounce), "%M", ClientName, true);
-							Format(QueueAnnounce, sizeof(QueueAnnounce), "%s %s", TAG_COLORED, QueueAnnounce);
-							CPrintToChatAll(QueueAnnounce);
-						}
-						
+						new bool:ActiveRound = false;
 						if (KvJumpToKey(LastRequestConfig, "Parameters"))
 						{
-							new bool:ActiveRound = true;
-							if (KvGetNum(LastRequestConfig, "ActiveRound", 0) == 0)
+							if (KvGetNum(LastRequestConfig, "ActiveRound", 0) == 1)
 							{
-								ActiveRound = false;
+								ActiveRound = true;
 							}
-
-							new FreedayValue = KvGetNum(LastRequestConfig, "IsFreedayType", 0);
-							switch (FreedayValue)
+							KvGoBack(LastRequestConfig);
+						}
+						
+						if (ActiveRound)
+						{
+							decl String:Active[255], String:ClientName[32];
+							if (KvGetString(LastRequestConfig, "Activated", Active, sizeof(Active)))
 							{
-								case 1:
+								GetClientName(client, ClientName, sizeof(ClientName));
+								ReplaceString(Active, sizeof(Active), "%M", ClientName, true);
+								Format(Active, sizeof(Active), "%s %s", TAG_COLORED, Active);
+								CPrintToChatAll(Active);
+							}
+							
+							if (KvJumpToKey(LastRequestConfig, "Parameters"))
+							{
+								new FreedayValue = KvGetNum(LastRequestConfig, "IsFreedayType", 0);
+								switch (FreedayValue)
 								{
-									if (ActiveRound)
-									{
-										g_IsFreeday[client] = true;
-									}
-									else
+									case 1:
 									{
 										GiveFreeday(client);
 									}
+									case 2:
+									{
+										FreedayforClientsMenu(client);
+									}
+									case 3:
+									{
+									
+									}
 								}
-								case 2:
-								{
-									FreedayforClientsMenu(client);
-								}
-							}
-							
-							if (KvGetNum(LastRequestConfig, "IsSuicide", 0) == 1)
-							{
-								if (ActiveRound)
+								
+								if (KvGetNum(LastRequestConfig, "IsSuicide", 0) == 1)
 								{
 									ForcePlayerSuicide(client);
 								}
-								else
+								
+								if (KvJumpToKey(LastRequestConfig, "KillWeapons"))
 								{
-									Suicide = client;
-								}
-							}
-							
-							if (KvJumpToKey(LastRequestConfig, "KillWeapons"))
-							{
-								new both = 0;
-								if (KvGetNum(LastRequestConfig, "Red", 0) == 1)
-								{
-									KillWeaponsEnumHandle = KW_Red;
-									both++;
-								}
-							
-								if (KvGetNum(LastRequestConfig, "Blue", 0) == 1)
-								{
-									KillWeaponsEnumHandle = KW_Blue;
-									both++;
+									for (new i = 1; i < MaxClients; i++)
+									{
+										if (IsValidClient(i) && IsPlayerAlive(i))
+										{
+											new team = GetClientTeam(i);
+											switch (team)
+											{
+												case TFTeam_Red:
+												{
+													if (KvGetNum(LastRequestConfig, "Red", 0) == 1)
+													{
+														StripToMelee(i);
+													}
+												}
+												case TFTeam_Blue:
+												{
+													if (KvGetNum(LastRequestConfig, "Blue", 0) == 1)
+													{
+														StripToMelee(i);
+													}
+												}
+											}
+											
+											if (KvGetNum(LastRequestConfig, "Warden", 0) == 1 && IsWarden(i))
+											{
+												StripToMelee(i);
+											}
+										}
+									}
+									KvGoBack(LastRequestConfig);
 								}
 								
-								if (both == 2)
+								if (KvJumpToKey(LastRequestConfig, "FriendlyFire"))
 								{
-									KillWeaponsEnumHandle = KW_Both;
+									if (KvGetNum(LastRequestConfig, "Status", 0) == 1)
+									{
+										new Float:TimeFloat = KvGetFloat(LastRequestConfig, "Timer", 1.0);
+										if (TimeFloat >= 0.1)
+										{
+											CreateTimer(TimeFloat, EnableFFTimer, _, TIMER_FLAG_NO_MAPCHANGE);
+										}
+										else
+										{
+											Jail_Log("[ERROR] Timer is set to a value below 0.1! Timer could not be created.");
+										}
+									}
+									KvGoBack(LastRequestConfig);
 								}
 								KvGoBack(LastRequestConfig);
 							}
-							else
+						}
+						else
+						{
+							decl String:QueueAnnounce[255], String:ClientName[32];
+							if (KvGetString(LastRequestConfig, "Queue_Announce", QueueAnnounce, sizeof(QueueAnnounce)))
 							{
-								KillWeaponsEnumHandle = KW_Disabled;
-								KvGoBack(LastRequestConfig);
+								GetClientName(client, ClientName, sizeof(ClientName));
+								ReplaceString(QueueAnnounce, sizeof(QueueAnnounce), "%M", ClientName, true);
+								Format(QueueAnnounce, sizeof(QueueAnnounce), "%s %s", TAG_COLORED, QueueAnnounce);
+								CPrintToChatAll(QueueAnnounce);
 							}
-							KvGoBack(LastRequestConfig);
+							LR_Number = StringToInt(choice);
 						}
 					}
 				}while (KvGotoNextKey(LastRequestConfig));
 				
-				LR_Number = StringToInt(choice);
 				CloseHandle(LastRequestConfig);
 			}
 			else
@@ -3712,18 +3718,6 @@ DoorHandler(DoorMode:status)
 	}
 }
 
-bool:kvbool(value)
-{
-	if (value == 0)
-	{
-		return false;
-	}
-	else
-	{
-		return true;
-	}
-}
-
 Handle:CreateParticle(String:type[], Float:time, entity, attach=NO_ATTACH, Float:xOffs=0.0, Float:yOffs=0.0, Float:zOffs=0.0)
 {
 	new particle = CreateEntityByName("info_particle_system");
@@ -3762,6 +3756,16 @@ Handle:CreateParticle(String:type[], Float:time, entity, attach=NO_ATTACH, Float
 	}
 	
 	return INVALID_HANDLE;
+}
+
+StripToMelee(client)
+{
+	TF2_RemoveWeaponSlot(client, 0);
+	TF2_RemoveWeaponSlot(client, 1);
+	TF2_RemoveWeaponSlot(client, 3);
+	TF2_RemoveWeaponSlot(client, 4);
+	TF2_RemoveWeaponSlot(client, 5);
+	TF2_SwitchtoSlot(client, TFWeaponSlot_Melee);
 }
 
 /* Timers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -3864,24 +3868,14 @@ public Action:ManageWeapons(Handle:hTimer, any:client)
 				
 				if (KillWeaponsEnumHandle == KW_Red || KillWeaponsEnumHandle == KW_Both)
 				{
-					TF2_RemoveWeaponSlot(client, 0);
-					TF2_RemoveWeaponSlot(client, 1);
-					TF2_RemoveWeaponSlot(client, 3);
-					TF2_RemoveWeaponSlot(client, 4);
-					TF2_RemoveWeaponSlot(client, 5);
-					TF2_SwitchtoSlot(client, TFWeaponSlot_Melee);
+					StripToMelee(client);
 				}
 			}
 		case TFTeam_Blue:
 			{
 				if (KillWeaponsEnumHandle == KW_Blue || KillWeaponsEnumHandle == KW_Both)
 				{
-					TF2_RemoveWeaponSlot(client, 0);
-					TF2_RemoveWeaponSlot(client, 1);
-					TF2_RemoveWeaponSlot(client, 3);
-					TF2_RemoveWeaponSlot(client, 4);
-					TF2_RemoveWeaponSlot(client, 5);
-					TF2_SwitchtoSlot(client, TFWeaponSlot_Melee);
+					StripToMelee(client);
 				}
 			}
 	}
