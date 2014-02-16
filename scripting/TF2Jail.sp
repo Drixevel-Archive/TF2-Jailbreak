@@ -1773,7 +1773,7 @@ public ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 		}
 	}
 	
-	g_bIsWardenLocked = true;
+	g_bIsWardenLocked = false;
 }
 
 public RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
