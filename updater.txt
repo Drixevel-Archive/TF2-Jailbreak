@@ -1,0 +1,24 @@
+"Updater"
+{
+	"Information"
+	{
+		"Version"
+		{
+			"Latest"		"5.1.2"
+			"Previous"		"5.1.1"
+		}
+
+		"Notes"	"Cleaned up the plugin with unnecessary verbose."
+		"Notes"	"Fully integrated logging functionality."
+		"Notes"	"Engine fixes for TF2. Still needs testing on Linux."
+	}
+
+	"Files"
+	{
+		"Plugin"		"Path_SM/plugins/TF2Jail.smx"
+		"Plugin"		"Path_SM/translations/TF2Jail.phrases.txt"
+
+		"Source"		"Path_SM/scripting/TF2Jail.sp"
+		"Source"		"Path_SM/scripting/include/tf2jail.inc"
+	}
+}

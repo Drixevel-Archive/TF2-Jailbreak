@@ -36,6 +36,12 @@
 		"en"		"{darkkhaki} Warden is currently disabled."
 	}
 	
+	"warden locked timer"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Warden has been locked due to lack of a Warden."
+	}
+	
 	"door controls disabled"
 	{
 		"#format"	""

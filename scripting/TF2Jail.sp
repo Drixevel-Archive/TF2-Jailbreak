@@ -39,34 +39,34 @@
 #define REQUIRE_EXTENSIONS
 
 #undef REQUIRE_PLUGIN
-#include <sourcebans>
-#include <tf2attributes>
-#include <sourcecomms>
-#include <basecomm>
-#include <betherobot>
-#include <betheskeleton>
-#include <voiceannounce_ex>
-#include <tf2items>
-#include <tf2items_giveweapon>
+#tryinclude <sourcebans>
+#tryinclude <tf2attributes>
+#tryinclude <sourcecomms>
+#tryinclude <basecomm>
+#tryinclude <betherobot>
+#tryinclude <betheskeleton>
+#tryinclude <voiceannounce_ex>
+#tryinclude <tf2items>
+#tryinclude <tf2items_giveweapon>
 #tryinclude <updater>
 #define REQUIRE_PLUGIN
 
 #define PLUGIN_NAME     "[TF2] Jailbreak"
 #define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"
-#define PLUGIN_VERSION  "5.1.1"
+#define PLUGIN_VERSION  "5.1.2"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"
 
-#define WARDEN_MODEL			"models/jailbreak/warden/warden_v2.mdl"
+#define WARDEN_MODEL			"models/jailbreak/warden/warden_v2"
 
-#define UPDATE_URL         "https://raw.github.com/JackofDesigns/TF2-Jailbreak/master/updater.txt"
+#define UPDATE_URL         "https://raw.github.com/JackofDesigns/TF2-Jailbreak/Beta/updater.txt"
 
 #define NO_ATTACH 0
 #define ATTACH_NORMAL 1
 #define ATTACH_HEAD 2
 
 //ConVar Handles, Globals, etc..
-new Handle:JB_ConVars[57] = {INVALID_HANDLE, ...};
+new Handle:JB_ConVars[58] = {INVALID_HANDLE, ...};
 
 new bool:j_Enabled = true;
 new bool:j_Advertise = true;
@@ -119,6 +119,7 @@ new bool:j_WardenWearables = true;
 new bool:j_FreedayTeleports = true;
 new j_WardenStabProtection = 0;
 new bool:j_KillPointServerCommand = true;
+new bool:j_RemoveFreedayOnLR = true;
 
 //Plugins/Extension bools
 new bool:e_tf2items = false;
@@ -163,7 +164,6 @@ new g_VotesNeeded = 0;
 new g_VotesPassed = 0;
 new g_FirstKill[MAXPLAYERS + 1];
 new g_Killcount[MAXPLAYERS + 1];
-new g_AmmoCount[MAXPLAYERS + 1];
 new WardenLimit = 0;
 new FreedayLimit = 0;
 new g_HasBeenWarden[MAXPLAYERS + 1] = 0;
@@ -178,7 +178,6 @@ new Handle:g_hArray_Pending = INVALID_HANDLE;
 new Handle:Forward_WardenCreated = INVALID_HANDLE;
 new Handle:Forward_WardenRemoved = INVALID_HANDLE;
 new Handle:g_adverttimer = INVALID_HANDLE;
-new Handle:g_checkweapontimer = INVALID_HANDLE;
 new Handle:g_refreshspellstimer = INVALID_HANDLE;
 new Handle:DataTimerF = INVALID_HANDLE;
 new Handle:WardenName;
@@ -230,7 +229,7 @@ public Plugin:myinfo =
 
 public OnPluginStart()
 {
-	PrintToServer("%s Jailbreak is now loading...", TAG);
+	Jail_Log("%s Jailbreak is now loading...", TAG);
 	File_LoadTranslations("common.phrases");
 	File_LoadTranslations("TF2Jail.phrases");
 
@@ -293,6 +292,7 @@ public OnPluginStart()
 	JB_ConVars[54] = AutoExecConfig_CreateConVar("sm_tf2jail_freeday_teleport", "1", "Status of teleporting: (1 = enable, 0 = disable) (Disables all functionality regardless of configs)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_ConVars[55] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_stabprotection", "1", "Give Wardens backstab protection: (2 = Always, 1 = Once, 0 = Disabled)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
 	JB_ConVars[56] = AutoExecConfig_CreateConVar("sm_tf2jail_point_servercommand", "1", "Kill 'point_servercommand' entities: (1 = Kill on Spawn, 0 = Disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_ConVars[57] = AutoExecConfig_CreateConVar("sm_tf2jail_freeday_removeonlr", "1", "Remove Freedays on Last Request: (1 = enable, 0 = disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
 	AutoExecConfig_ExecuteFile();
 
@@ -301,7 +301,15 @@ public OnPluginStart()
 		HookConVarChange(JB_ConVars[i], HandleCvars);
 	}
 
-	PluginEvents(true);
+	HookEvent("player_spawn", PlayerSpawn);
+	HookEvent("player_hurt", PlayerHurt);
+	HookEvent("player_death", PlayerDeath);
+	HookEvent("teamplay_round_start", RoundStart);
+	HookEvent("arena_round_start", ArenaRoundStart);
+	HookEvent("teamplay_round_win", RoundEnd);
+	HookEvent("post_inventory_application", RegeneratePlayer);
+	HookEvent("player_changeclass", ChangeClass, EventHookMode_Pre);
+	AddCommandListener(InterceptBuild, "build");
 
 	RegConsoleCmd("sm_fire", Command_FireWarden);
 	RegConsoleCmd("sm_firewarden", Command_FireWarden);
@@ -365,7 +373,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
 	if (GetEngineVersion() != Engine_TF2)
 	{
-		Format(error, err_max, "This plugin only works for Team Fortress 2.");
+		Format(error, err_max, "This plugin only works for Team Fortress 2");
 		return APLRes_Failure;
 	}
 
@@ -396,6 +404,7 @@ public OnAllPluginsLoaded()
 	e_voiceannounce_ex = LibraryExists("voiceannounce_ex");
 	e_tf2attributes = LibraryExists("tf2attributes");
 	e_sourcebans = LibraryExists("sourcebans");
+	
 	if (LibraryExists("sourcecomms")) enumCommsList = Sourcecomms;
 	else if (LibraryExists("basecomm")) enumCommsList = Basecomms;
 	
@@ -407,12 +416,13 @@ public OnAllPluginsLoaded()
 public OnLibraryAdded(const String:name[])
 {
 	if (StrEqual(name, "SteamTools", false)) e_steamtools = true;
-	else if (StrEqual(name, "sourcebans")) e_sourcebans = true;
-	else if (StrEqual(name, "sourcecomms")) enumCommsList = Sourcecomms;
+	if (StrEqual(name, "sourcebans")) e_sourcebans = true;
+	if (StrEqual(name, "voiceannounce_ex")) e_voiceannounce_ex = true;
+	if (StrEqual(name, "tf2attributes")) e_tf2attributes = true;
+	if (StrEqual(name, "tf2items")) e_tf2items = true;
+	
+	if (StrEqual(name, "sourcecomms")) enumCommsList = Sourcecomms;
 	else if (StrEqual(name, "basecomm")) enumCommsList = Basecomms;
-	else if (StrEqual(name, "voiceannounce_ex")) e_voiceannounce_ex = true;
-	else if (StrEqual(name, "tf2attributes")) e_tf2attributes = true;
-	else if (StrEqual(name, "tf2items")) e_tf2items = true;
 }
 
 public OnLibraryRemoved(const String:name[])
@@ -423,6 +433,8 @@ public OnLibraryRemoved(const String:name[])
 	else if (StrEqual(name, "tf2attributes")) e_tf2attributes = false;
 	else if (StrEqual(name, "sourcebans")) e_sourcebans = false;
 	else if (StrEqual(name, "voiceannounce_ex"))	e_voiceannounce_ex = false;
+	
+	if (e_tf2items) {}	//THOU SHALT BANISH ERRORS TO HELL!
 }
 
 public OnPluginEnd()
@@ -482,7 +494,8 @@ public OnConfigsExecuted()
 	j_WardenWearables = GetConVarBool(JB_ConVars[53]);
 	j_FreedayTeleports = GetConVarBool(JB_ConVars[54]);
 	j_WardenStabProtection = GetConVarInt(JB_ConVars[55]);
-	j_KillPointServerCommand = GetConVarBool(JB_ConVars[55]);
+	j_KillPointServerCommand = GetConVarBool(JB_ConVars[56]);
+	j_RemoveFreedayOnLR = GetConVarBool(JB_ConVars[57]);
 
 	if (j_Enabled)
 	{
@@ -510,12 +523,9 @@ public OnConfigsExecuted()
 				}
 			}
 		}
-
-		g_checkweapontimer = CreateTimer(1.0, CheckWeapons, _, TIMER_REPEAT);
 		
 		ParseConfigs();
-
-		PrintToServer("%s Jailbreak has successfully loaded.", TAG);
+		Jail_Log("%s Jailbreak has successfully loaded.", TAG);
 	}
 }
 
@@ -534,46 +544,46 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:
+		case 0:
+			{
+				j_Enabled = false;
+				CPrintToChatAll("%s %t", TAG_COLORED, "plugin disabled");
+				if (e_steamtools)
 				{
-					j_Enabled = false;
-					CPrintToChatAll("%s %t", TAG_COLORED, "plugin disabled");
-					PluginEvents(false);
-					if (e_steamtools)
+					Steam_SetGameDescription("Team Fortress");
+				}
+				for (new i = 1; i <= MaxClients; i++)
+				{
+					if (IsWarden(i) && j_WardenModel)
 					{
-						Steam_SetGameDescription("Team Fortress");
+						RemoveModel(i);
 					}
-					for (new i = 1; i <= MaxClients; i++)
+					if (g_IsRebel[i])
 					{
-						if (IsWarden(i) && j_WardenModel)
-						{
-							RemoveModel(i);
-						}
-						if (g_IsRebel[i])
-						{
-							g_IsRebel[i] = false;
-						}
+						g_IsRebel[i] = false;
 					}
 				}
-			case 1:
+			}
+		case 1:
+			{
+				j_Enabled = true;
+				CPrintToChatAll("%s %t", TAG_COLORED, "plugin enabled");
+				if (e_steamtools)
 				{
-					j_Enabled = true;
-					CPrintToChatAll("%s %t", TAG_COLORED, "plugin enabled");
-					PluginEvents(true);
-					if (e_steamtools)
+					decl String:gameDesc[64];
+					Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
+					Steam_SetGameDescription(gameDesc);
+				}
+				for (new i = 1; i <= MaxClients; i++)
+				{
+					if (IsWarden(i) && j_WardenModel)
 					{
-						decl String:gameDesc[64];
-						Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
-						Steam_SetGameDescription(gameDesc);
-					}
-					for (new i = 1; i <= MaxClients; i++)
-					{
-						if (IsWarden(i) && j_WardenModel)
-						{
-							SetModel(i, WARDEN_MODEL);
-						}
+						decl String:s[PLATFORM_MAX_PATH];
+						Format(s, PLATFORM_MAX_PATH, "%s.mdl", WARDEN_MODEL);
+						SetModel(i, s);
 					}
 				}
+			}
 		}
 	}
 
@@ -581,19 +591,19 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:
+		case 0:
+			{
+				j_Advertise = false;
+				ClearTimer(g_adverttimer);
+			}
+		case 1:
+			{
+				j_Advertise = true;
+				if (g_adverttimer == INVALID_HANDLE)
 				{
-					j_Advertise = false;
-					ClearTimer(g_adverttimer);
+					g_adverttimer = CreateTimer(120.0, TimerAdvertisement, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 				}
-			case 1:
-				{
-					j_Advertise = true;
-					if (g_adverttimer == INVALID_HANDLE)
-					{
-						g_adverttimer = CreateTimer(120.0, TimerAdvertisement, _, TIMER_REPEAT);
-					}
-				}
+			}
 		}
 	}
 
@@ -601,16 +611,16 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:
-				{
-					j_Cvars = false;
-					ConvarsSet(false);
-				}
-			case 1:
-				{
-					j_Cvars = true;
-					ConvarsSet(true);
-				}
+		case 0:
+			{
+				j_Cvars = false;
+				ConvarsSet(false);
+			}
+		case 1:
+			{
+				j_Cvars = true;
+				ConvarsSet(true);
+			}
 		}
 	}
 
@@ -623,8 +633,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_Balance = false;
-			case 1:	j_Balance = true;
+		case 0:	j_Balance = false;
+		case 1:	j_Balance = true;
 		}
 	}
 
@@ -637,28 +647,28 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:
+		case 0:
+			{
+				j_RedMelee = false;
+				for (new i = 1; i <= MaxClients; i++)
 				{
-					j_RedMelee = false;
-					for (new i = 1; i <= MaxClients; i++)
+					if (IsValidClient(i) && GetClientTeam(i) == _:TFTeam_Red && IsPlayerAlive(i))
 					{
-						if (IsValidClient(i) && GetClientTeam(i) == _:TFTeam_Red && IsPlayerAlive(i))
-						{
-							TF2_RegeneratePlayer(i);
-						}
+						TF2_RegeneratePlayer(i);
 					}
 				}
-			case 1:
+			}
+		case 1:
+			{
+				j_RedMelee = true;
+				for (new i = 1; i <= MaxClients; i++)
 				{
-					j_RedMelee = true;
-					for (new i = 1; i <= MaxClients; i++)
+					if (IsValidClient(i) && IsPlayerAlive(i))
 					{
-						if (IsValidClient(i) && IsPlayerAlive(i))
-						{
-							CreateTimer(0.1, ManageWeapons, i);
-						}
+						CreateTimer(0.1, ManageWeapons, GetClientUserId(i));
 					}
 				}
+			}
 		}
 	}
 
@@ -666,18 +676,18 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:
+		case 0:
+			{
+				j_Warden = false;
+				for (new i = 1; i <= MaxClients; i++)
 				{
-					j_Warden = false;
-					for (new i = 1; i <= MaxClients; i++)
+					if (IsWarden(i))
 					{
-						if (IsWarden(i))
-						{
-							WardenUnset(i);
-						}
+						WardenUnset(i);
 					}
 				}
-			case 1:	j_Warden = true;
+			}
+		case 1:	j_Warden = true;
 		}
 	}
 
@@ -685,8 +695,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_WardenAuto = false;
-			case 1:	j_WardenAuto = true;
+		case 0:	j_WardenAuto = false;
+		case 1:	j_WardenAuto = true;
 		}
 	}
 
@@ -694,28 +704,30 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:
+		case 0:
+			{
+				j_WardenModel = false;
+				for (new i = 1; i <= MaxClients; i++)
 				{
-					j_WardenModel = false;
-					for (new i = 1; i <= MaxClients; i++)
+					if (IsWarden(i))
 					{
-						if (IsWarden(i))
-						{
-							RemoveModel(i);
-						}
+						RemoveModel(i);
 					}
 				}
-			case 1:
+			}
+		case 1:
+			{
+				j_WardenModel = true;
+				for (new i = 1; i <= MaxClients; i++)
 				{
-					j_WardenModel = true;
-					for (new i = 1; i <= MaxClients; i++)
+					if (IsWarden(i))
 					{
-						if (IsWarden(i))
-						{
-							SetModel(i, WARDEN_MODEL);
-						}
+						decl String:s[PLATFORM_MAX_PATH];
+						Format(s, PLATFORM_MAX_PATH, "%s.mdl", WARDEN_MODEL);
+						SetModel(i, s);
 					}
 				}
+			}
 		}
 	}
 
@@ -723,8 +735,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_WardenForceSoldier = false;
-			case 1:	j_WardenForceSoldier = true;
+		case 0:	j_WardenForceSoldier = false;
+		case 1:	j_WardenForceSoldier = true;
 		}
 	}
 
@@ -732,8 +744,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_WardenFF = false;
-			case 1:	j_WardenFF = true;
+		case 0:	j_WardenFF = false;
+		case 1:	j_WardenFF = true;
 		}
 	}
 
@@ -741,8 +753,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_WardenCC = false;
-			case 1:	j_WardenCC = true;
+		case 0:	j_WardenCC = false;
+		case 1:	j_WardenCC = true;
 		}
 	}
 
@@ -750,8 +762,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_WardenRequest = false;
-			case 1:	j_WardenRequest = true;
+		case 0:	j_WardenRequest = false;
+		case 1:	j_WardenRequest = true;
 		}
 	}
 
@@ -764,8 +776,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_DoorControl = false;
-			case 1:	j_DoorControl = true;
+		case 0:	j_DoorControl = false;
+		case 1:	j_DoorControl = true;
 		}
 	}
 
@@ -786,9 +798,9 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 				{
 					switch (iNewValue)
 					{
-						case 0:	UnmutePlayer(i);
-						case 1:	if (g_CellDoorTimerActive) MutePlayer(i);
-						case 2:	if (g_bActiveRound) MutePlayer(i);
+					case 0:	UnmutePlayer(i);
+					case 1:	if (g_CellDoorTimerActive) MutePlayer(i);
+					case 2:	if (g_bActiveRound) MutePlayer(i);
 					}
 				}
 			}
@@ -812,9 +824,9 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 				{
 					switch (iNewValue)
 					{
-						case 0:	UnmutePlayer(i);
-						case 1:	MutePlayer(i);
-						case 2:	if (i != Warden) MutePlayer(i);
+					case 0:	UnmutePlayer(i);
+					case 1:	MutePlayer(i);
+					case 2:	if (i != Warden) MutePlayer(i);
 					}
 				}
 			}
@@ -825,8 +837,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_DeadMute = false;
-			case 1:	j_DeadMute = true;
+		case 0:	j_DeadMute = false;
+		case 1:	j_DeadMute = true;
 		}
 	}
 
@@ -834,8 +846,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_MicCheck = false;
-			case 1:	j_MicCheck = true;
+		case 0:	j_MicCheck = false;
+		case 1:	j_MicCheck = true;
 		}
 	}
 
@@ -843,8 +855,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_MicCheckType = false;
-			case 1:	j_MicCheckType = true;
+		case 0:	j_MicCheckType = false;
+		case 1:	j_MicCheckType = true;
 		}
 	}
 
@@ -852,18 +864,18 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:
+		case 0:
+			{
+				j_Rebels = false;
+				for (new i = 1; i <= MaxClients; i++)
 				{
-					j_Rebels = false;
-					for (new i = 1; i <= MaxClients; i++)
+					if (g_IsRebel[i])
 					{
-						if (g_IsRebel[i])
-						{
-							g_IsRebel[i] = false;
-						}
+						g_IsRebel[i] = false;
 					}
 				}
-			case 1:	j_Rebels = true;
+			}
+		case 1:	j_Rebels = true;
 		}
 	}
 
@@ -906,8 +918,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_Freekillers = false;
-			case 1:	j_Freekillers = true;
+		case 0:	j_Freekillers = false;
+		case 1:	j_Freekillers = true;
 		}
 	}
 
@@ -947,8 +959,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_LRSEnabled = false;
-			case 1:	j_LRSEnabled = true;
+		case 0:	j_LRSEnabled = false;
+		case 1:	j_LRSEnabled = true;
 		}
 	}
 
@@ -956,8 +968,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_LRSAutomatic = false;
-			case 1:	j_LRSAutomatic = true;
+		case 0:	j_LRSAutomatic = false;
+		case 1:	j_LRSAutomatic = true;
 		}
 	}
 
@@ -965,8 +977,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_LRSLockWarden = false;
-			case 1:	j_LRSLockWarden = true;
+		case 0:	j_LRSLockWarden = false;
+		case 1:	j_LRSLockWarden = true;
 		}
 	}
 
@@ -979,8 +991,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_1stDayFreeday = false;
-			case 1:	j_1stDayFreeday = true;
+		case 0:	j_1stDayFreeday = false;
+		case 1:	j_1stDayFreeday = true;
 		}
 	}
 
@@ -988,8 +1000,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_DemoCharge = false;
-			case 1:	j_DemoCharge = true;
+		case 0:	j_DemoCharge = false;
+		case 1:	j_DemoCharge = true;
 		}
 	}
 
@@ -997,8 +1009,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_DoubleJump = false;
-			case 1:	j_DoubleJump = true;
+		case 0:	j_DoubleJump = false;
+		case 1:	j_DoubleJump = true;
 		}
 	}
 
@@ -1006,8 +1018,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_Airblast = false;
-			case 1:	j_Airblast = true;
+		case 0:	j_Airblast = false;
+		case 1:	j_Airblast = true;
 		}
 	}
 
@@ -1022,8 +1034,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_WardenWearables = false;
-			case 1:	j_WardenWearables = true;
+		case 0:	j_WardenWearables = false;
+		case 1:	j_WardenWearables = true;
 		}
 	}
 	
@@ -1031,8 +1043,8 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_FreedayTeleports = false;
-			case 1:	j_FreedayTeleports = true;
+		case 0:	j_FreedayTeleports = false;
+		case 1:	j_FreedayTeleports = true;
 		}
 	}
 	
@@ -1045,8 +1057,17 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		switch (iNewValue)
 		{
-			case 0:	j_KillPointServerCommand = false;
-			case 1:	j_KillPointServerCommand = true;
+		case 0:	j_KillPointServerCommand = false;
+		case 1:	j_KillPointServerCommand = true;
+		}
+	}
+	
+	else if (cvar == JB_ConVars[57])
+	{
+		switch (iNewValue)
+		{
+		case 0:	j_RemoveFreedayOnLR = false;
+		case 1:	j_RemoveFreedayOnLR = true;
 		}
 	}
 }
@@ -1063,36 +1084,50 @@ public OnMapStart()
 	{
 		if (j_Advertise)
 		{
-			g_adverttimer = CreateTimer(120.0, TimerAdvertisement, _, TIMER_REPEAT);
+			g_adverttimer = CreateTimer(120.0, TimerAdvertisement, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		}
 
 		for (new i = 1; i <= MaxClients; i++)
 		{
-			if (IsClientConnected(i))
+			if (IsClientConnected(i) && g_bLateLoad)
 			{
-				if (g_bLateLoad) OnClientConnected(i);
-				g_AmmoCount[i] = 0;
+				OnClientConnected(i);
 			}
 			g_HasBeenWarden[i] = 0;
 		}
 		
-		if (j_WardenModel)
+		decl String:s[PLATFORM_MAX_PATH];
+		Format(s, PLATFORM_MAX_PATH, "%s.mdl", WARDEN_MODEL);
+		if (PrecacheModel(s, true) && j_WardenModel)
 		{
-			PrecacheModel(WARDEN_MODEL, true);
-			AddFileToDownloadsTable(WARDEN_MODEL);
-			AddFileToDownloadsTable("models/jailbreak/warden/warden_v2.dx80.vtx");
-			AddFileToDownloadsTable("models/jailbreak/warden/warden_v2.dx90.vtx");
-			AddFileToDownloadsTable("models/jailbreak/warden/warden_v2.phy");
-			AddFileToDownloadsTable("models/jailbreak/warden/warden_v2.sw.vtx");
-			AddFileToDownloadsTable("models/jailbreak/warden/warden_v2.vvd");
-			AddFileToDownloadsTable("materials/models/jailbreak/warden/NineteenEleven.vtf");
-			AddFileToDownloadsTable("materials/models/jailbreak/warden/NineteenEleven.vmt");
-			AddFileToDownloadsTable("materials/models/jailbreak/warden/warden_body.vtf");
-			AddFileToDownloadsTable("materials/models/jailbreak/warden/warden_body.vmt");
-			AddFileToDownloadsTable("materials/models/jailbreak/warden/warden_hat.vtf");
-			AddFileToDownloadsTable("materials/models/jailbreak/warden/warden_hat.vmt");
-			AddFileToDownloadsTable("materials/models/jailbreak/warden/warden_head.vtf");
-			AddFileToDownloadsTable("materials/models/jailbreak/warden/warden_head.vmt");
+			new String:extensions[][] = { ".mdl", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd", ".phy" };
+			new String:extensionsb[][] = { ".vtf", ".vmt" };
+			decl i;
+			for (i = 0; i < sizeof(extensions); i++)
+			{
+				Format(s, PLATFORM_MAX_PATH, "%s%s", WARDEN_MODEL, extensions[i]);
+				if (FileExists(s, true)) AddFileToDownloadsTable(s);
+			}
+			
+			for (i = 0; i < sizeof(extensionsb); i++)
+			{
+				Format(s, PLATFORM_MAX_PATH, "materials/models/jailbreak/warden/NineteenEleven%s", extensionsb[i]);
+				AddFileToDownloadsTable(s);
+				
+				Format(s, PLATFORM_MAX_PATH, "materials/models/jailbreak/warden/warden_body%s", extensionsb[i]);
+				AddFileToDownloadsTable(s);
+				
+				Format(s, PLATFORM_MAX_PATH, "materials/models/jailbreak/warden/warden_hat%s", extensionsb[i]);
+				AddFileToDownloadsTable(s);
+				
+				Format(s, PLATFORM_MAX_PATH, "materials/models/jailbreak/warden/warden_head%s", extensionsb[i]);
+				AddFileToDownloadsTable(s);
+			}
+		}
+		else
+		{
+			Jail_Log("Error precaching model, please check configurations and file integrity.");
+			j_WardenModel = false;
 		}
 		
 		PrecacheSound("ui/system_message_alert.wav", true);
@@ -1132,9 +1167,8 @@ public OnMapEnd()
 		ResetVotes();
 		
 		ConvarsSet(false);
-		ClearTimer(g_checkweapontimer);
 		ClearTimer(g_adverttimer);
-		PrintToServer("%s Jailbreak has been unloaded successfully.", TAG);
+		Jail_Log("%s Jailbreak has been unloaded successfully.", TAG);
 	}
 }
 
@@ -1154,41 +1188,40 @@ public OnClientPutInServer(client)
 public Action:PlayerTakeDamage(client, &attacker, &inflictor, &Float:damage, &damagetype, &weapon, Float:damageForce[3], Float:damagePosition[3])
 {
 	if (!j_Enabled) return Plugin_Continue;
-
-	if (!IsValidClient(client) || !IsValidClient(attacker)) return Plugin_Continue;
-
-	new team_attacker = GetClientTeam(attacker);
-
-	if (attacker > 0 && client != attacker)
+	if (IsValidClient(client) || IsValidClient(attacker))
 	{
-		switch (team_attacker)
+		new team_attacker = GetClientTeam(attacker);
+		if (attacker > 0 && client != attacker)
 		{
-		case TFTeam_Red:
+			switch (team_attacker)
 			{
-				if (j_Criticals == 2 || j_Criticals == 3)
+			case TFTeam_Red:
 				{
-					if (j_Criticalstype == 2) damagetype |= DMG_ACID;
-					if (j_Criticalstype == 1) damagetype |= DMG_CRIT;
-					return Plugin_Changed;
+					if (j_Criticals == 2 || j_Criticals == 3)
+					{
+						if (j_Criticalstype == 2) damagetype |= DMG_ACID;
+						if (j_Criticalstype == 1) damagetype |= DMG_CRIT;
+						return Plugin_Changed;
+					}
+				}
+			case TFTeam_Blue:
+				{
+					if (j_Criticals == 1 || j_Criticals == 3)
+					{
+						if (j_Criticalstype == 2) damagetype |= DMG_ACID;
+						if (j_Criticalstype == 1) damagetype |= DMG_CRIT;
+						return Plugin_Changed;
+					}
 				}
 			}
-		case TFTeam_Blue:
+			if (IsWarden(client) && j_WardenStabProtection == 2)
 			{
-				if (j_Criticals == 1 || j_Criticals == 3)
+				decl String:szClassName[64];
+				GetEntityClassname(GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon"), szClassName, sizeof(szClassName));
+				if (StrEqual(szClassName, "tf_weapon_knife") && (damagetype & DMG_CRIT == DMG_CRIT))
 				{
-					if (j_Criticalstype == 2) damagetype |= DMG_ACID;
-					if (j_Criticalstype == 1) damagetype |= DMG_CRIT;
-					return Plugin_Changed;
+					return Plugin_Handled;
 				}
-			}
-		}
-		if (IsWarden(client) && j_WardenStabProtection == 2)
-		{
-			decl String:szClassName[64];
-			GetEntityClassname(GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon"), szClassName, sizeof(szClassName));
-			if (StrEqual(szClassName, "tf_weapon_knife") && (damagetype & DMG_CRIT == DMG_CRIT))
-			{
-				return Plugin_Handled;
 			}
 		}
 	}
@@ -1199,60 +1232,62 @@ public OnClientPostAdminCheck(client)
 {
 	if (j_Enabled)
 	{
-		CreateTimer(4.0, Timer_Welcome, client, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(4.0, Timer_Welcome, GetClientUserId(client));
 	}
 }
 
 public OnClientDisconnect(client)
 {
-	if (!j_Enabled || !IsValidClient(client)) return;
+	if (!j_Enabled) return;
 
-	if (g_Voted[client])
+	if (IsValidClient(client))
 	{
-		g_Votes--;
-	}
-	
-	g_Voters--;
-	g_VotesNeeded = RoundToFloor(float(g_Voters) * j_WVotesNeeded);
-	
-	if (g_Votes && g_Voters && g_Votes >= g_VotesNeeded)
-	{
-		if (j_WVotesPostAction == 1) return;
-		FireWardenCall();
-	}
+		if (g_Voted[client])
+		{
+			g_Votes--;
+		}
+		
+		g_Voters--;
+		g_VotesNeeded = RoundToFloor(float(g_Voters) * j_WVotesNeeded);
+		
+		if (g_Votes && g_Voters && g_Votes >= g_VotesNeeded)
+		{
+			if (j_WVotesPostAction == 1) return;
+			FireWardenCall();
+		}
 
-	if (IsWarden(client))
-	{
-		CPrintToChatAll("%s %t", TAG_COLORED, "warden disconnected");
-		PrintCenterTextAll("%t", "warden disconnected center");
-		Warden = -1;
+		if (IsWarden(client))
+		{
+			CPrintToChatAll("%s %t", TAG_COLORED, "warden disconnected");
+			PrintCenterTextAll("%t", "warden disconnected center");
+			Warden = -1;
+		}
+		
+		g_HasTalked[client] = false;
+		g_IsMuted[client] = false;
+		g_ScoutsBlockedDoubleJump[client] = false;
+		g_PyrosDisableAirblast[client] = false;
+		g_IsRebel[client] = false;
+		g_IsFreeday[client] = false;
+		g_Killcount[client] = 0;
+		g_FirstKill[client] = 0;
 	}
-	
-	g_HasTalked[client] = false;
-	g_IsMuted[client] = false;
-	g_ScoutsBlockedDoubleJump[client] = false;
-	g_PyrosDisableAirblast[client] = false;
-	g_IsRebel[client] = false;
-	g_IsFreeday[client] = false;
-	g_Killcount[client] = 0;
-	g_FirstKill[client] = 0;
-	g_AmmoCount[client] = 0;
-	
-	return;
 }
 
-public Action:PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
+public PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (!j_Enabled) return Plugin_Continue;
+	if (!j_Enabled) return;
 
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	new team = GetClientTeam(client);
-	new TFClassType:class = TF2_GetPlayerClass(client);
-
 	if (IsValidClient(client) && IsPlayerAlive(client))
 	{
+		new team = GetClientTeam(client);
+		new TFClassType:class = TF2_GetPlayerClass(client);
+		
 		g_IsRebel[client] = false;
-		CreateTimer(0.1, ManageWeapons, client);
+		
+		CreateTimer(0.1, ManageWeapons, GetClientUserId(client));
+		
 		switch (team)
 		{
 		case TFTeam_Red:
@@ -1321,12 +1356,11 @@ public Action:PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 			}
 		}
 	}
-	return Plugin_Continue;
 }
 
-public Action:PlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
+public PlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (!j_Enabled) return Plugin_Continue;
+	if (!j_Enabled) return;
 
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	new client_attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
@@ -1349,12 +1383,11 @@ public Action:PlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 			}
 		}
 	}
-	return Plugin_Continue;
 }
 
 public Action:ChangeClass(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (!j_Enabled) return Plugin_Continue;
+	if (!j_Enabled) return;
 	
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	
@@ -1365,12 +1398,11 @@ public Action:ChangeClass(Handle:event, const String:name[], bool:dontBroadcast)
 		SetEntityFlags(client, flags);
 	}
 	
-	return Plugin_Continue;
 }
 
-public Action:PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
+public PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (!j_Enabled) return Plugin_Continue;
+	if (!j_Enabled) return;
 
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	new client_killer = GetClientOfUserId(GetEventInt(event, "attacker"));
@@ -1417,6 +1449,20 @@ public Action:PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 				}
 			}
 			
+			if (j_RemoveFreedayOnLR)
+			{
+				if (Team_GetClientCount(_:TFTeam_Blue, CLIENTFILTER_ALIVE) == 1)
+				{
+					for (new i = 1; i <= MaxClients; i++)
+					{
+						if (g_IsFreedayActive[i])
+						{
+							RemoveFreeday(i);
+						}
+					}
+				}
+			}
+			
 			if (Team_GetClientCount(_:TFTeam_Blue, CLIENTFILTER_ALIVE) == 1 && !g_bOneGuardLeft)
 			{
 				g_VoidFreekills = true;
@@ -1454,12 +1500,11 @@ public Action:PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 			PrintCenterTextAll("%t", "warden killed", client);
 		}
 	}
-	return Plugin_Continue;
 }
 
-public Action:RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
+public RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (!j_Enabled) return Plugin_Continue;
+	if (!j_Enabled) return;
 
 	if (j_1stDayFreeday && g_1stRoundFreeday)
 	{
@@ -1508,16 +1553,12 @@ public Action:RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 	Warden = -1;
 	g_bIsLRInUse = false;
 	g_bActiveRound = true;
-	
-	return Plugin_Continue;
 }
 
-public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
+public ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (!j_Enabled) return Plugin_Continue;
+	if (!j_Enabled) return;
 	
-	g_bIsWardenLocked = false;
-
 	if (j_Balance)
 	{
 		new Float:Ratio;
@@ -1543,7 +1584,7 @@ public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadc
 	{
 		new autoopen = RoundFloat(j_DoorOpenTimer);
 		CPrintToChatAll("%s %t", TAG_COLORED, "cell doors open start", autoopen);
-		CreateTimer(j_DoorOpenTimer, Open_Doors, _);
+		CreateTimer(j_DoorOpenTimer, Open_Doors);
 		g_CellDoorTimerActive = true;
 		Jail_Log("Cell doors have been auto opened via automatic timer if they exist.");
 	}
@@ -1559,7 +1600,7 @@ public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadc
 		{
 			new time = RoundFloat(j_RedMuteTime);
 			CPrintToChatAll("%s %t", TAG_COLORED, "red team muted temporarily", time);
-			CreateTimer(j_RedMuteTime, UnmuteReds, _, TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(j_RedMuteTime, UnmuteReds);
 			Jail_Log("Red team has been temporarily muted and will wait %s seconds to be unmuted.", time);
 		}
 	case 2:
@@ -1573,9 +1614,9 @@ public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadc
 	{
 		new Handle:LastRequestConfig = CreateKeyValues("TF2Jail_LastRequests");
 		FileToKeyValues(LastRequestConfig, LRConfig_File);
-	
+		
 		decl String:buffer[255], String:number[255];
-	
+		
 		if (KvGotoFirstSubKey(LastRequestConfig))
 		{
 			IntToString(LR_Number, number, sizeof(number));
@@ -1662,7 +1703,7 @@ public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadc
 								new Float:TimeFloat = KvGetFloat(LastRequestConfig, "Timer", 1.0);
 								if (TimeFloat >= 0.1)
 								{
-									CreateTimer(TimeFloat, EnableFFTimer, _, TIMER_FLAG_NO_MAPCHANGE);
+									CreateTimer(TimeFloat, EnableFFTimer);
 								}
 								else
 								{
@@ -1731,23 +1772,20 @@ public Action:ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadc
 			Jail_Log("%N has been set to warden automatically at the start of this arena round.", client);
 		}
 	}
-	return Plugin_Continue;
+	
+	g_bIsWardenLocked = true;
 }
 
-public Action:RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
+public RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 {
-	if (!j_Enabled) return Plugin_Continue;
-
-	g_bIsWardenLocked = true;
-	g_bOneGuardLeft = false;
-	g_bActiveRound = false;
-	FreedayLimit = 0;
+	if (!j_Enabled) return;
 
 	for (new i = 1; i <= MaxClients; i++)
 	{
 		if (IsValidClient(i))
 		{
 			UnmutePlayer(i);
+
 			if (g_IsFreedayActive[i])
 			{
 				RemoveFreeday(i);
@@ -1774,30 +1812,29 @@ public Action:RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 	{
 		SetConVarBool(JB_EngineConVars[1], false);
 	}
-
-	if (g_VoidFreekills)
-	{
-		g_VoidFreekills = false;
-	}
 	
 	if (!g_bTimerStatus)
 	{
 		ServerCommand("sm_countdown_enabled 2");
 	}
 	
-	ClearTimer(g_refreshspellstimer);
+	g_bIsWardenLocked = true;
+	g_bOneGuardLeft = false;
+	g_bActiveRound = false;
+	g_VoidFreekills = false;
+	FreedayLimit = 0;
 	
+	ClearTimer(g_refreshspellstimer);
 	CloseAllMenus();
 
-	return Plugin_Continue;
 }
 
-public Action:RegeneratePlayer(Handle:event, const String:name[], bool:dontBroadcast)
+public RegeneratePlayer(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (j_Enabled)
 	{
-		CreateTimer(0.1, ManageWeapons, client);
+		CreateTimer(0.1, ManageWeapons, GetClientUserId(client));
 	}
 }
 
@@ -1961,7 +1998,6 @@ public Action:AdminResetPlugin(client, args)
 
 		g_FirstKill[i] = 0;
 		g_Killcount[i] = 0;
-		g_AmmoCount[i] = 0;
 		g_HasBeenWarden[i] = 0;
 		
 		if (IsClientConnected(i))
@@ -2822,16 +2858,28 @@ WardenSet(client)
 	
 	switch (j_WardenVoice)
 	{
-		case 1: SetClientListeningFlags(client, VOICE_NORMAL);
-		case 2: CPrintToChatAll("%s %t", TAG_COLORED, "warden voice muted", Warden);
+	case 1: SetClientListeningFlags(client, VOICE_NORMAL);
+	case 2: CPrintToChatAll("%s %t", TAG_COLORED, "warden voice muted", Warden);
 	}
 	
 	if (j_WardenForceSoldier)
 	{
+		new Health = GetClientHealth(client);
 		TF2_SetPlayerClass(client, TFClass_Soldier);
+		TF2_RegeneratePlayer(client);
+		new Health2 = GetClientHealth(client);
+		if (Health < Health2)
+		{
+			SetEntityHealth(client, Health);
+		}
 	}
 
-	if (j_WardenModel) SetModel(client, WARDEN_MODEL);
+	if (j_WardenModel)
+	{
+		decl String:s[PLATFORM_MAX_PATH];
+		Format(s, PLATFORM_MAX_PATH, "%s.mdl", WARDEN_MODEL);
+		SetModel(client, s);
+	}
 	
 	if (j_WardenStabProtection == 1) AddAttribute(client, "backstab shield", 1.0);
 	
@@ -2864,10 +2912,6 @@ WardenUnset(client)
 		{
 			RemoveModel(client);
 		}
-		else
-		{
-
-		}
 	}
 	
 	if (j_BlueMute == 1)
@@ -2882,7 +2926,6 @@ WardenUnset(client)
 	}
 	
 	RemoveAttribute(client, "backstab shield");
-	
 	Forward_OnWardenRemoved(client);
 }
 
@@ -2895,14 +2938,7 @@ public Action:SetModel(client, const String:model[])
 		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
 		if (j_WardenWearables)
 		{
-			new iEntity = -1;
-			while((iEntity = FindEntityByClassnameSafe(iEntity, "tf_wear*")) != -1)
-			{
-				if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == client)
-				{
-					AcceptEntityInput(iEntity, "kill");
-				}
-			}
+			RemoveValveHat(client, true);
 		}
 		g_HasModel[client] = true;
 	}
@@ -2914,6 +2950,7 @@ public Action:RemoveModel(client)
 	{
 		SetVariantString("");
 		AcceptEntityInput(client, "SetCustomModel");
+		RemoveValveHat(client);
 		g_HasModel[client] = false;
 	}
 }
@@ -2923,7 +2960,7 @@ LastRequestStart(client, bool:Timer = true)
 {
 	if(IsVoteInProgress()) return;
 
-	new Handle:LRMenu_Handle = CreateMenu(MenuHandle_LR, MENU_ACTIONS_ALL);
+	new Handle:LRMenu_Handle = CreateMenu(MenuHandle_LR);
 	SetMenuTitle(LRMenu_Handle, "Last Request Menu");
 
 	new Handle:LastRequestConfig = CreateKeyValues("TF2Jail_LastRequests");
@@ -2949,8 +2986,8 @@ LastRequestStart(client, bool:Timer = true)
 					new Disabled = KvGetNum(LastRequestConfig, "Disabled", 0);
 					switch (Disabled)
 					{
-						case 0:	AddMenuItem(LRMenu_Handle, LR_ID, LR_NAME);
-						case 1:	AddMenuItem(LRMenu_Handle, LR_ID, LR_NAME, ITEMDRAW_DISABLED);
+					case 0:	AddMenuItem(LRMenu_Handle, LR_ID, LR_NAME);
+					case 1:	AddMenuItem(LRMenu_Handle, LR_ID, LR_NAME, ITEMDRAW_DISABLED);
 					}
 					KvGoBack(LastRequestConfig);
 				}
@@ -3025,17 +3062,17 @@ public MenuHandle_LR(Handle:menu, MenuAction:action, client, item)
 								new FreedayValue = KvGetNum(LastRequestConfig, "IsFreedayType", 0);
 								switch (FreedayValue)
 								{
-									case 1:
+								case 1:
 									{
 										GiveFreeday(client);
 									}
-									case 2:
+								case 2:
 									{
 										FreedayforClientsMenu(client);
 									}
-									case 3:
+								case 3:
 									{
-									
+										
 									}
 								}
 								
@@ -3053,14 +3090,14 @@ public MenuHandle_LR(Handle:menu, MenuAction:action, client, item)
 											new team = GetClientTeam(i);
 											switch (team)
 											{
-												case TFTeam_Red:
+											case TFTeam_Red:
 												{
 													if (KvGetNum(LastRequestConfig, "Red", 0) == 1)
 													{
 														StripToMelee(i);
 													}
 												}
-												case TFTeam_Blue:
+											case TFTeam_Blue:
 												{
 													if (KvGetNum(LastRequestConfig, "Blue", 0) == 1)
 													{
@@ -3085,7 +3122,7 @@ public MenuHandle_LR(Handle:menu, MenuAction:action, client, item)
 										new Float:TimeFloat = KvGetFloat(LastRequestConfig, "Timer", 1.0);
 										if (TimeFloat >= 0.1)
 										{
-											CreateTimer(TimeFloat, EnableFFTimer, _, TIMER_FLAG_NO_MAPCHANGE);
+											CreateTimer(TimeFloat, EnableFFTimer);
 										}
 										else
 										{
@@ -3196,7 +3233,7 @@ public MenuHandle_FreedayForClients(Handle:menu2, MenuAction:action, client, ite
 bool:IsValidClient(iClient)
 {
 	if(iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
-		return false;
+	return false;
 	return true;
 }
 
@@ -3243,7 +3280,7 @@ MarkRebel(client)
 	{
 		new time = RoundFloat(j_RebelsTime);
 		CPrintToChat(client, "%s %t", TAG_COLORED, "rebel timer start", time);
-		CreateTimer(j_RebelsTime, RemoveRebel, client, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(j_RebelsTime, RemoveRebel, GetClientUserId(client));
 	}
 	Jail_Log("%N has been marked as a Rebeller.", client);
 }
@@ -3447,39 +3484,11 @@ bool:IsWarden(client)
 	}
 }
 
-PluginEvents(bool:Enable = true)
-{
-	if (Enable)
-	{
-		HookEvent("player_spawn", PlayerSpawn);
-		HookEvent("player_hurt", PlayerHurt);
-		HookEvent("player_death", PlayerDeath);
-		HookEvent("teamplay_round_start", RoundStart);
-		HookEvent("arena_round_start", ArenaRoundStart);
-		HookEvent("teamplay_round_win", RoundEnd);
-		HookEvent("post_inventory_application", RegeneratePlayer);
-		HookEvent("player_changeclass", ChangeClass, EventHookMode_Pre);
-		AddCommandListener(InterceptBuild, "build");
-	}
-	else
-	{
-		UnhookEvent("player_spawn", PlayerSpawn);
-		UnhookEvent("player_hurt", PlayerHurt);
-		UnhookEvent("player_death", PlayerDeath);
-		UnhookEvent("teamplay_round_start", RoundStart);
-		UnhookEvent("arena_round_start", ArenaRoundStart);
-		UnhookEvent("teamplay_round_win", RoundEnd);
-		UnhookEvent("post_inventory_application", RegeneratePlayer);
-		UnhookEvent("player_changeclass", ChangeClass, EventHookMode_Pre);
-		RemoveCommandListener(InterceptBuild, "build");
-	}
-}
-
 MutePlayer(client)
 {
 	if (!AlreadyMuted(client) && !Client_HasAdminFlags(client, ADMFLAG_ROOT|ADMFLAG_RESERVATION) && !g_IsMuted[client])
 	{
-		Client_Mute(client);
+		SetClientListeningFlags(client, VOICE_MUTED);
 		g_IsMuted[client] = true;
 		CPrintToChat(client, "%s %t", TAG_COLORED, "muted player");
 	}
@@ -3489,7 +3498,7 @@ UnmutePlayer(client)
 {
 	if (!AlreadyMuted(client) && !Client_HasAdminFlags(client, ADMFLAG_ROOT|ADMFLAG_RESERVATION) && g_IsMuted[client])
 	{
-		Client_UnMute(client);
+		Client_Unmuted(client);
 		g_IsMuted[client] = false;
 		CPrintToChat(client, "%s %t", TAG_COLORED, "unmuted player");
 	}
@@ -3505,7 +3514,7 @@ ParseConfigs()
 	decl String:g_Mapname[128];
 	GetCurrentMap(g_Mapname, sizeof(g_Mapname));
 
-	PrintToServer("Loading %s...", g_Mapname);
+	Jail_Log("Loading %s...", g_Mapname);
 
 	if (!FileToKeyValues(MapConfig, MapConfig_File))
 	{
@@ -3564,7 +3573,7 @@ ParseConfigs()
 					free_pos[1] = KvGetFloat(MapConfig, "Coordinate_Y", 0.0);
 					free_pos[2] = KvGetFloat(MapConfig, "Coordinate_Z", 0.0);
 					
-					PrintToServer("Freeday Teleport Coordinates: %f, %f, %f", free_pos[0], free_pos[1], free_pos[2]);
+					Jail_Log("Freeday Teleport Coordinates: %f, %f, %f", free_pos[0], free_pos[1], free_pos[2]);
 				}
 				else
 				{
@@ -3578,7 +3587,7 @@ ParseConfigs()
 				g_bFreedayTeleportSet = false;
 			}
 			
-			PrintToServer("Successfully parsed %s", g_Mapname);
+			Jail_Log("Successfully parsed %s", g_Mapname);
 		}
 		else
 		{
@@ -3627,40 +3636,6 @@ EmptyWeaponSlots(client)
 	CPrintToChat(client, "%s %t", TAG_COLORED, "stripped weapons and ammo");
 }
 
-GiveRandomSpell(client)
-{
-	new rint = GetRandomInt(0,11);
-	new ent = -1;
-	
-	while ((ent = FindEntityByClassname(ent, "tf_weapon_spellbook")) != -1)
-	{
-		if(ent)
-		{
-			if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
-			{
-				SetHudTextParams(-1.0, 0.65, 6.0, 0, 255, 0, 255);
-				SetEntProp(ent, Prop_Send, "m_iSelectedSpellIndex", rint);
-				SetEntProp(ent, Prop_Send, "m_iSpellCharges", 2);
-				switch (rint)
-				{
-				case 0: ShowHudText(client, -1, "Picked up the spell: Fire Ball");
-				case 1: ShowHudText(client, -1, "Picked up the spell: Bat Missiles");
-				case 2: ShowHudText(client, -1, "Picked up the spell: Uber Charge");
-				case 3: ShowHudText(client, -1, "Picked up the spell: Giant Bomb");
-				case 4: ShowHudText(client, -1, "Picked up the spell: Super Jump");
-				case 5: ShowHudText(client, -1, "Picked up the spell: Invisible");
-				case 6: ShowHudText(client, -1, "Picked up the spell: Teleportation");
-				case 7: ShowHudText(client, -1, "Picked up the spell: Electro Bolt");
-				case 8: ShowHudText(client, -1, "Picked up the spell: Tiny Demon");
-				case 9: ShowHudText(client, -1, "Picked up the spell: TEAM MONOCULUS");
-				case 10: ShowHudText(client, -1, "Picked up the spell: Meteor Shower");
-				case 11: ShowHudText(client, -1, "Picked up the spell: Skeleton Army");
-				}
-			}
-		}
-	}
-}
-
 CloseAllMenus()
 {
 	for (new idx = 1; idx < MaxClients; idx++)
@@ -3692,28 +3667,28 @@ DoorHandler(DoorMode:status)
 				{
 					switch (status)
 					{
-						case DM_OPEN: AcceptEntityInput(ent, "Open");
-						case DM_CLOSE: AcceptEntityInput(ent, "Close");
-						case DM_LOCK: AcceptEntityInput(ent, "Lock");
-						case DM_UNLOCK: AcceptEntityInput(ent, "Unlock");
+					case DM_OPEN: AcceptEntityInput(ent, "Open");
+					case DM_CLOSE: AcceptEntityInput(ent, "Close");
+					case DM_LOCK: AcceptEntityInput(ent, "Lock");
+					case DM_UNLOCK: AcceptEntityInput(ent, "Unlock");
 					}
 				}
 			}
 		}
 		switch (status)
 		{
-			case DM_OPEN:
+		case DM_OPEN:
+			{
+				CPrintToChatAll("%s %t", TAG_COLORED, "doors opened");
+				if (g_CellDoorTimerActive)
 				{
-					CPrintToChatAll("%s %t", TAG_COLORED, "doors opened");
-					if (g_CellDoorTimerActive)
-					{
-						CPrintToChatAll("%s %t", TAG_COLORED, "doors manual open");
-						g_CellDoorTimerActive = false;
-					}
+					CPrintToChatAll("%s %t", TAG_COLORED, "doors manual open");
+					g_CellDoorTimerActive = false;
 				}
-			case DM_CLOSE: CPrintToChatAll("%s %t", TAG_COLORED, "doors closed");
-			case DM_LOCK: CPrintToChatAll("%s %t", TAG_COLORED, "doors locked");
-			case DM_UNLOCK: CPrintToChatAll("%s %t", TAG_COLORED, "doors unlocked");
+			}
+		case DM_CLOSE: CPrintToChatAll("%s %t", TAG_COLORED, "doors closed");
+		case DM_LOCK: CPrintToChatAll("%s %t", TAG_COLORED, "doors locked");
+		case DM_UNLOCK: CPrintToChatAll("%s %t", TAG_COLORED, "doors unlocked");
 		}
 	}
 }
@@ -3768,8 +3743,70 @@ StripToMelee(client)
 	TF2_SwitchtoSlot(client, TFWeaponSlot_Melee);
 }
 
+stock RemoveValveHat(client, bool:unhide = false)
+{
+	new edict = MaxClients+1;
+	while((edict = FindEntityByClassnameSafe(edict, "tf_wearable")) != -1)
+	{
+		decl String:netclass[32];
+		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && strcmp(netclass, "CTFWearable") == 0)
+		{
+			new idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
+			if (idx != 57 && idx != 133 && idx != 231 && idx != 444 && idx != 405 && idx != 608 && idx != 642 && GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client)
+			{
+				SetEntityRenderMode(edict, (unhide ? RENDER_NORMAL : RENDER_TRANSCOLOR));
+				SetEntityRenderColor(edict, 255, 255, 255, (unhide ? 255 : 0));
+			}
+		}
+	}
+	edict = MaxClients+1;
+	while((edict = FindEntityByClassnameSafe(edict, "tf_powerup_bottle")) != -1)
+	{
+		decl String:netclass[32];
+		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && strcmp(netclass, "CTFPowerupBottle") == 0)
+		{
+			new idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
+			if (idx != 57 && idx != 133 && idx != 231 && idx != 444 && idx != 405 && idx != 608 && idx != 642 && GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client)
+			{
+				SetEntityRenderMode(edict, (unhide ? RENDER_NORMAL : RENDER_TRANSCOLOR));
+				SetEntityRenderColor(edict, 255, 255, 255, (unhide ? 255 : 0));
+			}
+		}
+	}
+}
+
+stock Client_Unmuted(client)
+{
+	static Handle:cvDeadTalk = INVALID_HANDLE;
+
+	if (cvDeadTalk == INVALID_HANDLE)
+	{
+		cvDeadTalk = FindConVar("sm_deadtalk");
+	}
+
+	if (cvDeadTalk == INVALID_HANDLE)
+	{
+		SetClientListeningFlags(client, VOICE_NORMAL);
+	}
+	else
+	{
+		if (GetConVarInt(cvDeadTalk) == 1 && !IsPlayerAlive(client))
+		{
+			SetClientListeningFlags(client, VOICE_LISTENALL);
+		}
+		else if (GetConVarInt(cvDeadTalk) == 2 && !IsPlayerAlive(client))
+		{
+			SetClientListeningFlags(client, VOICE_TEAM);
+		}
+		else
+		{
+			SetClientListeningFlags(client, VOICE_NORMAL);
+		}
+	}
+}
+
 /* Timers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-public Action:UnmuteReds(Handle:hTimer, any:client)
+public Action:UnmuteReds(Handle:hTimer)
 {
 	for (new i = 1; i <= MaxClients; i++)
 	{
@@ -3782,7 +3819,7 @@ public Action:UnmuteReds(Handle:hTimer, any:client)
 	Jail_Log("All players have been unmuted.");
 }
 
-public Action:Open_Doors(Handle:hTimer, any:client)
+public Action:Open_Doors(Handle:hTimer)
 {
 	if (g_CellDoorTimerActive)
 	{
@@ -3794,90 +3831,45 @@ public Action:Open_Doors(Handle:hTimer, any:client)
 	}
 }
 
-public Action:StartMagicianWars(Handle:hTimer, any:client)
-{
-	SetConVarBool(JB_EngineConVars[0], true);
-	for (new i = 1; i <= MaxClients; i++)
-	{
-		if (IsValidClient(i) && IsPlayerAlive(i))
-		{
-			if (e_tf2items) TF2Items_GiveWeapon(i, 1069);
-			GiveRandomSpell(i);
-		}
-	}
-	g_refreshspellstimer = CreateTimer(15.0, RefreshSpells, _, TIMER_REPEAT);
-}
-
-public Action:RefreshSpells (Handle:hTimer, any:client)
-{
-	for (new i = 1; i <= MaxClients; i++)
-	{
-		if (IsValidClient(i) && IsPlayerAlive(i))
-		{
-			GiveRandomSpell(i);
-		}
-	}
-}
-
-public Action:TimerAdvertisement (Handle:hTimer, any:client)
+public Action:TimerAdvertisement (Handle:hTimer)
 {
 	CPrintToChatAll("%s %t", TAG_COLORED, "plugin advertisement");
 }
 
-public Action:CheckWeapons (Handle:hTimer, any:client)
+public Action:Timer_Welcome(Handle:hTimer, any:userid)
 {
-	if (IsValidClient(client) && IsPlayerAlive(client) && GetClientTeam(client) == _:TFTeam_Red)
-	{
-		new weapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Primary);
-		if (IsValidEntity(weapon))
-		{
-			new Ammo = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4;
-			
-			if (Ammo != g_AmmoCount[client] && g_IsFreedayActive[client])
-			{
-				RemoveFreeday(client);
-				g_AmmoCount[client] = Ammo;
-			}
-			else
-			{
-				g_AmmoCount[client] = Ammo;
-			}
-		}
-	}
-}
-
-public Action:Timer_Welcome(Handle:hTimer, any:client)
-{
-	if (IsValidClient(client))
+	new client = GetClientOfUserId(userid);
+	if (j_Enabled && IsValidClient(client))
 	{
 		CPrintToChat(client, "%s %t", TAG_COLORED, "welcome message");
 	}
 }
 
-public Action:ManageWeapons(Handle:hTimer, any:client)
+public Action:ManageWeapons(Handle:hTimer, any:userid)
 {
+	new client = GetClientOfUserId(userid);
 	new team = GetClientTeam(client);
 	switch (team)
 	{
-		case TFTeam_Red:
+	case TFTeam_Red:
+		{
+			if (j_RedMelee)
 			{
-				if (j_RedMelee)
-				{
-					EmptyWeaponSlots(client);
-				}
-				
-				if (KillWeaponsEnumHandle == KW_Red || KillWeaponsEnumHandle == KW_Both)
-				{
-					StripToMelee(client);
-				}
+				EmptyWeaponSlots(client);
 			}
-		case TFTeam_Blue:
+			
+			if (KillWeaponsEnumHandle == KW_Red || KillWeaponsEnumHandle == KW_Both)
 			{
-				if (KillWeaponsEnumHandle == KW_Blue || KillWeaponsEnumHandle == KW_Both)
-				{
-					StripToMelee(client);
-				}
+				StripToMelee(client);
 			}
+		}
+	case TFTeam_Blue:
+		{
+			if (KillWeaponsEnumHandle == KW_Blue || KillWeaponsEnumHandle == KW_Both)
+			{
+				StripToMelee(client);
+			}
+		}
 	}
 	KillWeaponsEnumHandle = KW_Disabled;
 }
@@ -3957,6 +3949,17 @@ public Action:DeleteParticle(Handle:timer, any:Edict)
 	}
 }
 
+public Action:RemoveRebel(Handle:hTimer, any:userid)
+{
+	new client = GetClientOfUserId(userid);
+	if (IsValidClient(client) && GetClientTeam(client) != 1 && IsPlayerAlive(client))
+	{
+		g_IsRebel[client] = false;
+		CPrintToChat(client, "%s %t", TAG_COLORED, "rebel timer end");
+		Jail_Log("%N is no longer a Rebeller.", client);
+	}
+}
+
 /* Group Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 public bool:WardenGroup(const String:strPattern[], Handle:hClients)
 {
@@ -4010,16 +4013,6 @@ public bool:NotFreedaysGroup(const String:strPattern[], Handle:hClients)
 		if (IsValidClient(i) && !g_IsFreeday[i] || IsValidClient(i) && !g_IsFreedayActive[i]) PushArrayCell(hClients, i);
 	}
 	return true;
-}
-
-public Action:RemoveRebel(Handle:hTimer, any:client)
-{
-	if (IsValidClient(client) && GetClientTeam(client) != 1 && IsPlayerAlive(client))
-	{
-		g_IsRebel[client] = false;
-		CPrintToChat(client, "%s %t", TAG_COLORED, "rebel timer end");
-		Jail_Log("%N is no longer a Rebeller.", client);
-	}
 }
 
 /* Native Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
