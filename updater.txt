@@ -4,13 +4,11 @@
 	{
 		"Version"
 		{
-			"Latest"		"5.1.2"
-			"Previous"		"5.1.1"
+			"Latest"		"5.1.2a"
+			"Previous"		"5.1.2"
 		}
 
-		"Notes"	"Cleaned up the plugin with unnecessary verbose."
-		"Notes"	"Fully integrated logging functionality."
-		"Notes"	"Engine fixes for TF2. Still needs testing on Linux."
+		"Notes"	"Debugging results for Linux."
 	}
 
 	"Files"

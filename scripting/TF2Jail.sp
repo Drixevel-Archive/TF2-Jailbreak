@@ -21,6 +21,7 @@
 	*
 	**
 */
+
 #pragma semicolon 1
 
 //Required Includes
@@ -33,9 +34,9 @@
 #include <tf2jail>
 
 #undef REQUIRE_EXTENSIONS
-#include <sdkhooks>
-#include <clientprefs>
-#include <steamtools>
+#tryinclude <sdkhooks>
+#tryinclude <clientprefs>
+#tryinclude <steamtools>
 #define REQUIRE_EXTENSIONS
 
 #undef REQUIRE_PLUGIN
@@ -43,23 +44,21 @@
 #tryinclude <tf2attributes>
 #tryinclude <sourcecomms>
 #tryinclude <basecomm>
-#tryinclude <betherobot>
-#tryinclude <betheskeleton>
 #tryinclude <voiceannounce_ex>
-#tryinclude <tf2items>
-#tryinclude <tf2items_giveweapon>
 #tryinclude <updater>
 #define REQUIRE_PLUGIN
 
-#define PLUGIN_NAME     "[TF2] Jailbreak"
-#define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"
-#define PLUGIN_VERSION  "5.1.2"
+#define PLUGIN_NAME	"[TF2] Jailbreak"
+#define PLUGIN_AUTHOR	"Keith Warren(Jack of Designs)"
+#define PLUGIN_VERSION	"5.1.2a"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
-#define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"
+#define PLUGIN_CONTACT	"http://www.jackofdesigns.com/"
+#define _DEBUG	0
+#define WARDEN_MODEL	"models/jailbreak/warden/warden_v2"
 
-#define WARDEN_MODEL			"models/jailbreak/warden/warden_v2"
-
+#if defined _updater_included
 #define UPDATE_URL         "https://raw.github.com/JackofDesigns/TF2-Jailbreak/Beta/updater.txt"
+#endif
 
 #define NO_ATTACH 0
 #define ATTACH_NORMAL 1
@@ -67,7 +66,6 @@
 
 //ConVar Handles, Globals, etc..
 new Handle:JB_ConVars[58] = {INVALID_HANDLE, ...};
-
 new bool:j_Enabled = true;
 new bool:j_Advertise = true;
 new bool:j_Cvars = true;
@@ -122,7 +120,6 @@ new bool:j_KillPointServerCommand = true;
 new bool:j_RemoveFreedayOnLR = true;
 
 //Plugins/Extension bools
-new bool:e_tf2items = false;
 new bool:e_tf2attributes = false;
 new bool:e_voiceannounce_ex = false;
 new bool:e_sourcebans = false;
@@ -229,10 +226,14 @@ public Plugin:myinfo =
 
 public OnPluginStart()
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - Plugin is Starting...");
+	#endif
+	
 	Jail_Log("%s Jailbreak is now loading...", TAG);
 	File_LoadTranslations("common.phrases");
 	File_LoadTranslations("TF2Jail.phrases");
-
+	
 	AutoExecConfig_SetFile("TF2Jail");
 
 	JB_ConVars[0] = AutoExecConfig_CreateConVar("tf2jail_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_DONTRECORD);
@@ -300,7 +301,7 @@ public OnPluginStart()
 	{
 		HookConVarChange(JB_ConVars[i], HandleCvars);
 	}
-
+	
 	HookEvent("player_spawn", PlayerSpawn);
 	HookEvent("player_hurt", PlayerHurt);
 	HookEvent("player_death", PlayerDeath);
@@ -349,7 +350,7 @@ public OnPluginStart()
 	JB_EngineConVars[0] = FindConVar("mp_friendlyfire");
 	JB_EngineConVars[1] = FindConVar("tf_avoidteammates_pushaway");
 	JB_EngineConVars[2] = FindConVar("sv_gravity");
-
+	
 	WardenName = CreateHudSynchronizer();
 
 	AddMultiTargetFilter("@warden", WardenGroup, "The Warden.", false);
@@ -367,10 +368,18 @@ public OnPluginStart()
 	g_hArray_Pending = CreateArray();
 
 	AutoExecConfig_CleanFile();
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - Plugin has Started!");
+	#endif
 }
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - AskPluginLoad2 is Starting...");
+	#endif
+	
 	if (GetEngineVersion() != Engine_TF2)
 	{
 		Format(error, err_max, "This plugin only works for Team Fortress 2");
@@ -394,56 +403,129 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 
 	g_bLateLoad = late;
 
+	#if _DEBUG
+		LogMessage("[DEBUG] - AskPluginLoad2 has Started!");
+	#endif
 	return APLRes_Success;
 }
 
 public OnAllPluginsLoaded()
-{	
+{
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnAllPluginsLoaded is Starting...");
+	#endif
+	
 	e_steamtools = LibraryExists("SteamTools");
-	e_tf2items = LibraryExists("tf2items");
 	e_voiceannounce_ex = LibraryExists("voiceannounce_ex");
 	e_tf2attributes = LibraryExists("tf2attributes");
 	e_sourcebans = LibraryExists("sourcebans");
 	
-	if (LibraryExists("sourcecomms")) enumCommsList = Sourcecomms;
-	else if (LibraryExists("basecomm")) enumCommsList = Basecomms;
+	if (LibraryExists("sourcecomms"))
+	{
+		enumCommsList = Sourcecomms;
+	}
+	else if (LibraryExists("basecomm"))
+	{
+		enumCommsList = Basecomms;
+	}
 	
-#if defined _updater_included
+	#if defined _updater_included
 	if (LibraryExists("updater")) Updater_AddPlugin(UPDATE_URL);
-#endif
+	#endif
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnAllPluginsLoaded has Started!");
+	#endif
 }
 
 public OnLibraryAdded(const String:name[])
 {
-	if (StrEqual(name, "SteamTools", false)) e_steamtools = true;
-	if (StrEqual(name, "sourcebans")) e_sourcebans = true;
-	if (StrEqual(name, "voiceannounce_ex")) e_voiceannounce_ex = true;
-	if (StrEqual(name, "tf2attributes")) e_tf2attributes = true;
-	if (StrEqual(name, "tf2items")) e_tf2items = true;
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnLibraryAdded is Starting...");
+	#endif
 	
-	if (StrEqual(name, "sourcecomms")) enumCommsList = Sourcecomms;
-	else if (StrEqual(name, "basecomm")) enumCommsList = Basecomms;
+	if (StrEqual(name, "SteamTools", false))
+	{
+		e_steamtools = true;
+	}
+	if (StrEqual(name, "sourcebans"))
+	{
+		e_sourcebans = true;
+	}
+	if (StrEqual(name, "voiceannounce_ex"))
+	{
+		e_voiceannounce_ex = true;
+	}
+	if (StrEqual(name, "tf2attributes"))
+	{
+		e_tf2attributes = true;
+	}
+	
+	if (StrEqual(name, "sourcecomms"))
+	{
+		enumCommsList = Sourcecomms;
+	}
+	else if (StrEqual(name, "basecomm"))
+	{
+		enumCommsList = Basecomms;
+	}
+
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnLibraryAdded has Started!");
+	#endif
 }
 
 public OnLibraryRemoved(const String:name[])
 {
-	if (StrEqual(name, "SteamTools", false)) e_steamtools = false;
-	else if (StrEqual(name, "sourcecomms") || StrEqual(name, "basecomm")) enumCommsList = None;
-	else if (StrEqual(name, "tf2items"))	e_tf2items = false;
-	else if (StrEqual(name, "tf2attributes")) e_tf2attributes = false;
-	else if (StrEqual(name, "sourcebans")) e_sourcebans = false;
-	else if (StrEqual(name, "voiceannounce_ex"))	e_voiceannounce_ex = false;
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnLibraryRemoved is Starting...");
+	#endif
 	
-	if (e_tf2items) {}	//THOU SHALT BANISH ERRORS TO HELL!
+	if (StrEqual(name, "SteamTools", false))
+	{
+		e_steamtools = false;
+	}
+	if (StrEqual(name, "sourcecomms") || StrEqual(name, "basecomm"))
+	{
+		enumCommsList = None;
+	}
+	if (StrEqual(name, "tf2attributes"))
+	{
+		e_tf2attributes = false;
+	}
+	if (StrEqual(name, "sourcebans"))
+	{
+		e_sourcebans = false;
+	}
+	if (StrEqual(name, "voiceannounce_ex"))
+	{
+		e_voiceannounce_ex = false;
+	}
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnLibraryRemoved has Started!");
+	#endif
 }
 
 public OnPluginEnd()
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnPluginEnd is Starting...");
+	#endif
+	
 	OnMapEnd();
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnPluginEnd has Started!");
+	#endif
 }
 
 public OnConfigsExecuted()
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnConfigsExecuted is Starting...");
+	#endif
+	
 	j_Enabled = GetConVarBool(JB_ConVars[1]);
 	j_Advertise = GetConVarBool(JB_ConVars[2]);
 	j_Cvars = GetConVarBool(JB_ConVars[3]);
@@ -496,7 +578,7 @@ public OnConfigsExecuted()
 	j_WardenStabProtection = GetConVarInt(JB_ConVars[55]);
 	j_KillPointServerCommand = GetConVarBool(JB_ConVars[56]);
 	j_RemoveFreedayOnLR = GetConVarBool(JB_ConVars[57]);
-
+	
 	if (j_Enabled)
 	{
 		if (j_Cvars)
@@ -511,8 +593,6 @@ public OnConfigsExecuted()
 			Steam_SetGameDescription(gameDesc);
 		}
 
-		ResetVotes();
-
 		if (g_bLateLoad)
 		{
 			for (new i = 1; i <= MaxClients; i++)
@@ -524,9 +604,15 @@ public OnConfigsExecuted()
 			}
 		}
 		
+		ResetVotes();
 		ParseConfigs();
+		
 		Jail_Log("%s Jailbreak has successfully loaded.", TAG);
 	}
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnConfigsExecuted has Started!");
+	#endif
 }
 
 public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[])
@@ -554,7 +640,7 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 				}
 				for (new i = 1; i <= MaxClients; i++)
 				{
-					if (IsWarden(i) && j_WardenModel)
+					if (j_WardenModel && IsWarden(i))
 					{
 						RemoveModel(i);
 					}
@@ -576,7 +662,7 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 				}
 				for (new i = 1; i <= MaxClients; i++)
 				{
-					if (IsWarden(i) && j_WardenModel)
+					if (j_WardenModel && IsWarden(i))
 					{
 						decl String:s[PLATFORM_MAX_PATH];
 						Format(s, PLATFORM_MAX_PATH, "%s.mdl", WARDEN_MODEL);
@@ -1072,62 +1158,73 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	}
 }
 
+#if defined _updater_included
 public Action:Updater_OnPluginChecking() Jail_Log("%s Checking if TF2Jail requires an update...", TAG);
 public Action:Updater_OnPluginDownloading() Jail_Log("%s New version has been found, downloading new files...", TAG);
 public Updater_OnPluginUpdated() Jail_Log("%s Download complete, updating files...", TAG);
 public Updater_OnPluginUpdating() Jail_Log("%s Updates complete! You may now reload the plugin or wait for map change/server restart.", TAG);
+#endif
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 public OnMapStart()
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnMapStart is Starting...");
+	#endif
+	
 	if (j_Enabled)
 	{
 		if (j_Advertise)
 		{
 			g_adverttimer = CreateTimer(120.0, TimerAdvertisement, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		}
-
-		for (new i = 1; i <= MaxClients; i++)
+		if (g_bLateLoad)
 		{
-			if (IsClientConnected(i) && g_bLateLoad)
+			for (new i = 1; i <= MaxClients; i++)
 			{
-				OnClientConnected(i);
+				if (IsClientConnected(i))
+				{
+					OnClientConnected(i);
+					g_HasBeenWarden[i] = 0;
+				}
 			}
-			g_HasBeenWarden[i] = 0;
 		}
 		
-		decl String:s[PLATFORM_MAX_PATH];
-		Format(s, PLATFORM_MAX_PATH, "%s.mdl", WARDEN_MODEL);
-		if (PrecacheModel(s, true) && j_WardenModel)
+		if (j_WardenModel)
 		{
-			new String:extensions[][] = { ".mdl", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd", ".phy" };
-			new String:extensionsb[][] = { ".vtf", ".vmt" };
-			decl i;
-			for (i = 0; i < sizeof(extensions); i++)
+			decl String:s[PLATFORM_MAX_PATH];
+			Format(s, PLATFORM_MAX_PATH, "%s.mdl", WARDEN_MODEL);
+			if (PrecacheModel(s, true))
 			{
-				Format(s, PLATFORM_MAX_PATH, "%s%s", WARDEN_MODEL, extensions[i]);
-				if (FileExists(s, true)) AddFileToDownloadsTable(s);
+				new String:extensions[][] = { ".mdl", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd", ".phy" };
+				new String:extensionsb[][] = { ".vtf", ".vmt" };
+				decl i;
+				for (i = 0; i < sizeof(extensions); i++)
+				{
+					Format(s, PLATFORM_MAX_PATH, "%s%s", WARDEN_MODEL, extensions[i]);
+					if (FileExists(s, true)) AddFileToDownloadsTable(s);
+				}
+				
+				for (i = 0; i < sizeof(extensionsb); i++)
+				{
+					Format(s, PLATFORM_MAX_PATH, "materials/models/jailbreak/warden/NineteenEleven%s", extensionsb[i]);
+					AddFileToDownloadsTable(s);
+					
+					Format(s, PLATFORM_MAX_PATH, "materials/models/jailbreak/warden/warden_body%s", extensionsb[i]);
+					AddFileToDownloadsTable(s);
+					
+					Format(s, PLATFORM_MAX_PATH, "materials/models/jailbreak/warden/warden_hat%s", extensionsb[i]);
+					AddFileToDownloadsTable(s);
+					
+					Format(s, PLATFORM_MAX_PATH, "materials/models/jailbreak/warden/warden_head%s", extensionsb[i]);
+					AddFileToDownloadsTable(s);
+				}
 			}
-			
-			for (i = 0; i < sizeof(extensionsb); i++)
+			else
 			{
-				Format(s, PLATFORM_MAX_PATH, "materials/models/jailbreak/warden/NineteenEleven%s", extensionsb[i]);
-				AddFileToDownloadsTable(s);
-				
-				Format(s, PLATFORM_MAX_PATH, "materials/models/jailbreak/warden/warden_body%s", extensionsb[i]);
-				AddFileToDownloadsTable(s);
-				
-				Format(s, PLATFORM_MAX_PATH, "materials/models/jailbreak/warden/warden_hat%s", extensionsb[i]);
-				AddFileToDownloadsTable(s);
-				
-				Format(s, PLATFORM_MAX_PATH, "materials/models/jailbreak/warden/warden_head%s", extensionsb[i]);
-				AddFileToDownloadsTable(s);
+				Jail_Log("Error precaching model, please check configurations and file integrity.");
+				j_WardenModel = false;
 			}
-		}
-		else
-		{
-			Jail_Log("Error precaching model, please check configurations and file integrity.");
-			j_WardenModel = false;
 		}
 		
 		PrecacheSound("ui/system_message_alert.wav", true);
@@ -1139,10 +1236,18 @@ public OnMapStart()
 		g_VotesNeeded = 0;
 		WardenLimit = 0;
 	}
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnMapStart has Started!");
+	#endif
 }
 
 public OnMapEnd()
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnMapEnd is Starting...");
+	#endif
+	
 	if (j_Enabled)
 	{
 		for (new i = 1; i <= MaxClients; i++)
@@ -1170,23 +1275,47 @@ public OnMapEnd()
 		ClearTimer(g_adverttimer);
 		Jail_Log("%s Jailbreak has been unloaded successfully.", TAG);
 	}
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnMapEnd has Started!");
+	#endif
 }
 
 public OnClientConnected(client)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnClientConnected is Starting...");
+	#endif
+	
 	g_Voted[client] = false;
 	g_Voters++;
 	g_VotesNeeded = RoundToFloor(float(g_Voters) * j_WVotesNeeded);
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnClientConnected has Started!");
+	#endif
 }
 
 public OnClientPutInServer(client)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnClientPutInServer is Starting...");
+	#endif
+	
 	g_IsMuted[client] = false;
 	SDKHook(client, SDKHook_OnTakeDamage, PlayerTakeDamage);
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnClientPutInServer has Started!");
+	#endif
 }
 
 public Action:PlayerTakeDamage(client, &attacker, &inflictor, &Float:damage, &damagetype, &weapon, Float:damageForce[3], Float:damagePosition[3])
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - PlayerTakeDamage is Starting...");
+	#endif
+	
 	if (!j_Enabled) return Plugin_Continue;
 	if (IsValidClient(client) || IsValidClient(attacker))
 	{
@@ -1225,19 +1354,36 @@ public Action:PlayerTakeDamage(client, &attacker, &inflictor, &Float:damage, &da
 			}
 		}
 	}
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - PlayerTakeDamage has Started!");
+	#endif
+	
 	return Plugin_Continue;
 }
 
 public OnClientPostAdminCheck(client)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnClientPostAdminCheck is Starting...");
+	#endif
+	
 	if (j_Enabled)
 	{
 		CreateTimer(4.0, Timer_Welcome, GetClientUserId(client));
 	}
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnClientPostAdminCheck has Started!");
+	#endif
 }
 
 public OnClientDisconnect(client)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnClientDisconnect is Starting...");
+	#endif
+	
 	if (!j_Enabled) return;
 
 	if (IsValidClient(client))
@@ -1272,10 +1418,18 @@ public OnClientDisconnect(client)
 		g_Killcount[client] = 0;
 		g_FirstKill[client] = 0;
 	}
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnClientDisconnect has Started!");
+	#endif
 }
 
 public PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - PlayerSpawn is Starting...");
+	#endif
+	
 	if (!j_Enabled) return;
 
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
@@ -1356,10 +1510,18 @@ public PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 			}
 		}
 	}
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - PlayerSpawn has Started!");
+	#endif
 }
 
 public PlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - PlayerHurt is Starting...");
+	#endif
+	
 	if (!j_Enabled) return;
 
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
@@ -1383,10 +1545,18 @@ public PlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 			}
 		}
 	}
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - PlayerHurt has Started!");
+	#endif
 }
 
 public Action:ChangeClass(Handle:event, const String:name[], bool:dontBroadcast)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - ChangeClass is Starting...");
+	#endif
+	
 	if (!j_Enabled) return;
 	
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
@@ -1398,10 +1568,17 @@ public Action:ChangeClass(Handle:event, const String:name[], bool:dontBroadcast)
 		SetEntityFlags(client, flags);
 	}
 	
+	#if _DEBUG
+		LogMessage("[DEBUG] - ChangeClass has Started!");
+	#endif
 }
 
 public PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - PlayerDeath is Starting...");
+	#endif
+	
 	if (!j_Enabled) return;
 
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
@@ -1500,10 +1677,18 @@ public PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 			PrintCenterTextAll("%t", "warden killed", client);
 		}
 	}
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - PlayerDeath has Started!");
+	#endif
 }
 
 public RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - RoundStart is Starting...");
+	#endif
+	
 	if (!j_Enabled) return;
 
 	if (j_1stDayFreeday && g_1stRoundFreeday)
@@ -1553,10 +1738,18 @@ public RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 	Warden = -1;
 	g_bIsLRInUse = false;
 	g_bActiveRound = true;
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - RoundStart has Started!");
+	#endif
 }
 
 public ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - ArenaRoundStart is Starting...");
+	#endif
+	
 	if (!j_Enabled) return;
 	
 	if (j_Balance)
@@ -1774,10 +1967,18 @@ public ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 	}
 	
 	g_bIsWardenLocked = false;
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - ArenaRoundStart has Started!");
+	#endif
 }
 
 public RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - RoundEnd is Starting...");
+	#endif
+	
 	if (!j_Enabled) return;
 
 	for (new i = 1; i <= MaxClients; i++)
@@ -1785,7 +1986,7 @@ public RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 		if (IsValidClient(i))
 		{
 			UnmutePlayer(i);
-
+			
 			if (g_IsFreedayActive[i])
 			{
 				RemoveFreeday(i);
@@ -1827,19 +2028,34 @@ public RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 	ClearTimer(g_refreshspellstimer);
 	CloseAllMenus();
 
+	#if _DEBUG
+		LogMessage("[DEBUG] - RoundEnd has Started!");
+	#endif
 }
 
 public RegeneratePlayer(Handle:event, const String:name[], bool:dontBroadcast)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - RegeneratePlayer is Starting...");
+	#endif
+	
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (j_Enabled)
 	{
 		CreateTimer(0.1, ManageWeapons, GetClientUserId(client));
 	}
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - RegeneratePlayer has Started!");
+	#endif
 }
 
 public OnEntityCreated(entity, const String:classname[])
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnEntityCreated is Starting...");
+	#endif
+	
 	if (j_Enabled && IsValidEntity(entity))
 	{
 		if (StrContains(classname, "tf_ammo_pack", false) != -1)
@@ -1847,32 +2063,57 @@ public OnEntityCreated(entity, const String:classname[])
 			AcceptEntityInput(entity, "Kill");
 		}
 		
-		if (StrContains(classname, "point_servercommand", false) != -1)
+		if (j_KillPointServerCommand)
 		{
-			if (j_KillPointServerCommand)
+			//Crashing on Linux
+			/*if (StrContains(classname, "point_servercommand", false) != -1)
 			{
-				AcceptEntityInput(entity, "Kill");
-			}
+				if (j_KillPointServerCommand)
+				{
+					AcceptEntityInput(entity, "Kill");
+				}
+			}*/
 		}
 	}
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnEntityCreated has Started!");
+	#endif
 }
 
 public Action:InterceptBuild(client, const String:command[], args)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - InterceptBuild is Starting...");
+	#endif
+	
 	if (j_Enabled && IsValidClient(client) && GetClientTeam(client) == _:TFTeam_Red)
 	{
 		return Plugin_Handled;
 	}
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - InterceptBuild has Started!");
+	#endif
+	
 	return Plugin_Continue;
 }
 
 public bool:OnClientSpeakingEx(client)
 {
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnClientSpeakingEx is Starting...");
+	#endif
+	
 	if (j_Enabled && e_voiceannounce_ex && j_MicCheck && !g_HasTalked[client])
 	{
 		g_HasTalked[client] = true;
 		CPrintToChat(client, "%s %t", TAG_COLORED, "microphone verified");
 	}
+	
+	#if _DEBUG
+		LogMessage("[DEBUG] - OnClientSpeakingEx has Started!");
+	#endif
 }
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -3459,7 +3700,6 @@ Jail_Log(const String:format[], any:...)
 			decl String:buffer[256];
 			VFormat(buffer, sizeof(buffer), format, 2);
 			LogMessage("%s", buffer);
-			PrintToServer("%s", buffer);
 		}
 	case 2:
 		{
@@ -3467,7 +3707,6 @@ Jail_Log(const String:format[], any:...)
 			VFormat(buffer, sizeof(buffer), format, 2);
 			BuildPath(Path_SM, path, sizeof(path), "logs/TF2Jail.log");
 			LogToFileEx(path, "%s", buffer);
-			PrintToServer("%s", buffer);
 		}
 	}
 }
