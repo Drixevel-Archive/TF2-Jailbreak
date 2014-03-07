@@ -4,12 +4,14 @@
 	{
 		"Version"
 		{
-			"Latest"		"5.1.5"
-			"Previous"		"5.1.2a"
+			"Latest"		"5.1.6"
+			"Previous"		"5.1.5"
 		}
 
-		"Notes"	"Last requests are now working except for handles."
-		"Notes"	"Bugs are fleshed out except for the latest ConVar."
+		"Notes"	"Added a new ConVar for Warden Timer."
+		"Notes"	"Fixed preferences to properly give menu options based on the ConVar variable."
+		"Notes"	"Fixed some bugs related to TF2Attributes and made the plugin easier to work with."
+		"Notes"	"Updated variables for Warden Locks."
 	}
 
 	"Files"

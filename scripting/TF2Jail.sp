@@ -53,7 +53,7 @@
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
 #define PLUGIN_AUTHOR	"Keith Warren(Jack of Designs)"
-#define PLUGIN_VERSION	"5.1.5"
+#define PLUGIN_VERSION	"5.1.6"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.jackofdesigns.com/"
 #define WARDEN_MODEL	"models/jailbreak/warden/warden_v2"
@@ -62,12 +62,8 @@
 #define UPDATE_URL         "https://raw.github.com/JackofDesigns/TF2-Jailbreak/Beta/updater.txt"
 #endif
 
-#define NO_ATTACH 0
-#define ATTACH_NORMAL 1
-#define ATTACH_HEAD 2
-
 //ConVar Handles, Globals, etc..
-new Handle:JB_ConVars[60] = {INVALID_HANDLE, ...};
+new Handle:JB_ConVars[61] = {INVALID_HANDLE, ...};
 new bool:j_Enabled = true, bool:j_Advertise = true, bool:j_Cvars = true, j_Logging = 2, bool:j_Balance = true, Float:j_BalanceRatio = 0.5,
 bool:j_RedMelee = true, bool:j_Warden = false, bool:j_WardenAuto = false, bool:j_WardenModel = true, bool:j_WardenForceSoldier = true,
 bool:j_WardenFF = true, bool:j_WardenCC = true, bool:j_WardenRequest = true, j_WardenLimit = 0, bool:j_DoorControl = true, Float:j_DoorOpenTimer = 60.0,
@@ -77,7 +73,7 @@ bool:j_Freekillers = true, Float:j_FreekillersTime = 6.0, j_FreekillersKills = 6
 String:BanMsgDC[255], j_FreekillersBantime = 60, j_FreekillersBantimeDC = 120, bool:j_LRSEnabled = true, bool:j_LRSAutomatic = true, bool:j_LRSLockWarden = true,
 j_FreedayLimit = 3, bool:j_1stDayFreeday = true, bool:j_DemoCharge = true, bool:j_DoubleJump = true, bool:j_Airblast = true, String:Particle_Freekiller[100],
 String:Particle_Rebellion[100], String:Particle_Freeday[100], j_WardenVoice = 1, bool:j_WardenWearables = true, bool:j_FreedayTeleports = true, j_WardenStabProtection = 0,
-bool:j_KillPointServerCommand = true, bool:j_RemoveFreedayOnLR = true, bool:j_RemoveFreedayOnLastGuard = true, j_Reftype = 1;
+bool:j_KillPointServerCommand = true, bool:j_RemoveFreedayOnLR = true, bool:j_RemoveFreedayOnLastGuard = true, j_Reftype = 1, j_WardenTimer = 20;
 
 //Plugins/Extension bools
 new bool:e_voiceannounce_ex = false, bool:e_sourcebans = false, bool:e_steamtools = false;
@@ -216,7 +212,8 @@ public OnPluginStart()
 	JB_ConVars[56] = AutoExecConfig_CreateConVar("sm_tf2jail_point_servercommand", "1", "Kill 'point_servercommand' entities: (1 = Kill on Spawn, 0 = Disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_ConVars[57] = AutoExecConfig_CreateConVar("sm_tf2jail_freeday_removeonlr", "1", "Remove Freedays on Last Request: (1 = enable, 0 = disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_ConVars[58] = AutoExecConfig_CreateConVar("sm_tf2jail_freeday_removeonlastguard", "1", "Remove Freedays on Last Guard: (1 = enable, 0 = disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	JB_ConVars[59] = AutoExecConfig_CreateConVar("sm_tf2jail_pref_type", "0", "Preference Type: (0 = Disabled, 1 = Blue, 2 = Warden Only)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_ConVars[59] = AutoExecConfig_CreateConVar("sm_tf2jail_pref_type", "0", "Preference Type: (0 = Disabled, 1 = Blue, 2 = Warden Only)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
+	JB_ConVars[60] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_timer", "20", "Time in seconds after Warden is unset or lost to lock Warden: (0 = Disabled)", FCVAR_PLUGIN);
 
 	AutoExecConfig_ExecuteFile();
 
@@ -292,7 +289,6 @@ public OnPluginStart()
 	Forward_WardenRemoved = CreateGlobalForward("Warden_OnWardenRemoved", ET_Ignore, Param_Cell);
 	
 	g_hRoleCookie = RegClientCookie("TF2Jail_RolePreference", "Sets the preferred role of the client. (Blue, Warden)", CookieAccess_Private);
-	SetCookiePrefabMenu(g_hRoleCookie, CookieMenu_YesNo_Int, "Would you like to be Warden/Blue?", RolePrefHandler);
 	
 	for (new i = MaxClients; i > 0; --i)
 	{
@@ -360,6 +356,10 @@ public OnAllPluginsLoaded()
 	#if defined _updater_included
 	if (LibraryExists("updater")) Updater_AddPlugin(UPDATE_URL);
 	#endif
+	
+	#if defined _jackofdesigns_included
+	Jack_OnAllPluginsLoaded();
+	#endif
 }
 
 public OnLibraryAdded(const String:name[])
@@ -376,6 +376,10 @@ public OnLibraryAdded(const String:name[])
 	{
 		EnumCommsList = Basecomms;
 	}
+	
+	#if defined _jackofdesigns_included
+	Jack_OnLibraryAdded(name);
+	#endif
 }
 
 public OnLibraryRemoved(const String:name[])
@@ -388,6 +392,10 @@ public OnLibraryRemoved(const String:name[])
 	{
 		EnumCommsList = None;
 	}
+	
+	#if defined _jackofdesigns_included
+	Jack_OnLibraryRemoved(name);
+	#endif
 }
 
 public OnPluginEnd()
@@ -456,6 +464,7 @@ public OnConfigsExecuted()
 	j_RemoveFreedayOnLR = GetConVarBool(JB_ConVars[57]);
 	j_RemoveFreedayOnLastGuard = GetConVarBool(JB_ConVars[58]);
 	j_Reftype = GetConVarInt(JB_ConVars[59]);
+	j_WardenTimer = GetConVarInt(JB_ConVars[60]);
 	
 	if (j_Enabled)
 	{
@@ -480,6 +489,12 @@ public OnConfigsExecuted()
 					OnClientPutInServer(i);
 				}
 			}
+		}
+		
+		switch (j_Reftype)
+		{
+			case 1: SetCookiePrefabMenu(g_hRoleCookie, CookieMenu_YesNo_Int, "Would you like to be Blue?", RolePrefHandler);
+			case 2: SetCookiePrefabMenu(g_hRoleCookie, CookieMenu_YesNo_Int, "Would you like to be Warden?", RolePrefHandler);
 		}
 		
 		ResetVotes();
@@ -1063,6 +1078,11 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		j_Reftype = iNewValue;
 	}
+	
+	else if (cvar == JB_ConVars[60])
+	{
+		j_WardenTimer = iNewValue;
+	}
 }
 
 #if defined _updater_included
@@ -1133,11 +1153,8 @@ public OnMapStart()
 		PrecacheSound("ui/system_message_alert.wav", true);
 		
 		g_1stRoundFreeday = true;
-		g_bActiveRound = false;
-		g_Voters = 0;
 		g_VotesNeeded = 0;
 		WardenLimit = 0;
-		g_bLockWardenLR = false;
 		
 		ResetVotes();
 	}
@@ -1168,7 +1185,6 @@ public OnMapEnd()
 		}
 
 		g_bActiveRound = false;
-		g_bLockWardenLR = false;
 		WardenLimit = 0;
 		ResetVotes();
 		
@@ -1181,7 +1197,6 @@ public OnMapEnd()
 		hTimer_WardenLock = INVALID_HANDLE;
 		
 		Jail_Log("%s Jailbreak has been unloaded successfully.", TAG);
-		
 	}
 }
 
@@ -1329,16 +1344,22 @@ public PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 					{
 						if (j_DoubleJump)
 						{
-							AddAttribute(client, "no double jump", 1.0);
-							g_ScoutsBlockedDoubleJump[client] = true;
+							if (attributes)
+							{
+								AddAttribute(client, "no double jump", 1.0);
+								g_ScoutsBlockedDoubleJump[client] = true;
+							}
 						}
 					}
 				case TFClass_Pyro:
 					{
 						if (j_Airblast)
 						{
-							AddAttribute(client, "airblast disabled", 1.0);
-							g_PyrosDisableAirblast[client] = true;
+							if (attributes)
+							{
+								AddAttribute(client, "airblast disabled", 1.0);
+								g_PyrosDisableAirblast[client] = true;
+							}
 						}
 					}
 				case TFClass_DemoMan:
@@ -1522,13 +1543,13 @@ public PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 		
 		if (g_PyrosDisableAirblast[client])
 		{
-			RemoveAttribute(client, "airblast disabled");
+			if (attributes) RemoveAttribute(client, "airblast disabled");
 			g_PyrosDisableAirblast[client] = false;
 		}
 		
 		if (g_ScoutsBlockedDoubleJump[client])
 		{
-			RemoveAttribute(client, "no double jump");
+			if (attributes) RemoveAttribute(client, "no double jump");
 			g_ScoutsBlockedDoubleJump[client] = false;
 		}
 		
@@ -1596,7 +1617,6 @@ public RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 	Warden = -1;
 	g_bIsLRInUse = false;
 	g_bActiveRound = true;
-	g_bIsWardenLocked = true;
 }
 
 public ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
@@ -1817,12 +1837,12 @@ public RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 			}
 			if (g_ScoutsBlockedDoubleJump[i])
 			{
-				RemoveAttribute(i, "no double jump");
+				if (attributes) RemoveAttribute(i, "no double jump");
 				g_ScoutsBlockedDoubleJump[i] = false;
 			}
 			if (g_PyrosDisableAirblast[i])
 			{
-				RemoveAttribute(i, "airblast disabled");
+				if (attributes) RemoveAttribute(i, "airblast disabled");
 				g_PyrosDisableAirblast[i] = false;
 			}
 			ClearTimer(hTimer_RebelTimers[i]);
@@ -2021,7 +2041,6 @@ public Action:AdminResetPlugin(client, args)
 {
 	if (!j_Enabled) return Plugin_Handled;
 	
-	g_Voters = 0;
 	g_VotesNeeded = 0;
 	ResetVotes();
 	
@@ -3005,7 +3024,6 @@ public Action:RemoveLR(client, args)
 	}
 	
 	g_bIsLRInUse = false;
-	g_bIsWardenLocked = false;
 	g_IsFreeday[client] = false;
 	g_IsFreedayActive[client] = false;
 	CPrintToChat(Warden, "%s %t", TAG_COLORED, "warden removed lr");
@@ -3044,7 +3062,10 @@ WardenSet(client)
 		SetModel(client, s);
 	}
 	
-	if (j_WardenStabProtection == 1) AddAttribute(client, "backstab shield", 1.0);
+	if (j_WardenStabProtection == 1)
+	{
+		if (attributes) AddAttribute(client, "backstab shield", 1.0);
+	}
 	
 	SetHudTextParams(-1.0, -1.0, 2.0, 255, 255, 255, 255, 1, _, 1.0, 1.0);
 	for (new i = 1; i <= MaxClients; i++)
@@ -3091,9 +3112,13 @@ WardenUnset(client)
 		}
 	}
 	
-	hTimer_WardenLock = CreateTimer(20.0, DisableWarden, INVALID_HANDLE, TIMER_FLAG_NO_MAPCHANGE);
+	if (j_WardenTimer != 0.0)
+	{
+		new Float:timer = float(j_WardenTimer);
+		hTimer_WardenLock = CreateTimer(timer, DisableWarden, INVALID_HANDLE, TIMER_FLAG_NO_MAPCHANGE);
+	}
 	
-	RemoveAttribute(client, "backstab shield");
+	if (attributes) RemoveAttribute(client, "backstab shield");
 	Forward_OnWardenRemoved(client);
 }
 
@@ -3323,8 +3348,6 @@ public MenuHandle_LR(Handle:menu, MenuAction:action, client, item)
 				}
 				CPrintToChatAll("%s %t", TAG_COLORED, "last request freedays removed");
 			}
-			
-			g_bIsWardenLocked = true;
 		}
 	case MenuAction_Cancel:
 		{
@@ -3942,46 +3965,6 @@ DoorHandler(DoorMode:status)
 	}
 }
 
-Handle:CreateParticle(String:type[], Float:time, entity, attach=NO_ATTACH, Float:xOffs=0.0, Float:yOffs=0.0, Float:zOffs=0.0)
-{
-	new particle = CreateEntityByName("info_particle_system");
-	
-	if (IsValidEdict(particle)) {
-		decl Float:pos[3];
-		GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
-		pos[0] += xOffs;
-		pos[1] += yOffs;
-		pos[2] += zOffs;
-		TeleportEntity(particle, pos, NULL_VECTOR, NULL_VECTOR);
-		DispatchKeyValue(particle, "effect_name", type);
-		if (attach != NO_ATTACH)
-		{
-			SetVariantString("!activator");
-			AcceptEntityInput(particle, "SetParent", entity, particle, 0);
-			if (attach == ATTACH_HEAD)
-			{
-				SetVariantString("head");
-				AcceptEntityInput(particle, "SetParentAttachmentMaintainOffset", particle, particle, 0);
-			}
-		}
-		DispatchKeyValue(particle, "targetname", "present");
-		DispatchSpawn(particle);
-		ActivateEntity(particle);
-		AcceptEntityInput(particle, "Start");
-		
-		if (time != 0.0)
-		{
-			CreateTimer(time, DeleteParticle, particle, TIMER_FLAG_NO_MAPCHANGE);
-		}
-	}
-	else
-	{
-		LogError("(CreateParticle): Could not create info_particle_system");
-	}
-	
-	return INVALID_HANDLE;
-}
-
 StripToMelee(client)
 {
 	TF2_RemoveWeaponSlot(client, 0);
@@ -4223,14 +4206,6 @@ public Action:EnableFFTimer(Handle:hTimer)
 {
 	hTimer_FriendlyFireEnable = INVALID_HANDLE;
 	SetConVarBool(JB_EngineConVars[0], true);
-}
-
-public Action:DeleteParticle(Handle:timer, any:Edict)
-{	
-	if (IsValidEdict(Edict))
-	{
-		RemoveEdict(Edict);
-	}
 }
 
 public Action:RemoveRebel(Handle:hTimer, any:userid)

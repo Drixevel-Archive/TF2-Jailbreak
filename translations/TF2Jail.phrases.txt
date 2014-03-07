@@ -628,9 +628,4 @@
 		"#format"	""
 		"en"		"Your settings are currently set to disabled. Type '!settings' and change your preference to become Warden."
 	}
-	"preference against blue"
-	{
-		"#format"	""
-		"en"		"Your preference is set against joining Blue team. You shall stay on the Red team."
-	}
 }
