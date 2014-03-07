@@ -3112,7 +3112,7 @@ WardenUnset(client)
 		}
 	}
 	
-	if (j_WardenTimer != 0.0)
+	if (j_WardenTimer != 0)
 	{
 		new Float:timer = float(j_WardenTimer);
 		hTimer_WardenLock = CreateTimer(timer, DisableWarden, INVALID_HANDLE, TIMER_FLAG_NO_MAPCHANGE);
