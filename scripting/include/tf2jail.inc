@@ -6,6 +6,8 @@
 #define TAG_COLORED	"{community}[TF2Jail]"
 #define TAG	"[TF2Jail]"
 
+#tryinclude <tf2attributes>
+
 // NOTE: Requires you check if the player is in-game, alive, etc.
 
 /**
@@ -86,6 +88,22 @@ native TF2Jail_IsFreekiller(client);
  * @noreturn
  **/
 native TF2Jail_MarkFreekiller(client);
+
+/**
+ * Strip clients to melee while using TF2Jail Rules. (Keep Weapons, ammo = 0)
+ *
+ * @param client		Client to Strip to melee.
+ * @noreturn
+ **/
+native TF2Jail_StripToMelee(client);
+
+/**
+ * Strip client to melee entirely using TF2Jail rules.
+ *
+ * @param client		Client to Strip entirely.
+ * @noreturn
+ **/
+native TF2Jail_StripAllWeapons(client);
 
 public SharedPlugin:__pl_tf2jail = 
 {

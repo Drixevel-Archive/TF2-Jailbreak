@@ -4,11 +4,12 @@
 	{
 		"Version"
 		{
-			"Latest"		"5.1.2a"
-			"Previous"		"5.1.2"
+			"Latest"		"5.1.5"
+			"Previous"		"5.1.2a"
 		}
 
-		"Notes"	"Debugging results for Linux."
+		"Notes"	"Last requests are now working except for handles."
+		"Notes"	"Bugs are fleshed out except for the latest ConVar."
 	}
 
 	"Files"
@@ -18,5 +19,6 @@
 
 		"Source"		"Path_SM/scripting/TF2Jail.sp"
 		"Source"		"Path_SM/scripting/include/tf2jail.inc"
+		"Source"		"Path_SM/scripting/include/jackofdesigns.inc"
 	}
 }

@@ -96,12 +96,6 @@
 		"en"		"{darkkhaki} Collision management is currently disabled."
 	}
 
-	"admin deny lr"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Admin has denied all currently queued last requests. Last request can be granted again."
-	}	
-
 	"admin reset plugin"
 	{
 		"#format"	""
@@ -111,25 +105,13 @@
 	"admin removed freeday"
 	{
 		"#format"	""
+		"en"		"{darkkhaki} Your freeday queue has been removed by an admin."
+	}
+	
+	"admin removed freeday active"
+	{
+		"#format"	""
 		"en"		"{darkkhaki} Your freeday status has been removed by an admin."
-	}
-	
-	"admin pardoned freekillers"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Admin has pardoned all current Freekillers marked."
-	}
-	
-	"admin removed robot"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Your robot status has been removed by an admin."
-	}
-	
-	"admin removed skeleton"
-	{
-		"#format"	""
-		"en"		"{darkkhaki} Your skeleton status has been removed by an admin."
 	}
 
 	"fire warden minimum players not met"
@@ -154,12 +136,6 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} You have been voted off! Please wait until next map and you may become Warden again."
-	}
-	
-	"forced warden"
-	{
-		"#format"	"{1:N},{2:N}"
-		"en"		"{darkkhaki} {1} has forced {2} to become Warden."
 	}
 
 	"new warden"
@@ -246,12 +222,6 @@
 		"en"		"Warden has been fired!"
 	}
 	
-	"warden fired"
-	{
-		"#format"	"{1:N},{2:N}"
-		"en"		"{darkkhaki} {1} has fired {2} from Warden."
-	}
-	
 	"no warden current"
 	{
 		"#format"	""
@@ -292,6 +262,12 @@
 	{
 		"#format"	"{1:N},{2:N}"
 		"en"		"{darkkhaki} {1} has given {2} a last request."
+	}
+	
+	"last request freedays removed"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Last request has been chosen, Freedays have been stripped."
 	}
 	
 	"lr freeday message"
@@ -636,5 +612,25 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Last Requests are currently disabled. Please check logs for more information. (Couldn't Parse Config)"
+	}
+	"Admin Force Warden Not Preferred"
+	{
+		"#format"	"{1:N}"
+		"en"		"{1} has their preference for Prisoner only, please pick another client."
+	}
+	"Admin Force Random Warden Not Preferred"
+	{
+		"#format"	"{1:N}"
+		"en"		"{1} has their preference for Prisoner only, rolling for another client..."
+	}
+	"preference set against guards or warden"
+	{
+		"#format"	""
+		"en"		"Your settings are currently set to disabled. Type '!settings' and change your preference to become Warden."
+	}
+	"preference against blue"
+	{
+		"#format"	""
+		"en"		"Your preference is set against joining Blue team. You shall stay on the Red team."
 	}
 }
