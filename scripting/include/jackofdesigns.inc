@@ -7,23 +7,25 @@
 #tryinclude <tf2attributes>
 #define REQUIRE_PLUGIN
 
+#if defined _tf2attributes_included
 new bool:attributes = false;
+#endif
 
 #define NO_ATTACH 0
 #define ATTACH_NORMAL 1
 #define ATTACH_HEAD 2
 
-public Jack_OnAllPluginsLoaded()
+stock Jack_OnAllPluginsLoaded()
 {
 	attributes = LibraryExists("tf2attributes");
 }
 
-public Jack_OnLibraryAdded(const String:name[])
+stock Jack_OnLibraryAdded(const String:name[])
 {
 	attributes = StrEqual(name, "tf2attributes");
 }
 
-public Jack_OnLibraryRemoved(const String:name[])
+stock Jack_OnLibraryRemoved(const String:name[])
 {
 	attributes = StrEqual(name, "tf2attributes");
 }
@@ -53,7 +55,7 @@ stock FindEntityByClassnameSafe(iStart, const String:strClassname[])
 #if defined _tf2attributes_included
 stock AddAttribute(client, String:attribute[], Float:value)
 {
-	if (IsValidClient(client))
+	if (attributes && IsValidClient(client))
 	{
 		TF2Attrib_SetByName(client, attribute, value);
 	}
@@ -61,14 +63,14 @@ stock AddAttribute(client, String:attribute[], Float:value)
 
 stock RemoveAttribute(client, String:attribute[])
 {
-	if (IsValidClient(client))
+	if (attributes && IsValidClient(client))
 	{
 		TF2Attrib_RemoveByName(client, attribute);
 	}
 }
 #endif
 
-Handle:CreateParticle(String:type[], Float:time, entity, attach=NO_ATTACH, Float:xOffs=0.0, Float:yOffs=0.0, Float:zOffs=0.0)
+stock Handle:CreateParticle(String:type[], Float:time, entity, attach=NO_ATTACH, Float:xOffs=0.0, Float:yOffs=0.0, Float:zOffs=0.0)
 {
 	new particle = CreateEntityByName("info_particle_system");
 	

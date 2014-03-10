@@ -53,7 +53,7 @@
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
 #define PLUGIN_AUTHOR	"Keith Warren(Jack of Designs)"
-#define PLUGIN_VERSION	"5.1.6"
+#define PLUGIN_VERSION	"5.1.6a"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.jackofdesigns.com/"
 #define WARDEN_MODEL	"models/jailbreak/warden/warden_v2"
@@ -213,8 +213,8 @@ public OnPluginStart()
 	JB_ConVars[57] = AutoExecConfig_CreateConVar("sm_tf2jail_freeday_removeonlr", "1", "Remove Freedays on Last Request: (1 = enable, 0 = disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_ConVars[58] = AutoExecConfig_CreateConVar("sm_tf2jail_freeday_removeonlastguard", "1", "Remove Freedays on Last Guard: (1 = enable, 0 = disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_ConVars[59] = AutoExecConfig_CreateConVar("sm_tf2jail_pref_type", "0", "Preference Type: (0 = Disabled, 1 = Blue, 2 = Warden Only)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
-	JB_ConVars[60] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_timer", "20", "Time in seconds after Warden is unset or lost to lock Warden: (0 = Disabled)", FCVAR_PLUGIN);
-
+	JB_ConVars[60] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_timer", "20", "Time in seconds after Warden is unset or lost to lock Warden: (0 = Disabled, NON-FLOAT VALUE)", FCVAR_PLUGIN);
+	
 	AutoExecConfig_ExecuteFile();
 
 	for (new i = 0; i < sizeof(JB_ConVars); i++)
@@ -489,6 +489,7 @@ public OnConfigsExecuted()
 					OnClientPutInServer(i);
 				}
 			}
+			g_bLateLoad = false;
 		}
 		
 		switch (j_Reftype)
@@ -1209,10 +1210,13 @@ public OnClientConnected(client)
 
 public OnClientCookiesCached(client)
 {
-	decl String:value[8];
-	GetClientCookie(client, g_hRoleCookie, value, sizeof(value));
-	
-	g_bRolePreference[client] = (value[0] != '\0' && StringToInt(value));
+	if (IsValidClient(client))
+	{
+		decl String:value[8];
+		GetClientCookie(client, g_hRoleCookie, value, sizeof(value));
+		
+		g_bRolePreference[client] = (value[0] != '\0' && StringToInt(value));
+	}
 }
 
 public OnClientPutInServer(client)
@@ -1623,6 +1627,8 @@ public ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (!j_Enabled) return;
 	
+	g_bIsWardenLocked = false;
+	
 	if (j_Balance)
 	{
 		new Float:Ratio;
@@ -1802,7 +1808,7 @@ public ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 									CPrintToChatAll(ActiveAnnounce);
 								}
 							}
-							FreedayForAll();
+							FreedayForAll(false);
 						}
 						else
 						{
@@ -1818,7 +1824,6 @@ public ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 	}
 	
 	FindRandomWarden();
-	g_bIsWardenLocked = false;
 }
 
 public RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
@@ -1850,11 +1855,7 @@ public RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 	}
 	
 	SetConVarBool(JB_EngineConVars[0], false);
-
-	if (GetConVarBool(JB_EngineConVars[1]))
-	{
-		SetConVarBool(JB_EngineConVars[1], false);
-	}
+	SetConVarBool(JB_EngineConVars[1], false);
 	
 	g_bIsWardenLocked = true;
 	g_bOneGuardLeft = false;
@@ -2041,9 +2042,6 @@ public Action:AdminResetPlugin(client, args)
 {
 	if (!j_Enabled) return Plugin_Handled;
 	
-	g_VotesNeeded = 0;
-	ResetVotes();
-	
 	for (new i = 1; i <= MaxClients; i++)
 	{
 		g_ScoutsBlockedDoubleJump[i] = false;
@@ -2066,6 +2064,8 @@ public Action:AdminResetPlugin(client, args)
 			OnClientConnected(i);
 		}
 	}
+	
+	ResetVotes();
 
 	g_CellsOpened = false;
 	g_1stRoundFreeday = false;
@@ -3101,23 +3101,25 @@ WardenUnset(client)
 		}
 	}
 	
-	if (j_BlueMute == 1)
+	if (g_bActiveRound)
 	{
-		for (new i=1; i<=MaxClients; i++)
+		if (j_BlueMute == 1)
 		{
-			if (IsValidClient(i) && GetClientTeam(i) == _:TFTeam_Blue && i != Warden)
+			for (new i = 1; i <= MaxClients; i++)
 			{
-				UnmutePlayer(i);
+				if (IsValidClient(i) && GetClientTeam(i) == _:TFTeam_Blue)
+				{
+					UnmutePlayer(i);
+				}
 			}
 		}
+		
+		if (j_WardenTimer != 0 && j_WardenTimer != 0.0)
+		{
+			new Float:timer = float(j_WardenTimer);
+			hTimer_WardenLock = CreateTimer(timer, DisableWarden, INVALID_HANDLE, TIMER_FLAG_NO_MAPCHANGE);
+		}
 	}
-	
-	if (j_WardenTimer != 0)
-	{
-		new Float:timer = float(j_WardenTimer);
-		hTimer_WardenLock = CreateTimer(timer, DisableWarden, INVALID_HANDLE, TIMER_FLAG_NO_MAPCHANGE);
-	}
-	
 	if (attributes) RemoveAttribute(client, "backstab shield");
 	Forward_OnWardenRemoved(client);
 }
@@ -3283,6 +3285,15 @@ public MenuHandle_LR(Handle:menu, MenuAction:action, client, item)
 												Jail_Log("[ERROR] Timer is set to a value below 0.1! Timer could not be created.");
 											}
 										}
+										KvGoBack(LastRequestConfig);
+									}
+									if (KvJumpToKey(LastRequestConfig, "DuelMode"))
+									{
+										if (KvGetNum(LastRequestConfig, "IsDuel", 0) == 1)
+										{
+											GiveDuelMenu(client);
+										}
+										KvGoBack(LastRequestConfig);
 									}
 									KvGoBack(LastRequestConfig);
 								}
@@ -3362,6 +3373,45 @@ public MenuHandle_LR(Handle:menu, MenuAction:action, client, item)
 			}
 		}
 	case MenuAction_End: CloseHandle(menu), g_bIsLRInUse = false;
+	}
+}
+
+GiveDuelMenu(client)
+{
+	if (!IsVoteInProgress())
+	{
+		new Handle:menu1 = CreateMenu(MenuHandle_DuelMenu, MENU_ACTIONS_ALL);
+		SetMenuTitle(menu1, "Choose a Player");
+		SetMenuExitBackButton(menu1, false);
+		AddTargetsToMenu2(menu1, 0, COMMAND_FILTER_NO_BOTS | COMMAND_FILTER_NO_IMMUNITY);
+		DisplayMenu(menu1, client, MENU_TIME_FOREVER);
+	}
+}
+
+public MenuHandle_DuelMenu(Handle:menu2, MenuAction:action, client, item)
+{
+	switch(action)
+	{
+	case MenuAction_Select:
+		{
+			decl String:info[32];
+			GetMenuItem(menu2, item, info, sizeof(info));
+			
+			new target = GetClientOfUserId(StringToInt(info));
+			
+			if (IsValidClient(client))
+			{
+				if (IsValidClient(target))
+				{
+					//TODO
+				}
+			}
+		}
+	case MenuAction_Cancel:
+		{
+			LastRequestStart(client);
+		}
+	case MenuAction_End: CloseHandle(menu2);
 	}
 }
 
@@ -3509,7 +3559,7 @@ FreedayForAll(bool:active = false)
 	}
 	else
 	{
-		DoorHandler(OPEN);
+	
 	}
 }
 
@@ -4225,8 +4275,11 @@ public Action:RemoveRebel(Handle:hTimer, any:userid)
 public Action:DisableWarden(Handle:hTimer)
 {
 	hTimer_WardenLock = INVALID_HANDLE;
-	CPrintToChatAll("%s %t", TAG_COLORED, "warden locked timer");
-	g_bIsWardenLocked = true;
+	if (g_bActiveRound)
+	{
+		CPrintToChatAll("%s %t", TAG_COLORED, "warden locked timer");
+		g_bIsWardenLocked = true;
+	}
 }
 
 /* Group Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
