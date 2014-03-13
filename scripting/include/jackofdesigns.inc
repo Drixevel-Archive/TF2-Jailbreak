@@ -17,17 +17,23 @@ new bool:attributes = false;
 
 stock Jack_OnAllPluginsLoaded()
 {
+	#if defined _tf2attributes_included
 	attributes = LibraryExists("tf2attributes");
+	#endif
 }
 
 stock Jack_OnLibraryAdded(const String:name[])
 {
+	#if defined _tf2attributes_included
 	attributes = StrEqual(name, "tf2attributes");
+	#endif
 }
 
 stock Jack_OnLibraryRemoved(const String:name[])
 {
+	#if defined _tf2attributes_included
 	attributes = StrEqual(name, "tf2attributes");
+	#endif
 }
 
 stock bool:IsValidClient(iClient)
@@ -39,12 +45,12 @@ stock bool:IsValidClient(iClient)
 
 stock ClearTimer(&Handle:timer)
 {
-    if(timer != INVALID_HANDLE)
-    {
-        KillTimer(timer);
-        timer = INVALID_HANDLE;
-    }
-}  
+	if (timer != INVALID_HANDLE)
+	{
+		KillTimer(timer);
+		timer = INVALID_HANDLE;
+	}
+}
 
 stock FindEntityByClassnameSafe(iStart, const String:strClassname[])
 {

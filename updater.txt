@@ -4,12 +4,11 @@
 	{
 		"Version"
 		{
-			"Latest"		"5.1.6a"
-			"Previous"		"5.1.6"
+			"Latest"		"5.1.7"
+			"Previous"		"5.1.6a"
 		}
 
-		"Notes"	"TF2 Attributes is now an option and isn't required."
-		"Notes"	"Warden timer has been fixed. (Make sure it's an integer value, not a float value.)"
+		//"Notes"	"TF2 Attributes is now an option and isn't required."
 	}
 
 	"Files"

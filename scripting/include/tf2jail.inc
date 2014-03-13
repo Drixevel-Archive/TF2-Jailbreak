@@ -105,6 +105,29 @@ native TF2Jail_StripToMelee(client);
  **/
 native TF2Jail_StripAllWeapons(client);
 
+/**
+ * Lock warden from being allowed.
+ *
+ * @noreturn
+ **/
+native TF2Jail_LockWarden();
+
+/**
+ * Unlock warden from being allowed.
+ *
+ * @noreturn
+ **/
+native TF2Jail_UnlockWarden();
+
+/**
+ * Log using TF2Jail's logging system/rules.
+ *
+ * @param log			String or text to log.
+ * @param ...			Formatting parameters.
+ * @noreturn
+ **/
+native TF2Jail_Log(const String:log[], any:...);
+
 public SharedPlugin:__pl_tf2jail = 
 {
 	name = "tf2jail",
@@ -129,5 +152,9 @@ public __pl_tf2jail_SetNTVOptional()
 	MarkNativeAsOptional("TF2Jail_MarkRebel");
 	MarkNativeAsOptional("TF2Jail_IsFreekiller");
 	MarkNativeAsOptional("TF2Jail_MarkFreekiller");
+	MarkNativeAsOptional("TF2Jail_StripToMelee");
+	MarkNativeAsOptional("TF2Jail_StripAllWeapons");
+	MarkNativeAsOptional("TF2Jail_LockWarden");
+	MarkNativeAsOptional("TF2Jail_UnlockWarden");
 }
 #endif
