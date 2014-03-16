@@ -17,8 +17,8 @@
 #define PLUGIN_DESCRIPTION	"Allow clients to vote for the Next Warden based on settings."
 #define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"
 
-new Handle:ConVars[5] = {INVALID_HANDLE, ...};
-new bool:cv_enable = true, bool:cv_roundstart = true, cv_picktype = 1, cv_minimumplayers;
+new Handle:ConVars[6] = {INVALID_HANDLE, ...};
+new bool:cv_enable = true, bool:cv_roundstart = true, cv_picktype = 1, cv_minimumplayers, cv_playertypes;
 
 new bool:g_bLateLoad = false;
 
@@ -45,7 +45,8 @@ public OnPluginStart()
 	ConVars[1] = AutoExecConfig_CreateConVar("sm_tf2jail_wardenvote_enable", "1", "Status of the plugin: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	ConVars[2] = AutoExecConfig_CreateConVar("sm_tf2jail_wardenvote_roundstart", "1", "Execute vote on arena round start: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	ConVars[3] = AutoExecConfig_CreateConVar("sm_tf2jail_wardenvote_picktype", "1", "How to pick clients for vote: (1 = Random, 2 = Ascending Indexes)", FCVAR_PLUGIN, true, 1.0, true, 2.0);
-	ConVars[4] = AutoExecConfig_CreateConVar("sm_tf2jail_wardenvote_picktype", "7", "Minimum amount of clients to start votes: (0 = Disabled, Maximum amount is 32)", FCVAR_PLUGIN, true, 0.0, true, float(MAXPLAYERS));
+	ConVars[4] = AutoExecConfig_CreateConVar("sm_tf2jail_wardenvote_minimum", "7", "Minimum amount of clients to start votes: (0 = Disabled, Maximum amount is 32)", FCVAR_PLUGIN, true, 0.0, true, float(MAXPLAYERS));
+	ConVars[5] = AutoExecConfig_CreateConVar("sm_tf2jail_wardenvote_teams", "3", "Team types that appear in the votes: (0 = Everyone, 1 = Spectators, 2 = Reds, 3 = Blues)", FCVAR_PLUGIN, true, 0.0, true, 3.0);
 	
 	AutoExecConfig_ExecuteFile();
 
@@ -76,6 +77,7 @@ public OnConfigsExecuted()
 	cv_roundstart = GetConVarBool(ConVars[2]);
 	cv_picktype = GetConVarInt(ConVars[3]);
 	cv_minimumplayers = GetConVarInt(ConVars[4]);
+	cv_playertypes = GetConVarInt(ConVars[5]);
 	
 	if (cv_enable)
 	{
@@ -122,6 +124,11 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	else if (cvar == ConVars[4])
 	{
 		cv_minimumplayers = iNewValue;
+	}
+	
+	else if (cvar == ConVars[4])
+	{
+		cv_playertypes = iNewValue;
 	}
 }
 
@@ -241,19 +248,89 @@ stock UTIL_AddTargetsToMenu2(Handle:menu)
 	
 	for (new i = 1; i <= 7; i++)
 	{
-		new Picked;
 		switch (cv_picktype)
 		{
-			case 1: Picked = Client_GetRandom(CLIENTFILTER_INGAMEAUTH);
-			case 2: Picked = Client_GetNext(CLIENTFILTER_INGAMEAUTH);
-		}
-		if (IsValidClient(Picked))
-		{
-			IntToString(GetClientUserId(Picked), user_id, sizeof(user_id));
-			GetClientName(Picked, name, sizeof(name));
-			Format(display, sizeof(display), "%s (%s)", name, user_id);
-			AddMenuItem(menu, user_id, display);
-			num_clients++;
+			case 1:
+				{
+					new Picked;
+					switch (cv_playertypes)
+					{
+						case 0: Picked = Client_GetRandom(CLIENTFILTER_INGAMEAUTH);
+						case 1: Picked = Client_GetRandom(CLIENTFILTER_SPECTATORS);
+						case 2: Picked = Client_GetRandom(CLIENTFILTER_TEAMONE);
+						case 3: Picked = Client_GetRandom(CLIENTFILTER_TEAMTWO);
+					}
+					if (IsValidClient(Picked))
+					{
+						IntToString(GetClientUserId(Picked), user_id, sizeof(user_id));
+						GetClientName(Picked, name, sizeof(name));
+						Format(display, sizeof(display), "%s (%s)", name, user_id);
+						AddMenuItem(menu, user_id, display);
+						num_clients++;
+					}
+				}
+			case 2:
+				{
+					switch (cv_playertypes)
+					{
+						case 0:
+							{
+								LOOP_CLIENTS(Picked, CLIENTFILTER_INGAMEAUTH)
+								{
+									if (IsValidClient(Picked))
+									{
+										IntToString(GetClientUserId(Picked), user_id, sizeof(user_id));
+										GetClientName(Picked, name, sizeof(name));
+										Format(display, sizeof(display), "%s (%s)", name, user_id);
+										AddMenuItem(menu, user_id, display);
+										num_clients++;
+									}
+								}
+							}
+						case 1:
+							{
+								LOOP_CLIENTS(Picked, CLIENTFILTER_SPECTATORS)
+								{
+									if (IsValidClient(Picked))
+									{
+										IntToString(GetClientUserId(Picked), user_id, sizeof(user_id));
+										GetClientName(Picked, name, sizeof(name));
+										Format(display, sizeof(display), "%s (%s)", name, user_id);
+										AddMenuItem(menu, user_id, display);
+										num_clients++;
+									}
+								}
+							}
+						case 2:
+							{
+								LOOP_CLIENTS(Picked, CLIENTFILTER_TEAMONE)
+								{
+									if (IsValidClient(Picked))
+									{
+										IntToString(GetClientUserId(Picked), user_id, sizeof(user_id));
+										GetClientName(Picked, name, sizeof(name));
+										Format(display, sizeof(display), "%s (%s)", name, user_id);
+										AddMenuItem(menu, user_id, display);
+										num_clients++;
+									}
+								}
+							}
+						case 3:
+							{
+								LOOP_CLIENTS(Picked, CLIENTFILTER_TEAMTWO)
+								{
+									if (IsValidClient(Picked))
+									{
+										IntToString(GetClientUserId(Picked), user_id, sizeof(user_id));
+										GetClientName(Picked, name, sizeof(name));
+										Format(display, sizeof(display), "%s (%s)", name, user_id);
+										AddMenuItem(menu, user_id, display);
+										num_clients++;
+									}
+								}
+							}
+					}
+				}
 		}
 	}
 	return num_clients;

@@ -45,7 +45,7 @@
 	"warden incorrect flags"
 	{
 		"#format"	""
-		"en"		"You have the incorrect flags to become Warden."
+		"en"		"{darkkhaki} You have the incorrect flags to become Warden."
 	}
 	
 	"warden current"
@@ -237,7 +237,7 @@
 	"admin reset plugin"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} Admin has reset the plugin. Please reacquire Warden and grant Freedays if there are any."
+		"en"		"{darkkhaki} Reset the plugin, please reacquire Warden and grant Freedays if there are any."
 	}	
 	
 	"admin removed freeday"
@@ -540,130 +540,130 @@
 		"en"		"Cell Doors - Undetected"
 	}
 
-	"Admin Remove warden"
-	{
-		"#format"	"{1:N},{2:N}"
-		"en"		"{1} has fired {2} from Warden."
-	}
-	
-	"Admin Lock warden"
+	"Admin Remove Warden"
 	{
 		"#format"	"{1:N}"
-		"en"		"Warden has been Locked by {1}."
+		"en"		"{darkkhaki} Fired {1} from Warden."
 	}
 	
-	"Admin Unlock warden"
+	"Admin Lock Warden"
 	{
-		"#format"	"{1:N}"
-		"en"		"Warden has been Unlocked by {1}. You may now go Warden again."
+		"#format"	""
+		"en"		"{darkkhaki} Warden has been Locked."
+	}
+	
+	"Admin Unlock Warden"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Warden has been Unlocked, you may now go Warden again."
 	}
 	
 	"Admin Pardon Freekillers"
 	{
-		"#format"	"{1:N}"
-		"en"		"{1} has pardoned all marked Freekillers."
+		"#format"	""
+		"en"		"{darkkhaki} Pardoned all marked Freekillers."
 	}
 	
 	"Admin Deny Last Request"
 	{
-		"#format"	"{1:N}"
-		"en"		"{1} has denied and cleared all queued last requests."
+		"#format"	""
+		"en"		"{darkkhaki} Denied and cleared all queued last requests."
 	}
 	
 	"Admin Open Cells"
 	{
-		"#format"	"{1:N}"
-		"en"		"{1} has opened the cell doors."
+		"#format"	""
+		"en"		"{darkkhaki} Opened the cell doors via admin commands."
 	}
 	
 	"Admin Close Cells"
 	{
-		"#format"	"{1:N}"
-		"en"		"{1} has closed the cell doors."
+		"#format"	""
+		"en"		"{darkkhaki} Closed the cell doors via admin commands."
 	}
 	
 	"Admin Lock Cells"
 	{
-		"#format"	"{1:N}"
-		"en"		"{1} has locked all cell doors."
+		"#format"	""
+		"en"		"{darkkhaki} Locked the cell doors via admin commands."
 	}
 	
 	"Admin Unlock Cells"
 	{
+		"#format"	""
+		"en"		"{darkkhaki} Unlocked the cell doors via admin commands."
+	}
+	
+	"Admin Force Warden Random"
+	{
 		"#format"	"{1:N}"
-		"en"		"{1} has unlocked all cell doors."
+		"en"		"{darkkhaki} Forced {1} to be Warden by random pick."
 	}
 	
-	"Admin Force warden Random"
+	"Admin Force Warden"
 	{
-		"#format"	"{1:N},{2:N}"
-		"en"		"{1} has forced {2} to be Warden by random."
-	}
-	
-	"Admin Force warden"
-	{
-		"#format"	"{1:N},{2:N}"
-		"en"		"{1} has forced {2} to be Warden manually."
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} Forced {1} to be Warden."
 	}
 	
 	"Admin Force Last Request"
 	{
-		"#format"	"{1:N},{2:N}"
-		"en"		"{1} has given {2} a last request."
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki}Gave {1} a Last Request."
 	}
 	
 	"Admin Force Last Request Self"
 	{
-		"#format"	"{1:N}"
-		"en"		"{1} has given himself last request."
+		"#format"	""
+		"en"		"{darkkhaki} Gave themselves a Last Request."
 	}
 	
 	"Admin Reset Plugin"
 	{
 		"#format"	"{1:N}"
-		"en"		"{1} has reset the plugin."
+		"en"		"{darkkhaki} {1} has reset the plugin."
 	}
 	
 	"Admin Scan Map Compatibility"
 	{
-		"#format"	"{1:N}"
-		"en"		"{1} has scanned the map to check for compatibility with the TF2Jail plugin."
+		"#format"	""
+		"en"		"{darkkhaki} Scanning the map to check for compatibility with the TF2Jail plugin."
 	}
 	
 	"Admin Give Freeday Menu"
 	{
-		"#format"	"{1:N}"
-		"en"		"{1} is giving someone a Freeday..."
+		"#format"	""
+		"en"		"{darkkhaki} Giving someone a Freeday..."
 	}
 	
 	"Admin Remove Freeday Menu"
 	{
-		"#format"	"{1:N}"
-		"en"		"{1} is removing someone's Freeday..."
+		"#format"	""
+		"en"		"{darkkhaki} Removing someone's Freeday..."
 	}
 	
 	"Admin Accept Request FF"
 	{
-		"#format"	"{1:N},{2:N}"
-		"en"		"{1} has accepted {2}'s request to enable Friendly Fire."
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} Accepted {1}'s request to enable Friendly Fire."
 	}
 	
 	"Admin Accept Request CC"
 	{
-		"#format"	"{1:N},{2:N}"
-		"en"		"{1} has accepted {2}'s request to enable Collision Detection."
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} Accepted {1}'s request to enable Collision Detection."
 	}
 	
 	"Admin Cancel Active FF"
 	{
-		"#format"	"{1:N}"
-		"en"		"{1} has cancelled the active Warden command: Friendly Fire"
+		"#format"	""
+		"en"		"{darkkhaki} Cancelled the active Warden command: Friendly Fire"
 	}
 	
 	"Admin Cancel Active CC"
 	{
-		"#format"	"{1:N}"
-		"en"		"{1} has cancelled the active Warden command: Collision"
+		"#format"	""
+		"en"		"{darkkhaki} Cancelled the active Warden command: Collision"
 	}
 	
 	"last request config invalid"
@@ -675,42 +675,42 @@
 	"Admin Force Warden Not Preferred"
 	{
 		"#format"	"{1:N}"
-		"en"		"{1} has their preference for Prisoner only, please pick another client."
+		"en"		"{darkkhaki} {1} has their preference for Prisoner only, please pick another client."
 	}
 	
 	"Admin Force Random Warden Not Preferred"
 	{
 		"#format"	"{1:N}"
-		"en"		"{1} has their preference for Prisoner only, rolling for another client..."
+		"en"		"{darkkhaki} {1} has their preference for Prisoner only, rolling for another client..."
 	}
 	
 	"preference set against guards or warden"
 	{
 		"#format"	""
-		"en"		"Your settings are currently set to disabled. Type '!settings' and change your preference to become Warden."
+		"en"		"{darkkhaki} Your settings are currently set to disabled. Type '!settings' and change your preference to become Warden."
 	}
 	
 	"preference blue on"
 	{
 		"#format"	""
-		"en"		"Preference updated to allow the plugin to move you to blue."
+		"en"		"{darkkhaki} Preference updated to allow the plugin to move you to blue."
 	}
 	
 	"preference blue off"
 	{
 		"#format"	""
-		"en"		"Preference updated to disallow the plugin to move you to blue."
+		"en"		"{darkkhaki} Preference updated to disallow the plugin to move you to blue."
 	}
 	
 	"preference warden on"
 	{
 		"#format"	""
-		"en"		"Preference updated to allow the plugin to make you Warden."
+		"en"		"{darkkhaki} Preference updated to allow the plugin to make you Warden."
 	}
 	
 	"preference warden off"
 	{
 		"#format"	""
-		"en"		"Preference updated to disallow the plugin to make you Warden."
+		"en"		"{darkkhaki} Preference updated to disallow the plugin to make you Warden."
 	}
 }

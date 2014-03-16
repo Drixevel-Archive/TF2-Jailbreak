@@ -52,7 +52,7 @@ stock ClearTimer(&Handle:timer)
 	}
 }
 
-stock FindEntityByClassnameSafe(iStart, const String:strClassname[])
+stock FindEntityByClassnameSafe(iStart, String:strClassname[])
 {
 	while (iStart > -1 && !IsValidEntity(iStart)) iStart--;
 	return FindEntityByClassname(iStart, strClassname);
@@ -121,5 +121,18 @@ public Action:DeleteParticle(Handle:timer, any:Edict)
 	if (IsValidEdict(Edict))
 	{
 		RemoveEdict(Edict);
+	}
+}
+
+stock PrintToConsoleAll(const String:format[], any:...)
+{
+	new String:sValue[256];
+	VFormat(sValue, 256, format, 2);
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			PrintToConsole(i, sValue);
+		}
 	}
 }
