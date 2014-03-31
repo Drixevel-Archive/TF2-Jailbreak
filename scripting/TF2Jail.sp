@@ -53,7 +53,7 @@
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
 #define PLUGIN_AUTHOR	"Keith Warren(Jack of Designs)"
-#define PLUGIN_VERSION	"5.1.8"
+#define PLUGIN_VERSION	"5.2.0"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.jackofdesigns.com/"
 #define WARDEN_MODEL	"models/jailbreak/warden/warden_v2"
@@ -63,7 +63,7 @@
 #endif
 
 //ConVar Handles, Globals, etc..
-new Handle:JB_ConVars[65] = {INVALID_HANDLE, ...};
+new Handle:JB_ConVars[66] = {INVALID_HANDLE, ...};
 new bool:cv_Enabled = true, bool:cv_Advertise = true, bool:cv_Cvars = true, cv_Logging = 2, bool:cv_Balance = true, Float:cv_BalanceRatio = 0.5,
 bool:cv_RedMelee = true, bool:cv_Warden = false, bool:cv_WardenAuto = false, bool:cv_WardenModel = true, bool:cv_WardenForceSoldier = true,
 bool:cv_WardenFF = true, bool:cv_WardenCC = true, bool:cv_WardenRequest = true, cv_WardenLimit = 0, bool:cv_DoorControl = true, Float:cv_DoorOpenTimer = 60.0,
@@ -74,10 +74,11 @@ String:BanMsgDC[255], cv_FreekillersBantime = 60, cv_FreekillersBantimeDC = 120,
 cv_FreedayLimit = 3, bool:cv_1stDayFreeday = true, bool:cv_DemoCharge = true, bool:cv_DoubleJump = true, bool:cv_Airblast = true, String:Particle_Freekiller[100],
 String:Particle_Rebellion[100], String:Particle_Freeday[100], cv_WardenVoice = 1, bool:cv_WardenWearables = true, bool:cv_FreedayTeleports = true, cv_WardenStabProtection = 0,
 bool:cv_KillPointServerCommand = true, bool:cv_RemoveFreedayOnLR = true, bool:cv_RemoveFreedayOnLastGuard = true, bool:cv_PrefStatus = false, cv_WardenTimer = 20, bool:cv_AdminFlags = false,
-bool:cv_PrefBlue = false, bool:cv_PrefWarden = false, bool:cv_ConsoleSpew = false;
+bool:cv_PrefBlue = false, bool:cv_PrefWarden = false, bool:cv_ConsoleSpew = false, cv_BuildingsManage;
 
 //Plugins/Extension bools
-new bool:e_voiceannounce_ex = false, bool:e_sourcebans = false, bool:e_steamtools = false, bool:e_clientprefs = false;
+new bool:e_voiceannounce_ex = false, bool:e_sourcebans = false, bool:e_steamtools = false,
+bool:e_clientprefs = false;
 
 //Global Bools
 new bool:g_IsMapCompatible = false, bool:g_CellsOpened = false, bool:g_1stRoundFreeday = false, bool:g_VoidFreekills = false,
@@ -91,7 +92,10 @@ bool:g_HasTalked[MAXPLAYERS+1], bool:g_LockedFromWarden[MAXPLAYERS+1], bool:g_bR
 bool:g_HasModel[MAXPLAYERS+1], bool:g_Voted[MAXPLAYERS+1] = {false, ...};
 
 //Global Integers
-new Warden = -1, LR_Number = -1, g_Voters = 0, g_Votes = 0, g_VotesNeeded = 0, g_VotesPassed = 0, WardenLimit = 0, FreedayLimit = 0;
+new Warden = -1, CustomClient = -1, LR_Pending = -1,
+LR_Current = -1, g_Voters = 0, g_Votes = 0,
+g_VotesNeeded = 0, g_VotesPassed = 0, WardenLimit = 0,
+FreedayLimit = 0;
 
 //Player Array Integers
 new g_FirstKill[MAXPLAYERS + 1], g_Killcount[MAXPLAYERS + 1], g_HasBeenWarden[MAXPLAYERS + 1];
@@ -100,16 +104,20 @@ new g_FirstKill[MAXPLAYERS + 1], g_Killcount[MAXPLAYERS + 1], g_HasBeenWarden[MA
 new Float:free_pos[3];
 
 //Global Strings
-new String:GCellNames[32], String:GCellOpener[32], String:DoorList[][] = {"func_door", "func_door_rotating", "func_movelinear"}, String:LRConfig_File[PLATFORM_MAX_PATH];
+new String:GCellNames[32], String:GCellOpener[32], String:DoorList[][] = {"func_door", "func_door_rotating", "func_movelinear"},
+String:LRConfig_File[PLATFORM_MAX_PATH], String:CustomLR[12];
 
 //Global Handles
-new Handle:g_hArray_Pending, Handle:Forward_WardenCreated, Handle:Forward_WardenRemoved, Handle:WardenName, Handle:g_hRolePref_Blue, Handle:g_hRolePref_Warden;
+new Handle:g_hArray_Pending, Handle:Forward_WardenCreated, Handle:Forward_WardenRemoved,
+Handle:WardenName, Handle:LastRequestName, Handle:g_hRolePref_Blue,
+Handle:g_hRolePref_Warden;
 
 //Engine ConVar Handles
 new Handle:JB_EngineConVars[3] = {INVALID_HANDLE, ...};
 
 //Timer Handles
-new Handle:hTimer_Advertisement, Handle:hTimer_FreekillingData, Handle:hTimer_OpenCells, Handle:hTimer_FriendlyFireEnable, Handle:hTimer_WardenLock;
+new Handle:hTimer_Advertisement, Handle:hTimer_FreekillingData, Handle:hTimer_OpenCells,
+Handle:hTimer_FriendlyFireEnable, Handle:hTimer_WardenLock;
 
 //Player Array Handles
 new Handle:hTimer_ParticleTimers[MAXPLAYERS+1], Handle:hTimer_RebelTimers[MAXPLAYERS+1];
@@ -223,9 +231,10 @@ public OnPluginStart()
 	JB_ConVars[62] = AutoExecConfig_CreateConVar("sm_tf2jail_preference_blue", "0", "Enable the preference for Blue if preferences are enabled: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_ConVars[63] = AutoExecConfig_CreateConVar("sm_tf2jail_preference_warden", "0", "Enable the preference for Blue if preferences are enabled: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	JB_ConVars[64] = AutoExecConfig_CreateConVar("sm_tf2jail_console_prints_status", "1", "Enable console messages and information: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	JB_ConVars[65] = AutoExecConfig_CreateConVar("sm_tf2jail_buildings_manage", "1", "Allow Engineers to build on the following teams: (0 = None, 1 = Blue, 2 = Red, 3 = Both)", FCVAR_PLUGIN, true, 0.0, true, 3.0);
 	
 	AutoExecConfig_ExecuteFile();
-
+	
 	for (new i = 0; i < sizeof(JB_ConVars); i++)
 	{
 		HookConVarChange(JB_ConVars[i], HandleCvars);
@@ -239,7 +248,10 @@ public OnPluginStart()
 	HookEvent("teamplay_round_win", RoundEnd);
 	HookEvent("post_inventory_application", RegeneratePlayer);
 	HookEvent("player_changeclass", ChangeClass, EventHookMode_Pre);
+	
 	AddCommandListener(InterceptBuild, "build");
+	AddCommandListener(Command_Say, "say");
+	AddCommandListener(Command_Say, "say_team");
 
 	RegConsoleCmd("sm_fire", Command_FireWarden);
 	RegConsoleCmd("sm_firewarden", Command_FireWarden);
@@ -260,6 +272,8 @@ public OnPluginStart()
 	RegConsoleCmd("sm_currentlr", CurrentLR);
 	RegConsoleCmd("sm_currentlastrequests", CurrentLR);
 	RegConsoleCmd("sm_lrlist", ListLRs);
+	RegConsoleCmd("sm_lrslist", ListLRs);
+	RegConsoleCmd("sm_lrs", ListLRs);
 	RegConsoleCmd("sm_lastrequestlist", ListLRs);
 	RegConsoleCmd("sm_cw", CurrentWarden);
 	RegConsoleCmd("sm_currentwarden", CurrentWarden);
@@ -292,6 +306,7 @@ public OnPluginStart()
 	JB_EngineConVars[2] = FindConVar("sv_gravity");
 	
 	WardenName = CreateHudSynchronizer();
+	LastRequestName = CreateHudSynchronizer();
 	
 	AddMultiTargetFilter("@warden", WardenGroup, "The Warden.", false);
 	AddMultiTargetFilter("@rebels", RebelsGroup, "All Rebels.", false);
@@ -328,6 +343,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 
 	//Sourcemod 1.4 Compatibility with chat prints... why the hell not.
 	MarkNativeAsOptional("GetUserMessageType");
+	
 	MarkNativeAsOptional("Steam_SetGameDescription");
 	
 	CreateNative("TF2Jail_WardenActive", Native_ExistWarden);
@@ -345,6 +361,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	CreateNative("TF2Jail_LockWarden", Native_LockWarden);
 	CreateNative("TF2Jail_UnlockWarden", Native_UnlockWarden);
 	CreateNative("TF2Jail_Log", Native_Logging);
+	CreateNative("TF2Jail_IsLRRound", Native_IsLRRound);
 	RegPluginLibrary("tf2jail");
 
 	g_bLateLoad = late;
@@ -489,6 +506,7 @@ public OnConfigsExecuted()
 	cv_PrefBlue = GetConVarBool(JB_ConVars[62]);
 	cv_PrefWarden = GetConVarBool(JB_ConVars[63]);
 	cv_ConsoleSpew = GetConVarBool(JB_ConVars[64]);
+	cv_BuildingsManage = GetConVarInt(JB_ConVars[65]);
 	
 	if (cv_Enabled)
 	{
@@ -508,11 +526,18 @@ public OnConfigsExecuted()
 		{
 			for (new i = 1; i <= MaxClients; i++)
 			{
+				if (IsClientConnected(i))
+				{
+					OnClientConnected(i);
+				}
+				
 				if (IsClientInGame(i))
 				{
 					OnClientPutInServer(i);
 				}
 			}
+			g_1stRoundFreeday = false;
+			g_bLateLoad = false;
 		}
 		
 		ResetVotes();
@@ -520,7 +545,7 @@ public OnConfigsExecuted()
 		
 		if (e_clientprefs && cv_PrefStatus)
 		{
-			if (!g_bLateLoad) SetCookieMenuItem(TF2Jail_Preferences, 0, "TF2Jail Preferences");
+			SetCookieMenuItem(TF2Jail_Preferences, 0, "TF2Jail Preferences");
 			
 			if (cv_PrefBlue)
 			{
@@ -641,7 +666,7 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 								TF2_RegeneratePlayer(i);
 							}
 						}
-					case 1: CreateTimer(0.1, ManageWeapons, GetClientUserId(i), TIMER_FLAG_NO_MAPCHANGE);
+					case 1: CreateTimer(0.1, ManageWeapons, GetClientUserId(i));
 				}
 			}
 		}
@@ -942,6 +967,10 @@ public HandleCvars (Handle:cvar, const String:oldValue[], const String:newValue[
 	{
 		cv_ConsoleSpew = bool:iNewValue;
 	}
+	else if (cvar == JB_ConVars[65])
+	{
+		cv_BuildingsManage = iNewValue;
+	}
 }
 
 #if defined _updater_included
@@ -960,15 +989,12 @@ public OnMapStart()
 		{
 			StartAdvertisement();
 		}
-		if (g_bLateLoad)
+		
+		for (new i = 1; i <= MaxClients; i++)
 		{
-			for (new i = 1; i <= MaxClients; i++)
+			if (IsClientConnected(i))
 			{
-				if (IsClientConnected(i))
-				{
-					OnClientConnected(i);
-					g_HasBeenWarden[i] = 0;
-				}
+				g_HasBeenWarden[i] = 0;
 			}
 		}
 		
@@ -1040,12 +1066,15 @@ public OnMapEnd()
 				
 				hTimer_ParticleTimers[i] = INVALID_HANDLE;
 				hTimer_RebelTimers[i] = INVALID_HANDLE;
+				
+				ClearSyncHud(i, LastRequestName);
 			}
 		}
 
 		g_bActiveRound = false;
 		g_bAdminLockWarden = false;
 		WardenLimit = 0;
+		LR_Current = -1;
 		ResetVotes();
 		
 		ConvarsSet(false);
@@ -1233,22 +1262,16 @@ public PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 					{
 						if (cv_DoubleJump)
 						{
-							if (attributes)
-							{
-								AddAttribute(client, "no double jump", 1.0);
-								g_ScoutsBlockedDoubleJump[client] = true;
-							}
+							AddAttribute(client, "no double jump", 1.0);
+							g_ScoutsBlockedDoubleJump[client] = true;
 						}
 					}
 				case TFClass_Pyro:
 					{
 						if (cv_Airblast)
 						{
-							if (attributes)
-							{
-								AddAttribute(client, "airblast disabled", 1.0);
-								g_PyrosDisableAirblast[client] = true;
-							}
+							AddAttribute(client, "airblast disabled", 1.0);
+							g_PyrosDisableAirblast[client] = true;
 						}
 					}
 				case TFClass_DemoMan:
@@ -1274,6 +1297,7 @@ public PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 			}
 		case TFTeam_Blue:
 			{
+				#if defined _voiceannounce_ex_included_
 				if (e_voiceannounce_ex && cv_MicCheck)
 				{
 					if (cv_MicCheckType)
@@ -1286,6 +1310,8 @@ public PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 						}
 					}
 				}
+				#endif
+				
 				if (cv_BlueMute == 2)
 				{
 					MutePlayer(client);
@@ -1432,21 +1458,18 @@ public PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 		
 		if (g_PyrosDisableAirblast[client])
 		{
-			if (attributes) RemoveAttribute(client, "airblast disabled");
+			RemoveAttribute(client, "airblast disabled");
 			g_PyrosDisableAirblast[client] = false;
 		}
 		
 		if (g_ScoutsBlockedDoubleJump[client])
 		{
-			if (attributes) RemoveAttribute(client, "no double jump");
+			RemoveAttribute(client, "no double jump");
 			g_ScoutsBlockedDoubleJump[client] = false;
 		}
 		
-		if (hTimer_ParticleTimers[client])
-		{
-			ClearTimer(hTimer_ParticleTimers[client]);
-		}
-		
+		ClearTimer(hTimer_ParticleTimers[client]);
+			
 		if (IsWarden(client))
 		{
 			WardenUnset(client);
@@ -1463,6 +1486,14 @@ public RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 	{
 		DoorHandler(OPEN);
 		PrintCenterTextAll("1st round freeday");
+		SetHudTextParams(-1.0, 0.9, 99999.0, 255,0,0, 255);
+		for (new i = 1; i <= MaxClients; i++)
+		{
+			if (IsClientInGame(i) && !IsFakeClient(i))
+			{
+				ShowSyncHudText(i, LastRequestName, "1st Day Freeday");
+			}
+		}
 		g_1stRoundFreeday = false;
 		Jail_Log("1st day freeday has been activated.");
 	}
@@ -1575,7 +1606,7 @@ public ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 		}
 	}
 	
-	if (LR_Number != -1)
+	if (LR_Current != -1)
 	{
 		new Handle:LastRequestConfig = CreateKeyValues("TF2Jail_LastRequests");
 		FileToKeyValues(LastRequestConfig, LRConfig_File);
@@ -1585,18 +1616,34 @@ public ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 		{
 			do
 			{
-				IntToString(LR_Number, number, sizeof(number));
+				IntToString(LR_Current, number, sizeof(number));
 				KvGetSectionName(LastRequestConfig, buffer, sizeof(buffer));
 				
 				if (StrEqual(buffer, number))
 				{
+					if (StrEqual(CustomLR, ""))
+					{
+						new String:LR_Name[255];
+						KvGetString(LastRequestConfig, "Name", LR_Name, sizeof(LR_Name));
+						SetHudTextParams(-1.0, 0.9, 99999.0, 255,0,0, 255);
+						for (new i = 1; i <= MaxClients; i++)
+						{
+							if (IsClientInGame(i) && !IsFakeClient(i))
+							{
+								ShowSyncHudText(i, LastRequestName, "Last Request: %s", LR_Name);
+							}
+						}
+					}
+					
 					new bool:IsFreedayRound = false, String:ServerCommands[255];
 					
 					if (KvGetString(LastRequestConfig, "ServerCommand", ServerCommands, sizeof(ServerCommands)))
 					{
 						if (!StrEqual(ServerCommands, ""))
-						{
-							ServerCommand("%s", ServerCommands);
+						{							
+							new Handle:dp;
+							CreateDataTimer(0.5, ExecuteServerCommand, dp);
+							WritePackString(dp, ServerCommands);
 						}
 					}
 					
@@ -1706,8 +1753,20 @@ public ArenaRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 				}
 			} while (KvGotoNextKey(LastRequestConfig));
 		}
-		LR_Number = -1;
 		CloseHandle(LastRequestConfig);
+	}
+	
+	if (!StrEqual(CustomLR, ""))
+	{
+		SetHudTextParams(-1.0, 0.9, 99999.0, 255,0,0, 255);
+		for (new i = 1; i <= MaxClients; i++)
+		{
+			if (IsClientInGame(i) && !IsFakeClient(i))
+			{
+				ShowSyncHudText(i, LastRequestName, "Last Request: %s", CustomLR);
+			}
+		}
+		CustomLR[0] = '\0';
 	}
 	
 	FindRandomWarden();
@@ -1729,16 +1788,17 @@ public RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 			}
 			else if (g_ScoutsBlockedDoubleJump[i])
 			{
-				if (attributes) RemoveAttribute(i, "no double jump");
+				RemoveAttribute(i, "no double jump");
 				g_ScoutsBlockedDoubleJump[i] = false;
 			}
 			else if (g_PyrosDisableAirblast[i])
 			{
-				if (attributes) RemoveAttribute(i, "airblast disabled");
+				RemoveAttribute(i, "airblast disabled");
 				g_PyrosDisableAirblast[i] = false;
 			}
 			
-			ClearTimer(hTimer_RebelTimers[i]);
+			hTimer_RebelTimers[i] = INVALID_HANDLE;
+			ClearSyncHud(i, LastRequestName);
 		}
 	}
 	
@@ -1756,16 +1816,20 @@ public RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 	ClearTimer(hTimer_WardenLock);
 	ClearTimer(hTimer_FriendlyFireEnable);
 	
+	LR_Current = -1;
+	if (LR_Pending != -1)
+	{
+		LR_Current = LR_Pending;
+		LR_Pending = -1;
+	}
+	
 	CloseAllMenus();
 }
 
 public RegeneratePlayer(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (cv_Enabled)
-	{
-		CreateTimer(0.1, ManageWeapons, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-	}
+	CreateTimer(0.1, ManageWeapons, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public OnEntityCreated(entity, const String:classname[])
@@ -1795,14 +1859,42 @@ public Action:InterceptBuild(client, const String:command[], args)
 {
 	if (cv_Enabled)
 	{
-		if (IsValidClient(client) && GetClientTeam(client) == _:TFTeam_Red)
+		if (IsValidClient(client))
 		{
-			return Plugin_Handled;
+			switch (GetClientTeam(client))
+			{
+				case TFTeam_Red:
+					{
+						switch (cv_BuildingsManage)
+						{
+							case 2, 3: return Plugin_Handled;
+						}
+					}
+				case TFTeam_Blue:
+					{
+						switch (cv_BuildingsManage)
+						{
+							case 1, 3: return Plugin_Handled;
+						}
+					}
+			}
 		}
 	}
 	return Plugin_Continue;
 }
 
+public Action:Command_Say(client, const String:command[], args)
+{
+	if (client == CustomClient)
+	{
+		strcopy(CustomLR, sizeof(CustomLR), command);
+		CPrintToChat(client, "Next round LR set to: %s", TAG_COLORED, CustomLR);
+		CustomClient = -1;
+	}
+	return Plugin_Continue;
+}
+
+#if defined _voiceannounce_ex_included_
 public bool:OnClientSpeakingEx(client)
 {
 	if (cv_Enabled && e_voiceannounce_ex && cv_MicCheck && !g_HasTalked[client])
@@ -1811,6 +1903,7 @@ public bool:OnClientSpeakingEx(client)
 		CPrintToChat(client, "%s %t", TAG_COLORED, "microphone verified");
 	}
 }
+#endif
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 public Action:Command_FireWarden(client, args)
@@ -1921,7 +2014,7 @@ public Action:AdminMapCompatibilityCheck(client, args)
 		}
 	}
 
-	CShowActivity2(client, TAG, "%t", "Admin Scan Map Compatibility");
+	CShowActivity2(client, TAG_COLORED, "%t", "Admin Scan Map Compatibility");
 	Jail_Log("Admin %N has checked the map for compatibility.", client);
 	return Plugin_Handled;
 }
@@ -1965,7 +2058,7 @@ public Action:AdminResetPlugin(client, args)
 	
 	ParseConfigs();
 
-	CShowActivity2(client, TAG, "%t", "Admin Reset Plugin");
+	CShowActivity2(client, TAG_COLORED, "%t", "Admin Reset Plugin");
 	Jail_Log("Admin %N has reset the plugin of all it's bools, integers and floats.", client);
 
 	return Plugin_Handled;
@@ -1978,7 +2071,7 @@ public Action:AdminOpenCells(client, args)
 	if (g_IsMapCompatible)
 	{
 		DoorHandler(OPEN);
-		CShowActivity2(client, TAG, "%t", "Admin Open Cells");
+		CShowActivity2(client, TAG_COLORED, "%t", "Admin Open Cells");
 		Jail_Log("Admin %N has opened the cells using admin.", client);
 	}
 	else
@@ -1996,7 +2089,7 @@ public Action:AdminCloseCells(client, args)
 	if (g_IsMapCompatible)
 	{
 		DoorHandler(CLOSE);
-		CShowActivity2(client, TAG, "%t", "Admin Close Cells");
+		CShowActivity2(client, TAG_COLORED, "%t", "Admin Close Cells");
 		Jail_Log("Admin %N has closed the cells using admin.", client);
 	}
 	else
@@ -2014,7 +2107,7 @@ public Action:AdminLockCells(client, args)
 	if (g_IsMapCompatible)
 	{
 		DoorHandler(LOCK);
-		CShowActivity2(client, TAG, "%t", "Admin Lock Cells");
+		CShowActivity2(client, TAG_COLORED, "%t", "Admin Lock Cells");
 		Jail_Log("Admin %N has locked the cells using admin.", client);
 	}
 	else
@@ -2032,7 +2125,7 @@ public Action:AdminUnlockCells(client, args)
 	if (g_IsMapCompatible)
 	{
 		DoorHandler(UNLOCK);
-		CShowActivity2(client, TAG, "%t", "Admin Unlock Cells");
+		CShowActivity2(client, TAG_COLORED, "%t", "Admin Unlock Cells");
 		Jail_Log("Admin %N has unlocked the cells using admin.", client);
 	}
 	else
@@ -2072,26 +2165,26 @@ public Action:AdminForceWarden(client, args)
 					if (g_bRolePreference_Warden[target])
 					{
 						WardenSet(target);
-						CShowActivity2(client, TAG, "%t", "Admin Force Warden", target);
+						CShowActivity2(client, TAG_COLORED, "%t", "Admin Force Warden", target);
 						Jail_Log("Admin %N has forced a %N Warden.", client, target);
 					}
 					else
 					{
-						CPrintToChat(client, "%s %t", "Admin Force Warden Not Preferred", TAG_COLORED, target);
+						CPrintToChat(client, "%s %t", TAG_COLORED, "Admin Force Warden Not Preferred", target);
 						Jail_Log("Client %N has their preference set to prisoner only, finding another client...", target);
 					}
 				}
 				else
 				{
 					WardenSet(target);
-					CShowActivity2(client, TAG, "%t", "Admin Force Warden", target);
+					CShowActivity2(client, TAG_COLORED, "%t", "Admin Force Warden", target);
 					Jail_Log("Admin %N has forced a %N Warden.", client, target);
 				}
 			}
 			else
 			{
 				WardenSet(target);
-				CShowActivity2(client, TAG, "%t", "Admin Force Warden", target);
+				CShowActivity2(client, TAG_COLORED, "%t", "Admin Force Warden", target);
 				Jail_Log("Admin %N has forced a %N Warden.", client, target);
 			}
 		}
@@ -2111,12 +2204,12 @@ FindWardenRandom(client)
 				if (g_bRolePreference_Warden[Random])
 				{
 					WardenSet(Random);
-					CShowActivity2(client, TAG, "%t", "Admin Force Warden Random", Random);
+					CShowActivity2(client, TAG_COLORED, "%t", "Admin Force Warden Random", Random);
 					Jail_Log("Admin %N has given %N Warden by Force.", client, Random);
 				}
 				else
 				{
-					CPrintToChat(client, "%s %t", "Admin Force Random Warden Not Preferred", TAG_COLORED, Random);
+					CPrintToChat(client, "%s %t", TAG_COLORED, "Admin Force Random Warden Not Preferred", Random);
 					Jail_Log("Client %N has their preference set to prisoner only, finding another client...", Random);
 					FindWardenRandom(client);
 				}
@@ -2124,9 +2217,15 @@ FindWardenRandom(client)
 			else
 			{
 				WardenSet(Random);
-				CShowActivity2(client, TAG, "%t", "Admin Force Warden Random", Random);
+				CShowActivity2(client, TAG_COLORED, "%t", "Admin Force Warden Random", Random);
 				Jail_Log("Admin %N has given %N Warden by Force.", client, Random);
 			}
+		}
+		else
+		{
+			WardenSet(Random);
+			CShowActivity2(client, TAG_COLORED, "%t", "Admin Force Warden Random", Random);
+			Jail_Log("Admin %N has given %N Warden by Force.", client, Random);
 		}
 	}
 }
@@ -2142,7 +2241,7 @@ public Action:AdminForceLR(client, args)
 
 	if (args < 1)
 	{
-		CShowActivity2(client, TAG, "%t", "Admin Force Last Request Self");
+		CShowActivity2(client, TAG_COLORED, "%t", "Admin Force Last Request Self");
 		LastRequestStart(client);
 		Jail_Log("Admin %N has given his/herself last request using admin.", client);
 	}
@@ -2154,7 +2253,7 @@ public Action:AdminForceLR(client, args)
 		new target = FindTarget(client, arg, true, false);
 		if (target != -1 || target != client)
 		{
-			CShowActivity2(client, TAG, "%t", "Admin Force Last Request", target);
+			CShowActivity2(client, TAG_COLORED, "%t", "Admin Force Last Request", target);
 			LastRequestStart(target, false);
 			Jail_Log("Admin %N has gave %N a Last Request by admin.", client, target);
 		}
@@ -2170,23 +2269,30 @@ public Action:AdminDenyLR(client, args)
 	{
 		for (new i = 1; i <= MaxClients; i++)
 		{
-			if (g_IsFreeday[i])
+			if (IsValidClient(i))
 			{
-				CPrintToChat(client, "%s %t", TAG_COLORED, "admin removed freeday");
-				g_IsFreeday[i] = false;
-			}
-			
-			if (g_IsFreedayActive[i])
-			{
-				CPrintToChat(client, "%s %t", TAG_COLORED, "admin removed freeday active");
-				g_IsFreedayActive[i] = false;
+				if (g_IsFreeday[i])
+				{
+					CPrintToChat(client, "%s %t", TAG_COLORED, "admin removed freeday");
+					g_IsFreeday[i] = false;
+				}
+				
+				if (g_IsFreedayActive[i])
+				{
+					CPrintToChat(client, "%s %t", TAG_COLORED, "admin removed freeday active");
+					g_IsFreedayActive[i] = false;
+				}
+				
+				ClearSyncHud(i, LastRequestName);
 			}
 		}
 		
 		g_bIsLRInUse = false;
-		LR_Number = -1;
 		
-		CShowActivity2(client, TAG, "%t", "Admin Deny Last Request");
+		LR_Pending = -1;
+		LR_Current = -1;
+		
+		CShowActivity2(client, TAG_COLORED, "%t", "Admin Deny Last Request");
 		Jail_Log("Admin %N has denied all currently queued last requests and reset the last request system.", client);
 	}
 	else
@@ -2212,7 +2318,7 @@ public Action:AdminPardonFreekiller(client, args)
 				ClearTimer(hTimer_ParticleTimers[i]);
 			}
 		}
-		CShowActivity2(client, TAG, "%t", "Admin Pardon Freekillers");
+		CShowActivity2(client, TAG_COLORED, "%t", "Admin Pardon Freekillers");
 		Jail_Log("Admin %N has pardoned all currently marked Freekillers.", client);
 	}
 	else
@@ -2233,7 +2339,7 @@ public Action:AdminGiveFreeday(client, args)
 		}
 		else
 		{
-			CReplyToCommand(client, "%s%t", TAG, "Command is in-game only");
+			CReplyToCommand(client, "%s %t", TAG, "Command is in-game only");
 		}
 	}
 	else
@@ -2251,7 +2357,7 @@ GiveFreedaysMenu(client)
 		SetMenuTitle(menu,"Choose a Player");
 		AddTargetsToMenu2(menu, 0, COMMAND_FILTER_ALIVE | COMMAND_FILTER_NO_BOTS | COMMAND_FILTER_NO_IMMUNITY);
 		DisplayMenu(menu, client, 20);
-		CShowActivity2(client, TAG, "%t", "Admin Give Freeday Menu");
+		CShowActivity2(client, TAG_COLORED, "%t", "Admin Give Freeday Menu");
 		Jail_Log("Admin %N is giving someone a freeday...", client);
 	}
 }
@@ -2310,7 +2416,7 @@ RemoveFreedaysMenu(client)
 		SetMenuTitle(menu,"Choose a Player");
 		AddTargetsToMenu2(menu, 0, COMMAND_FILTER_ALIVE | COMMAND_FILTER_NO_BOTS | COMMAND_FILTER_NO_IMMUNITY);
 		DisplayMenu(menu, client, 20);
-		CShowActivity2(client, TAG, "%t", "Admin Remove Freeday Menu");
+		CShowActivity2(client, TAG_COLORED, "%t", "Admin Remove Freeday Menu");
 		Jail_Log("Admin %N is removing someone's freeday status...", client);
 	}
 }
@@ -2353,14 +2459,14 @@ public Action:AdminAcceptWardenChange(client, args)
 	case FriendlyFire:
 		{
 			SetConVarBool(JB_EngineConVars[0], true);
-			CShowActivity2(client, TAG, "%t", "Admin Accept Request FF", Warden);
+			CShowActivity2(client, TAG_COLORED, "%t", "Admin Accept Request FF", Warden);
 			CPrintToChatAll("%s %t", TAG_COLORED, "friendlyfire enabled");
 			Jail_Log("Admin %N has accepted %N's request to enable Friendly Fire.", client, Warden);
 		}
 	case Collision:
 		{
 			SetConVarBool(JB_EngineConVars[1], true);
-			CShowActivity2(client, TAG, "%t", "Admin Accept Request CC", Warden);
+			CShowActivity2(client, TAG_COLORED, "%t", "Admin Accept Request CC", Warden);
 			CPrintToChatAll("%s %t", TAG_COLORED, "collision enabled");
 			Jail_Log("Admin %N has accepted %N's request to enable Collision.", client, Warden);
 		}
@@ -2381,14 +2487,14 @@ public Action:AdminCancelWardenChange(client, args)
 	case FriendlyFire:
 		{
 			SetConVarBool(JB_EngineConVars[0], false);
-			CShowActivity2(client, TAG, "%t", "Admin Cancel Active FF");
+			CShowActivity2(client, TAG_COLORED, "%t", "Admin Cancel Active FF");
 			CPrintToChatAll("%s %t", TAG_COLORED, "friendlyfire disabled");
 			Jail_Log("Admin %N has cancelled %N's request for Friendly Fire.", client, Warden);
 		}
 	case Collision:
 		{
 			SetConVarBool(JB_EngineConVars[1], false);
-			CShowActivity2(client, TAG, "%t", "Admin Cancel Active CC");
+			CShowActivity2(client, TAG_COLORED, "%t", "Admin Cancel Active CC");
 			CPrintToChatAll("%s %t", TAG_COLORED, "collision disabled");
 			Jail_Log("Admin %N has cancelled %N's request for Collision.", client, Warden);
 		}
@@ -2448,11 +2554,13 @@ public Action:BecomeWarden(client, args)
 			}
 		}
 		
+		#if defined _voiceannounce_ex_included_
 		if (cv_MicCheck && !cv_MicCheckType && !g_HasTalked[client])
 		{
 			CPrintToChat(client, "%s %t", TAG_COLORED, "microphone check warden block");
 			return Plugin_Handled;
 		}
+		#endif
 		
 		if (g_LockedFromWarden[client])
 		{
@@ -2682,7 +2790,7 @@ public Action:LockWarden(client, args)
 		}
 	}
 	g_bAdminLockWarden = true;
-	CShowActivity2(client, TAG, "%t", "Admin Lock Warden");
+	CShowActivity2(client, TAG_COLORED, "%t", "Admin Lock Warden");
 	Jail_Log("Admin %N has locked Warden via administration.", client);
 	return Plugin_Handled;
 }
@@ -2690,7 +2798,7 @@ public Action:LockWarden(client, args)
 public Action:UnlockWarden(client, args)
 {
 	g_bAdminLockWarden = false;
-	CShowActivity2(client, TAG, "%t", "Admin Unlock Warden");
+	CShowActivity2(client, TAG_COLORED, "%t", "Admin Unlock Warden");
 	Jail_Log("Admin %N has unlocked Warden via administration.", client);
 	return Plugin_Handled;
 }
@@ -2702,7 +2810,7 @@ public Action:AdminRemoveWarden(client, args)
 	if (Warden != -1)
 	{
 		PrintCenterTextAll("%t", "warden fired center");
-		CShowActivity2(client, TAG, "%t", "Admin Remove Warden", Warden);
+		CShowActivity2(client, TAG_COLORED, "%t", "Admin Remove Warden", Warden);
 		Jail_Log("Admin %N has removed %N's Warden status with admin.", client, Warden);
 		WardenUnset(Warden);
 	}
@@ -2870,13 +2978,13 @@ public MenuHandle_GiveLR(Handle:menu, MenuAction:action, client, item)
 
 public Action:CurrentLR(client, args)
 {
-	if (LR_Number != -1)
+	if (LR_Current != -1)
 	{
 		new String:number[255];
 		new Handle:LastRequestConfig = CreateKeyValues("TF2Jail_LastRequests");
 		if (FileToKeyValues(LastRequestConfig, LRConfig_File))
 		{
-			IntToString(LR_Number, number, sizeof(number));
+			IntToString(LR_Current, number, sizeof(number));
 			if (KvGotoFirstSubKey(LastRequestConfig))
 			{
 				decl String:ID[64], String:Name[255];
@@ -2984,7 +3092,7 @@ WardenSet(client)
 	
 	if (cv_WardenStabProtection == 1)
 	{
-		if (attributes) AddAttribute(client, "backstab shield", 1.0);
+		AddAttribute(client, "backstab shield", 1.0);
 	}
 	
 	SetHudTextParams(-1.0, -1.0, 2.0, 255, 255, 255, 255, 1, _, 1.0, 1.0);
@@ -3043,7 +3151,7 @@ WardenUnset(client)
 			hTimer_WardenLock = CreateTimer(timer, DisableWarden, INVALID_HANDLE, TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
-	if (attributes) RemoveAttribute(client, "backstab shield");
+	RemoveAttribute(client, "backstab shield");
 	Forward_OnWardenRemoved(client);
 }
 
@@ -3110,140 +3218,16 @@ public MenuHandle_LR(Handle:menu, MenuAction:action, client, item)
 				{
 					new String:buffer[255];
 					new String:choice[255];
-					GetMenuItem(menu, item, choice, sizeof(choice));     
-
+					GetMenuItem(menu, item, choice, sizeof(choice));
 					do
 					{
 						KvGetSectionName(LastRequestConfig, buffer, sizeof(buffer));
 						if (StrEqual(buffer, choice))
 						{
-							new bool:ActiveRound = false;
-							if (KvJumpToKey(LastRequestConfig, "Parameters"))
+							decl String:Custom[25];
+							KvGetString(LastRequestConfig, "Handler", Custom, sizeof(Custom));
+							if (StrEqual(Custom, "LR_Custom"))
 							{
-								if (KvGetNum(LastRequestConfig, "ActiveRound", 0) == 1)
-								{
-									ActiveRound = true;
-								}
-							}
-							KvGoBack(LastRequestConfig);
-							
-							if (ActiveRound)
-							{
-								decl String:Active[255], String:ClientName[32];
-								if (KvGetString(LastRequestConfig, "Activated", Active, sizeof(Active)))
-								{
-									GetClientName(client, ClientName, sizeof(ClientName));
-									ReplaceString(Active, sizeof(Active), "%M", ClientName, true);
-									Format(Active, sizeof(Active), "%s %s", TAG_COLORED, Active);
-									CPrintToChatAll(Active);
-								}
-								
-								if (KvJumpToKey(LastRequestConfig, "Parameters"))
-								{
-									switch (KvGetNum(LastRequestConfig, "IsFreedayType", 0))
-									{
-									case 1:
-										{
-											GiveFreeday(client);
-										}
-									case 2:
-										{
-											FreedayforClientsMenu(client, true, true);
-										}
-									case 3:
-										{
-											FreedayForAll(false);
-										}
-									}
-									
-									if (KvGetNum(LastRequestConfig, "IsSuicide", 0) == 1)
-									{
-										ForcePlayerSuicide(client);
-									}
-									
-									if (KvJumpToKey(LastRequestConfig, "KillWeapons"))
-									{
-										for (new i = 1; i < MaxClients; i++)
-										{
-											if (IsValidClient(i) && IsPlayerAlive(i))
-											{
-												switch (GetClientTeam(i))
-												{
-												case TFTeam_Red:
-													{
-														if (KvGetNum(LastRequestConfig, "Red", 0) == 1)
-														{
-															StripToMelee(i);
-														}
-													}
-												case TFTeam_Blue:
-													{
-														if (KvGetNum(LastRequestConfig, "Blue", 0) == 1)
-														{
-															StripToMelee(i);
-														}
-													}
-												}
-												
-												if (KvGetNum(LastRequestConfig, "Warden", 0) == 1 && IsWarden(i))
-												{
-													StripToMelee(i);
-												}
-											}
-										}
-										KvGoBack(LastRequestConfig);
-									}
-									
-									if (KvJumpToKey(LastRequestConfig, "FriendlyFire"))
-									{
-										if (KvGetNum(LastRequestConfig, "Status", 0) == 1)
-										{
-											new Float:TimeFloat = KvGetFloat(LastRequestConfig, "Timer", 1.0);
-											if (TimeFloat >= 0.1)
-											{
-												hTimer_FriendlyFireEnable = CreateTimer(TimeFloat, EnableFFTimer, INVALID_HANDLE, TIMER_FLAG_NO_MAPCHANGE);
-											}
-											else
-											{
-												Jail_Log("[ERROR] Timer is set to a value below 0.1! Timer could not be created.");
-											}
-										}
-										KvGoBack(LastRequestConfig);
-									}
-									if (KvJumpToKey(LastRequestConfig, "DuelMode"))
-									{
-										if (KvGetNum(LastRequestConfig, "IsDuel", 0) == 1)
-										{
-											GiveDuelMenu(client);
-										}
-										KvGoBack(LastRequestConfig);
-									}
-									KvGoBack(LastRequestConfig);
-								}
-								KvGoBack(LastRequestConfig);
-							}
-							else
-							{
-								if (KvJumpToKey(LastRequestConfig, "Parameters"))
-								{
-									switch (KvGetNum(LastRequestConfig, "IsFreedayType", 0))
-									{
-									case 1:
-										{
-											g_IsFreeday[client] = true;
-										}
-									case 2:
-										{
-											FreedayforClientsMenu(client, false, true);
-										}
-									case 3:
-										{
-											FreedayForAll(true);
-										}
-									}
-									KvGoBack(LastRequestConfig);
-								}
-								
 								decl String:QueueAnnounce[255], String:ClientName[32];
 								if (KvGetString(LastRequestConfig, "Queue_Announce", QueueAnnounce, sizeof(QueueAnnounce)))
 								{
@@ -3253,22 +3237,159 @@ public MenuHandle_LR(Handle:menu, MenuAction:action, client, item)
 									CPrintToChatAll(QueueAnnounce);
 								}
 								
-								LR_Number = StringToInt(choice);
+								CPrintToChat(client, "%s %t", TAG_COLORED, "custom last request message");
+								CustomClient = client;
+							}
+							else
+							{
+								new bool:ActiveRound = false;
+								if (KvJumpToKey(LastRequestConfig, "Parameters"))
+								{
+									if (KvGetNum(LastRequestConfig, "ActiveRound", 0) == 1)
+									{
+										ActiveRound = true;
+									}
+									KvGoBack(LastRequestConfig);
+								}
+								
+								if (ActiveRound)
+								{
+									decl String:Active[255], String:ClientName[32];
+									if (KvGetString(LastRequestConfig, "Activated", Active, sizeof(Active)))
+									{
+										GetClientName(client, ClientName, sizeof(ClientName));
+										ReplaceString(Active, sizeof(Active), "%M", ClientName, true);
+										Format(Active, sizeof(Active), "%s %s", TAG_COLORED, Active);
+										CPrintToChatAll(Active);
+									}
+									
+									if (KvJumpToKey(LastRequestConfig, "Parameters"))
+									{
+										switch (KvGetNum(LastRequestConfig, "IsFreedayType", 0))
+										{
+										case 1:
+											{
+												GiveFreeday(client);
+											}
+										case 2:
+											{
+												FreedayforClientsMenu(client, true, true);
+											}
+										case 3:
+											{
+												FreedayForAll(false);
+											}
+										}
+										
+										if (KvGetNum(LastRequestConfig, "IsSuicide", 0) == 1)
+										{
+											ForcePlayerSuicide(client);
+										}
+										
+										if (KvJumpToKey(LastRequestConfig, "KillWeapons"))
+										{
+											for (new i = 1; i < MaxClients; i++)
+											{
+												if (IsValidClient(i) && IsPlayerAlive(i))
+												{
+													switch (GetClientTeam(i))
+													{
+													case TFTeam_Red:
+														{
+															if (KvGetNum(LastRequestConfig, "Red", 0) == 1)
+															{
+																StripToMelee(i);
+															}
+														}
+													case TFTeam_Blue:
+														{
+															if (KvGetNum(LastRequestConfig, "Blue", 0) == 1)
+															{
+																StripToMelee(i);
+															}
+														}
+													}
+													
+													if (KvGetNum(LastRequestConfig, "Warden", 0) == 1 && IsWarden(i))
+													{
+														StripToMelee(i);
+													}
+												}
+											}
+											KvGoBack(LastRequestConfig);
+										}
+										
+										if (KvJumpToKey(LastRequestConfig, "FriendlyFire"))
+										{
+											if (KvGetNum(LastRequestConfig, "Status", 0) == 1)
+											{
+												new Float:TimeFloat = KvGetFloat(LastRequestConfig, "Timer", 1.0);
+												if (TimeFloat >= 0.1)
+												{
+													hTimer_FriendlyFireEnable = CreateTimer(TimeFloat, EnableFFTimer, INVALID_HANDLE, TIMER_FLAG_NO_MAPCHANGE);
+												}
+												else
+												{
+													Jail_Log("[ERROR] Timer is set to a value below 0.1! Timer could not be created.");
+												}
+											}
+											KvGoBack(LastRequestConfig);
+										}
+										if (KvJumpToKey(LastRequestConfig, "DuelMode"))
+										{
+											if (KvGetNum(LastRequestConfig, "IsDuel", 0) == 1)
+											{
+												GiveDuelMenu(client);
+											}
+											KvGoBack(LastRequestConfig);
+										}
+										KvGoBack(LastRequestConfig);
+									}
+								}
+								else
+								{
+									new bool:FreedayCheck = true;
+									if (KvJumpToKey(LastRequestConfig, "Parameters"))
+									{
+										switch (KvGetNum(LastRequestConfig, "IsFreedayType", 0))
+										{
+										case 1:
+											{
+												g_IsFreeday[client] = true;
+												FreedayCheck = false;
+											}
+										case 2:
+											{
+												FreedayforClientsMenu(client, false, true);
+												FreedayCheck = false;
+											}
+										case 3:
+											{
+												FreedayForAll(true);
+											}
+										}
+										KvGoBack(LastRequestConfig);
+									}
+									
+									decl String:QueueAnnounce[255], String:ClientName[32];
+									if (KvGetString(LastRequestConfig, "Queue_Announce", QueueAnnounce, sizeof(QueueAnnounce)))
+									{
+										GetClientName(client, ClientName, sizeof(ClientName));
+										ReplaceString(QueueAnnounce, sizeof(QueueAnnounce), "%M", ClientName, true);
+										Format(QueueAnnounce, sizeof(QueueAnnounce), "%s %s", TAG_COLORED, QueueAnnounce);
+										CPrintToChatAll(QueueAnnounce);
+									}
+									
+									if (FreedayCheck)
+									{
+										LR_Pending = StringToInt(choice);
+									}
+								}
 							}
 						}
 					}while (KvGotoNextKey(LastRequestConfig));
-					
-					CloseHandle(LastRequestConfig);
 				}
-				else
-				{
-					CloseHandle(LastRequestConfig);
-					CloseHandle(menu);
-				}
-			}
-			else
-			{
-				CloseHandle(menu);
+				CloseHandle(LastRequestConfig);
 			}
 			
 			if (cv_RemoveFreedayOnLR)
@@ -3568,12 +3689,17 @@ MarkFreekiller(client)
 		{
 			new Handle:hPack;
 			hTimer_FreekillingData = CreateDataTimer(cv_FreekillersWave, BanClientTimerFreekiller, hPack, TIMER_FLAG_NO_MAPCHANGE);
-			WritePackCell(hPack, client);
-			WritePackCell(hPack, GetClientUserId(client));
-			WritePackString(hPack, sAuth);
 			if (hTimer_FreekillingData != INVALID_HANDLE)
 			{
+				WritePackCell(hPack, client);
+				WritePackCell(hPack, GetClientUserId(client));
+				WritePackString(hPack, sAuth);
 				PushArrayCell(hPack, hTimer_FreekillingData);
+			}
+			else
+			{
+				hTimer_FreekillingData = INVALID_HANDLE;
+				CloseHandle(hPack);
 			}
 		}
 	}
@@ -3611,20 +3737,6 @@ SetAmmo(client, wepslot, newAmmo)
 		new iOffset = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4;
 		new iAmmoTable = FindSendPropInfo("CTFPlayer", "m_iAmmo");
 		SetEntData(client, iAmmoTable+iOffset, newAmmo, 4, true);
-	}
-}
-
-TF2_SwitchtoSlot(client, slot)
-{
-	if (slot >= 0 && slot <= 5 && IsValidClient(client) && IsPlayerAlive(client))
-	{
-		decl String:classname[64];
-		new wep = GetPlayerWeaponSlot(client, slot);
-		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, classname, sizeof(classname)))
-		{
-			FakeClientCommandEx(client, "use %s", classname);
-			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
-		}
 	}
 }
 
@@ -3891,21 +4003,16 @@ CloseAllMenus()
 
 Jail_Log(const String:format[], any:...)
 {
+	decl String:buffer[256];
+	VFormat(buffer, sizeof(buffer), format, 2);
+	
 	switch (cv_Logging)
 	{
-	case 1:
-		{
-			decl String:buffer[256];
-			VFormat(buffer, sizeof(buffer), format, 2);
-			LogMessage("%s", buffer);
-		}
+	case 1: LogMessage("%s", buffer);
 	case 2:
 		{
 			decl String:Date[20];
 			FormatTime(Date, sizeof(Date), "%Y-%m-%d", GetTime());
-			
-			decl String:buffer[256];
-			VFormat(buffer, sizeof(buffer), format, 2);
 			
 			decl String:path[PLATFORM_MAX_PATH], String:path_final[PLATFORM_MAX_PATH];
 			Format(path, sizeof(path), "logs/TF2Jail_%s.log", Date);
@@ -3914,9 +4021,10 @@ Jail_Log(const String:format[], any:...)
 		}
 	}
 	
-	decl String:buffer[256];
-	VFormat(buffer, sizeof(buffer), format, 2);
-	Jail_ConsolePrint("%s", buffer);
+	if (cv_ConsoleSpew)
+	{
+		PrintToConsoleAll("%s %s", TAG, buffer);
+	}
 }
 
 DoorHandler(DoorMode:status)
@@ -4080,9 +4188,9 @@ PreferenceMenu(client)
 	SetMenuTitle(hMenu, "TF2Jail Preferences");
 	
 	decl String:sValue[64];
-	Format(sValue, sizeof(sValue), "%s", g_bRolePreference_Blue[client] ? "Blue Preference [ON]" : "Blue Preference [OFF]");
+	Format(sValue, sizeof(sValue), "%s", g_bRolePreference_Blue[client] ? "Blue Preference [OFF]" : "Blue Preference [ON]");
 	AddMenuItem(hMenu, "Pref_Blue", sValue, cv_PrefBlue ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
-	Format(sValue, sizeof(sValue), "%s", g_bRolePreference_Warden[client] ? "Warden Preference [ON]" : "Warden Preference [OFF]");
+	Format(sValue, sizeof(sValue), "%s", g_bRolePreference_Warden[client] ? "Warden Preference [OFF]" : "Warden Preference [ON]");
 	AddMenuItem(hMenu, "Pref_Warden", sValue, cv_PrefWarden ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 	
 	DisplayMenu(hMenu, client, 0);
@@ -4103,15 +4211,15 @@ public MenuHandle_Preferences(Handle:hMenu, MenuAction:action, client, item)
 				{
 					if (!g_bRolePreference_Blue[client])
 					{
-						SetClientCookie(client, g_hRolePref_Blue, "1");
+						SetClientCookie(client, g_hRolePref_Blue, "0");
 						g_bRolePreference_Blue[client] = true;
-						CPrintToChat(client, "%s %t", TAG_COLORED, "preference blue on");
+						CPrintToChat(client, "%s %t", TAG_COLORED, "preference blue off");
 					}
 					else
 					{
-						SetClientCookie(client, g_hRolePref_Blue, "0");
+						SetClientCookie(client, g_hRolePref_Blue, "1");
 						g_bRolePreference_Blue[client] = false;
-						CPrintToChat(client, "%s %t", TAG_COLORED, "preference blue off");
+						CPrintToChat(client, "%s %t", TAG_COLORED, "preference blue on");
 					}
 				}
 			}
@@ -4123,13 +4231,13 @@ public MenuHandle_Preferences(Handle:hMenu, MenuAction:action, client, item)
 					{
 						SetClientCookie(client, g_hRolePref_Warden, "1");
 						g_bRolePreference_Warden[client] = true;
-						CPrintToChat(client, "%s %t", TAG_COLORED, "preference warden on");
+						CPrintToChat(client, "%s %t", TAG_COLORED, "preference warden off");
 					}
 					else
 					{
 						SetClientCookie(client, g_hRolePref_Warden, "0");
 						g_bRolePreference_Warden[client] = false;
-						CPrintToChat(client, "%s %t", TAG_COLORED, "preference warden off");
+						CPrintToChat(client, "%s %t", TAG_COLORED, "preference warden on");
 					}
 				}
 			}
@@ -4145,16 +4253,6 @@ public MenuHandle_Preferences(Handle:hMenu, MenuAction:action, client, item)
 StartAdvertisement()
 {
 	hTimer_Advertisement = CreateTimer(120.0, TimerAdvertisement, INVALID_HANDLE, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-}
-
-Jail_ConsolePrint(const String:format[], any:...)
-{
-	if (cv_ConsoleSpew)
-	{
-		decl String:buffer[256];
-		VFormat(buffer, sizeof(buffer), format, 2);
-		PrintToConsoleAll("%s %s", TAG, buffer);
-	}
 }
 
 /* Timers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -4206,7 +4304,7 @@ public Action:ManageWeapons(Handle:hTimer, any:userid)
 	{
 	case TFTeam_Red:
 		{
-			if (cv_RedMelee)
+			if (cv_Enabled && cv_RedMelee)
 			{
 				EmptyWeaponSlots(client);
 			}
@@ -4281,7 +4379,6 @@ public Action:BanClientTimerFreekiller(Handle:hTimer, Handle:hPack)
 			Jail_Log("%N has been banned via identity.", BANFLAG_AUTHID);
 		}
 	}
-	CloseHandle(hPack);
 }
 
 public Action:EnableFFTimer(Handle:hTimer)
@@ -4311,6 +4408,16 @@ public Action:DisableWarden(Handle:hTimer)
 	{
 		CPrintToChatAll("%s %t", TAG_COLORED, "warden locked timer");
 		g_bIsWardenLocked = true;
+	}
+}
+public Action:ExecuteServerCommand(Handle:timer, Handle:dp)
+{
+	if (dp != INVALID_HANDLE)
+	{
+		new String:buffer[64];
+		ResetPack(dp);
+		ReadPackString(dp, buffer, sizeof(buffer));
+		ServerCommand(buffer);
 	}
 }
 
@@ -4698,6 +4805,23 @@ public Native_Logging(Handle:plugin, numParams)
 	decl String:buffer[1024], written;
 	FormatNativeString(0, 1, 2, sizeof(buffer),  written, buffer);
 	Jail_Log("%s", buffer);
+}
+
+public Native_IsLRRound(Handle:plugin, numParams)
+{
+	if (!cv_Enabled)
+	{
+		ThrowNativeError(SP_ERROR_INDEX, "Plugin is disabled");
+	}
+	
+	if (LR_Current != -1)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 public Forward_OnWardenCreation(client)

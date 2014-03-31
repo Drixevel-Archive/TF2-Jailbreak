@@ -10,6 +10,7 @@
 
 // NOTE: Requires you check if the player is in-game, alive, etc.
 
+//Natives
 /**
  * Warden Check if exists.
  *
@@ -128,6 +129,28 @@ native TF2Jail_UnlockWarden();
  **/
 native TF2Jail_Log(const String:log[], any:...);
 
+/**
+ * Returns if the current round is a Last Request day.
+ *
+ * @return		True on success, false on failure.
+ **/
+native TF2Jail_IsLRRound();
+
+//Forwards
+/**
+ * Called when the Warden has been assigned/created via the plugin or natives.
+ *
+ * @noreturn
+ **/
+forward Warden_OnWardenCreated(client);
+
+/**
+ * Called when the Warden has been removed/retired via the plugin or natives.
+ *
+ * @noreturn
+ **/
+forward Warden_OnWardenRemoved(client);
+
 public SharedPlugin:__pl_tf2jail = 
 {
 	name = "tf2jail",
@@ -156,5 +179,6 @@ public __pl_tf2jail_SetNTVOptional()
 	MarkNativeAsOptional("TF2Jail_StripAllWeapons");
 	MarkNativeAsOptional("TF2Jail_LockWarden");
 	MarkNativeAsOptional("TF2Jail_UnlockWarden");
+	MarkNativeAsOptional("TF2Jail_IsLRRound");
 }
 #endif

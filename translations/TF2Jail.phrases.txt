@@ -234,7 +234,7 @@
 		"en"		"One guard left..."
 	}
 
-	"admin reset plugin"
+	"Admin Reset Plugin"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Reset the plugin, please reacquire Warden and grant Freedays if there are any."
@@ -618,12 +618,6 @@
 		"en"		"{darkkhaki} Gave themselves a Last Request."
 	}
 	
-	"Admin Reset Plugin"
-	{
-		"#format"	"{1:N}"
-		"en"		"{darkkhaki} {1} has reset the plugin."
-	}
-	
 	"Admin Scan Map Compatibility"
 	{
 		"#format"	""
@@ -712,5 +706,11 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Preference updated to disallow the plugin to make you Warden."
+	}
+	
+	"custom last request message"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Please type into chat what you want the LR name to be first then type what it is in chat after."
 	}
 }

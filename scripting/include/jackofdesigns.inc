@@ -130,9 +130,23 @@ stock PrintToConsoleAll(const String:format[], any:...)
 	VFormat(sValue, 256, format, 2);
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientInGame(i) && !IsFakeClient(i))
+		if (IsValidClient(i))
 		{
 			PrintToConsole(i, sValue);
+		}
+	}
+}
+
+stock TF2_SwitchtoSlot(client, slot)
+{
+	if (slot >= 0 && slot <= 5 && IsValidClient(client) && IsPlayerAlive(client))
+	{
+		decl String:classname[64];
+		new wep = GetPlayerWeaponSlot(client, slot);
+		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, classname, sizeof(classname)))
+		{
+			FakeClientCommandEx(client, "use %s", classname);
+			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
 		}
 	}
 }
