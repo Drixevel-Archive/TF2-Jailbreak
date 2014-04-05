@@ -3,8 +3,8 @@
 #endif
 #define _tf2jail_included
 
-#define TAG_COLORED	"{community}[TF2Jail]"
-#define TAG	"[TF2Jail]"
+#define JTAG_COLORED	"{community}[TF2Jail]"
+#define JTAG	"[TF2Jail]"
 
 #tryinclude <tf2attributes>
 
