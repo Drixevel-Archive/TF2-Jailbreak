@@ -1,10 +1,11 @@
-﻿"Phrases"
+"Phrases"
 {
 	"plugin enabled"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} TF2 Jailbreak has been enabled."
 		"nl"		"{darkkhaki} TF2 Jailbreak is ingeschakeld."
+		"fr"		"{darkkhaki} TF2 Jailbreak est activé."
 	}
 
 	"plugin disabled"
@@ -12,6 +13,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} TF2 Jailbreak has been disabled."
 		"nl"		"{darkkhaki} TF2 Jailbreak is uitgeschakeld."
+		"fr"		"{darkkhaki} TF2 Jailbreak est désactivé."
 	}
 	
 	"plugin advertisement"
@@ -19,6 +21,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} TF2 Jailbreak plugin by Keith Warren [Jack of Designs] - (http://www.jackofdesigns.com/)."
 		"nl"		"{darkkhaki} TF2 Jailbreak plugin door Keith Warren [Jack of Designs]  - (http://www.jackofdesigns.com/)."
+		"fr"		"{darkkhaki} TF2 Jailbreak plugin est codé par Keith Warren [Jack of Designs]  - (http://www.jackofdesigns.com/)."
 	}
 
 	"welcome message"
@@ -26,6 +29,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Welcome to Team Fortress 2 Jailbreak! This server is running the [TF2Jail] plugin!"
 		"nl"		"{darkkhaki} Welkom bij Team Fortress 2 Jailbreak! Deze server draait op de [TF2Jail] plugin!"
+		"fr"		"{darkkhaki} Bienvenue sur Team Fortress 2 Jailbreak! Ce serveur utilise le [TF2Jail] plugin!"
 	}
 	
 	"incompatible map"
@@ -33,6 +37,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} The current map is incompatible with this command."
 		"nl"		"{darkkhaki} De huidige map ondersteund deze commando niet."
+		"fr"		"{darkkhaki} Cette map est incompatible avec cette commande."
 	}
 	
 	"warden disabled"
@@ -40,6 +45,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Warden is currently disabled."
 		"nl"		"{darkkhaki} Hoofdbewaker is op het moment uitgeschakeld."
+		"fr"		"{darkkhaki} Le Gardien est présentement désactivé."
 	}
 	
 	"warden locked timer"
@@ -47,6 +53,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Warden has been locked due to lack of a Warden."
 		"nl"		"{darkkhaki} Hoofdbewaker niet beschikbaar wegens het ontbreken van een hoofdbewaker."
+		"fr"		"{darkkhaki} La position du Gardien a été barré."
 	}
 	
 	"warden incorrect flags"
@@ -54,6 +61,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} You have the incorrect flags to become Warden."
 		"nl"		"{darkkhaki} Je hebt niet de juiste permissies om Hoofdbewaker te worden."
+		"fr"		"{darkkhaki} Vous n'avez pas les droits requis pour etre Gardien."
 	}
 	
 	"warden current"
@@ -61,6 +69,7 @@
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1} is the current Warden."
 		"nl"		"{darkkhaki} {1} is de huidige Hoofdbewaker."
+		"fr"		"{darkkhaki} {1} est Le Gardien."
 	}
 	
 	"warden friendly fire manage disabled"
@@ -68,6 +77,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Friendly fire management is currently disabled."
 		"nl"		"{darkkhaki} Friendly fire management is op dit moment uitgeschakeld."
+		"fr"		"{darkkhaki} Le contrôle du Friendly Fire est désactivé."
 	}
 	
 	"warden collision manage disabled"
@@ -75,6 +85,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Collision management is currently disabled."
 		"nl"		"{darkkhaki} Botsing management is op dit moment uitgeschakeld."
+		"fr"		"{darkkhaki} Le contrôle de la collision est désactivé."
 	}
 	
 	"warden new"
@@ -82,6 +93,7 @@
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1} is the new Warden."
 		"nl"		"{darkkhaki} {1} is de nieuwe Hoofdbewaker."
+		"fr"		"{darkkhaki} {1} est Le Gardien."
 	}
 	
 	"warden locked"
@@ -89,6 +101,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Warden is currently locked."
 		"nl"		"{darkkhaki} Hoofdbewaker is op dit moment niet beschikbaar. [LOCKED]"
+		"fr"		"{darkkhaki} Le Gardien est barré. [LOCKED]"
 	}
 	
 	"warden locked lr round"
@@ -96,6 +109,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Warden is currently locked because it's a last request round."
 		"nl"		"{darkkhaki} Hoofdbewaker is op dit moment niet beschikbaar, wegens het een Last Request ronde is."
+		"fr"		"{darkkhaki} Le Gardien est présentement barré car ceci est une Derniere Requete."
 	}
 	
 	"warden locked admin"
@@ -103,6 +117,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Warden is currently locked by administration."
 		"nl"		"{darkkhaki} Hoofdbewaker is op dit moment gesloten door een administrator."
+		"fr"		"{darkkhaki} Le Gardien a été barré par un Admin."
 	}
 	
 	"warden locked natives"
@@ -110,6 +125,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Warden has been locked by the console."
 		"nl"		"{darkkhaki} Hoofdbeveiliger is gesloten door CONSOLE"
+		"fr"		"{darkkhaki} Le Gardien a été barré par la Console."
 	}
 	
 	"warden unlocked natives"
@@ -117,228 +133,266 @@
 		"#format"	""
 		"en"		"{darkkhaki} Warden has been unlocked by the console."
 		"nl"		"{darkkhaki} Hoofdbeveiliger is geopend door CONSOLE"
+		"fr"		"{darkkhaki} Le Gardien a été débarré par la Console."
 	}
 	
 	"warden granted lr"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Warden has granted you last request."
+		"fr"		"{darkkhaki} Le Gardien vous a assigné votre Derniere Requete."
 	}
 
 	"warden removed lr"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Last request has been reset. You may grant a Prisoner last request again."
+		"fr"		"{darkkhaki} La Derniere Requete a été réinitialisé. Vous pouvez assigner une Derniere Requete"
 	}
 	
 	"warden disconnected center"
 	{
 		"#format"	""
 		"en"		"Warden has disconnected!"
+		"fr"		"Le Gardien s'est déconnecté!"
 	}
 	
 	"warden disconnected"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} The Warden has disconnected. You may now choose a new Warden by typing !w in chat."
+		"fr"		"{darkkhaki} Le Gardien s'est déconnecté! Vouz pouvez choisir un nouveau Gardien avec !w."
 	}
 	
 	"warden retired center"
 	{
 		"#format"	""
 		"en"		"Warden has retired!"
+		"fr"		"Le Gardien s'est retiré!"
 	}
 	
 	"warden retired"
 	{
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1} has retired from Warden. A new Warden may now be chosen by typing !w in chat."
+		"fr"		"{darkkhaki} Le Gardien {1} s'est retiré. Vouz pouvez choisir un nouveau Gardien avec !w."
 	}
 	
 	"not warden"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} You are not the Warden."
+		"fr"		"{darkkhaki} Vouz n'etes pas Le Gardien."
 	}
 	
 	"dead warden"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} The Warden is now dead. You may now choose a new one by typing !w in chat."
+		"fr"		"{darkkhaki} Le Gardien est mort. Vous pouvez choisir un nouveau Gardien avec !w"
 	}
 	
 	"warden killed"
 	{
 		"#format"	""
 		"en"		"Warden has been killed!"
+		"fr"		"Le Gardien a été tué!"
 	}
 	
 	"warden fired center"
 	{
 		"#format"	""
 		"en"		"Warden has been fired!"
+		"fr"		"Le Gardien a été viré"
 	}
 	
 	"no warden current"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Warden is not currently taken."
+		"fr"		"{darkkhaki} Il y a déja un Gardien."
 	}
 
 	"warden message"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} You are now Warden! Type !wlist in chat to see the list of available commands."
+		"fr"		"{darkkhaki} Vous etes Le Gardien. Ecrivez !wlist pour un liste de commandes disponible."
 	}
 	
 	"warden limit reached"
 	{
 		"#format"	"{1:N},{2:d}"
 		"en"		"{darkkhaki} {1} has reached his limit for Warden this map which is set to {2} on the server."
+		"fr"		"{darkkhaki} {1} ne peut plus etre Gardien car il a ateint la limite de {2} sur ce serveur."
 	}
 	
 	"warden voice muted"
 	{
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} WARNING: {1} is currently muted, they cannot speak on the microphone."
+		"fr"		"{darkkhaki} ATTENTION: {1} est presentement muet. Ils ne peuvent pas parler avec leurs micro"
 	}
 	
 	"warden current screen"
 	{
 		"#format"	"{1:N}"
 		"en"		"Current Warden: {1}"
+		"fr"		"Le Gardien est: {1}"
 	}
 	
 	"door controls disabled"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Door controls are currently disabled."
+		"fr"		"{darkkhaki} Le contrôle des portes est désactivé."
 	}
 	
 	"microphone check warden block"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Please verify your microphone in order to become Warden."
+		"fr"		"{darkkhaki} Veuillez vérifier votre micro pour etre Le Gardien."
 	}
 	
 	"freekillers system disabled"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} The Anti-Freekill system is currently disabled."
+		"fr"		"{darkkhaki} Le system Anti-Freekill est présentement désactivé."
 	}
 	
 	"freekiller flagged while void"
 	{
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1} has been marked as a freekiller during a void period."
+		"fr"		"{darkkhaki} {1} a été marqué en Free-Killeur durant une periode inactive."
 	}
 	
 	"lr system disabled"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} The Last Request system is currently disabled."
+		"fr"		"{darkkhaki} Le systeme de Derniere Requete est presentement désactivé."
 	}
 	
 	"red mute system disabled"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Muting is currently disabled on this server. Everyone may talk."
+		"fr"		"{darkkhaki} Le systeme de muet est désactivé sur ce serveur. Tout le monde peut parler."
 	}
 	
 	"last guard"
 	{
 		"#format"	""
 		"en"		"One guard left..."
+		"fr"		"Il ne reste qu'un Gardien..."
 	}
 
 	"Admin Reset Plugin"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Reset the plugin, please reacquire Warden and grant Freedays if there are any."
+		"fr"		"{darkkhaki} Redémarrez le plugin et selectionez un Gardien puis allouez une Journée Libre."
 	}	
 	
 	"admin removed freeday"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Your freeday queue has been removed by an admin."
+		"fr"		"{darkkhaki} Your freeday queue has been removed by an admin."
 	}
 	
 	"admin removed freeday active"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Your freeday status has been removed by an admin."
+		"fr"		"{darkkhaki} Un Admin a retiré votre Journée Libre."
 	}
 
 	"fire warden minimum players not met"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Minimum players has not been met to fire Warden."
+		"fr"		"{darkkhaki} Le nombre minimal de joueurs pour virer un Guardien nà pas été ateint."
 	}	
 	
 	"fire warden already voted"
 	{
 		"#format"	"{1:d},{2:d}"
 		"en"		"{darkkhaki} You have already voted to cast off this Warden. ({1} votes, {2} required)"
+		"fr"		"{darkkhaki} Vous avez déja votez pour virer ce Gardien. ({1} votes, {2} requis)"
 	}
 	
 	"fire warden requested"
 	{
 		"#format"	"{1:s},{2:d},{3:d}"
 		"en"		"{darkkhaki} {1} wants to fire the current Warden. ({2} votes, {3} required)"
+		"fr"		"{darkkhaki} {1} veux virer le Gardien. ({2} votes, {3} requis)"
 	}
 	
 	"voted off of warden"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} You have been voted off! Please wait until next map and you may become Warden again."
+		"fr"		"{darkkhaki} Vous avez été voté en dehors! Veuillez attendre a la prochaine map pour etre Gardien."
 	}
 	
 	"last request in use"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Last request is currently in use. Feel free to type !removelr in order to cancel all queued requests and the current LR."
+		"fr"		"{darkkhaki} La Derniere Requete est déja utilisé. Ecrivez !removelr pour canceler la queue de Derniere Requete."
 	}
 	
 	"last request closed"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} The last request menu has been closed. Warden may grant a last request again to a prisoner."
+		"fr"		"{darkkhaki} Le menu de Derniere Requete a été fermé. Le Gardien peut assigner un Derniere Requete a nouveau."
 	}
 	
 	"last request given"
 	{
 		"#format"	"{1:N},{2:N}"
 		"en"		"{darkkhaki} {1} has given {2} a last request."
+		"fr"		"{darkkhaki} {1} a donné a {2} une Derniere Requete."
 	}
 	
 	"last request freedays removed"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Last request has been chosen, Freedays have been stripped."
+		"fr"		"{darkkhaki} La Derniere Requete a été choisi. La Journée Libre a été retiré."
 	}
 	
 	"lr freeday message"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Freedays are granted godmode for protection. If you attack or damage a Guard, your Freeday will be lifted."
+		"fr"		"{darkkhaki} La Journée Libre donne le mode God. Si vous attaquez un Guarde, votre Journée Libre sera retiré."
 	}
 	
 	"lr freeday lost center"
 	{
 		"#format"	"{1:N}"
 		"en"		"{1} has lost his/her freeday!"
+		"fr"		"{1} a perdus ca Journee Libre!"
 	}
 	
 	"lr freeday lost"
 	{
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1}'s Freeday has been removed because you attacked a Guard."
+		"fr"		"{darkkhaki} La Journée Libre de {1} a été retiré parce que vous avez attaqué un Gardien."
 	}
 	
 	"lr freeday picking clients"
 	{
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1} is picking clients for Freeday next round..."
+		"fr"		"{darkkhaki} {1} choisi la personne qui recevra la Journee Libre en prochaine ronde..."
 	}
 	
 	"lr freeday picked clients"
