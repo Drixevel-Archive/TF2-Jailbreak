@@ -32,7 +32,7 @@
 
 #define PLUGIN_NAME     "[TF2] Jailbreak - Team Bans"
 #define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"
-#define PLUGIN_VERSION  "1.0.5"
+#define PLUGIN_VERSION  "1.0.5a"
 #define PLUGIN_DESCRIPTION	"Manage bans for one or multiple teams."
 #define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"
 
@@ -822,7 +822,7 @@ Remove_CTBan(adminIndex, targetIndex, bExpired=false)
 
 public Action:Command_LiveBan(client, args)
 {
-	if (args > 1)
+	if (args > 3)
 	{
 		CReplyToCommand(client, "%s Usage: sm_teamban <player> <time> <reason>", JTAG);
 		return Plugin_Handled;
@@ -1329,22 +1329,19 @@ public Action:CheckTimedGuardBans(Handle:timer)
 	
 	for (new i = 0; i < iTime; i++)
 	{
-		new iBannedClientIndex = GetArrayCell(TimedBanLocalList, i);
-		if (IsValidClient(iBannedClientIndex))
+		new client = GetArrayCell(TimedBanLocalList, i);
+		if (IsValidClient(client))
 		{
-			if (IsPlayerAlive(iBannedClientIndex))
+			LocalTimeRemaining[client]--;
+			
+			TF2Jail_BB_Debug("found alive time banned client with %i remaining", LocalTimeRemaining[client]);
+			
+			if (LocalTimeRemaining[client] <= 0)
 			{
-				LocalTimeRemaining[iBannedClientIndex]--;
-				
-				TF2Jail_BB_Debug("found alive time banned client with %i remaining", LocalTimeRemaining[iBannedClientIndex]);
-				
-				if (LocalTimeRemaining[iBannedClientIndex] <= 0)
-				{
-					RemoveFromArray(TimedBanLocalList, i);
-					iTime--;
-					Remove_CTBan(0, iBannedClientIndex, true);
-					TF2Jail_BB_Debug("removed Guard ban on %N", iBannedClientIndex);
-				}
+				RemoveFromArray(TimedBanLocalList, i);
+				iTime--;
+				Remove_CTBan(0, client, true);
+				TF2Jail_BB_Debug("removed Guard ban on %N", client);
 			}
 		}
 	}

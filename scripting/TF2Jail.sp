@@ -53,7 +53,7 @@
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
 #define PLUGIN_AUTHOR	"Keith Warren(Jack of Designs)"
-#define PLUGIN_VERSION	"5.2.2"
+#define PLUGIN_VERSION	"5.2.2a"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.jackofdesigns.com/"
 #define WARDEN_MODEL	"models/jailbreak/warden/warden_v2"
@@ -3215,7 +3215,7 @@ LastRequestStart(client, bool:Timer = true)
 	new Handle:LRMenu_Handle = CreateMenu(MenuHandle_LR);
 	SetMenuTitle(LRMenu_Handle, "Last Request Menu");
 
-	ParseLastRequests(client, LRMenu_Handle, true);
+	ParseLastRequests(client, LRMenu_Handle);
 
 	SetMenuExitButton(LRMenu_Handle, true);
 	DisplayMenu(LRMenu_Handle, client, 30 );
@@ -3863,7 +3863,7 @@ UnmutePlayer(client)
 	}
 }
 
-ParseLastRequests(client, Handle:menu, bool:CheckVIP = false)
+ParseLastRequests(client, Handle:menu)
 {
 	new Handle:LastRequestConfig = CreateKeyValues("TF2Jail_LastRequests");
 	
@@ -3880,14 +3880,20 @@ ParseLastRequests(client, Handle:menu, bool:CheckVIP = false)
 				
 				if (KvJumpToKey(LastRequestConfig, "Parameters"))
 				{
+					new bool:VIPCheck = false;
+					if (KvGetNum(LastRequestConfig, "IsVIPOnly", 0) == 1)
+					{
+						VIPCheck = true;
+						Format(LR_NAME, sizeof(LR_NAME), "%s [VIP Only]", LR_NAME);
+					}
+					
 					switch (KvGetNum(LastRequestConfig, "Disabled", 0))
 					{
 					case 0:
 					{
-						if (CheckVIP)
+						if (VIPCheck)
 						{
-							Format(LR_NAME, sizeof(LR_NAME), "%s [VIP Only]", LR_NAME);
-							if (KvGetNum(LastRequestConfig, "IsVIPOnly", 0) == 1 & IsVIP(client))
+							if (IsVIP(client))
 							{
 								AddMenuItem(menu, LR_ID, LR_NAME);
 							}
