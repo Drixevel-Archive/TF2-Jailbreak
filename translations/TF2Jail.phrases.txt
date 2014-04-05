@@ -4,102 +4,119 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} TF2 Jailbreak has been enabled."
+		"nl"		"{darkkhaki} TF2 Jailbreak is ingeschakeld."
 	}
 
 	"plugin disabled"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} TF2 Jailbreak has been disabled."
+		"nl"		"{darkkhaki} TF2 Jailbreak is uitgeschakeld."
 	}
 	
 	"plugin advertisement"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} TF2 Jailbreak plugin by Keith Warren [Jack of Designs] - (http://www.jackofdesigns.com/)."
+		"nl"		"{darkkhaki} TF2 Jailbreak plugin door Keith Warren [Jack of Designs]  - (http://www.jackofdesigns.com/)."
 	}
 
 	"welcome message"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Welcome to Team Fortress 2 Jailbreak! This server is running the [TF2Jail] plugin!"
+		"nl"		"{darkkhaki} Welkom bij Team Fortress 2 Jailbreak! Deze server draait op de [TF2Jail] plugin!"
 	}
 	
 	"incompatible map"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} The current map is incompatible with this command."
+		"nl"		"{darkkhaki} De huidige map ondersteund deze commando niet."
 	}
 	
 	"warden disabled"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Warden is currently disabled."
+		"nl"		"{darkkhaki} Hoofdbewaker is op het moment uitgeschakeld."
 	}
 	
 	"warden locked timer"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Warden has been locked due to lack of a Warden."
+		"nl"		"{darkkhaki} Hoofdbewaker niet beschikbaar wegens het ontbreken van een hoofdbewaker."
 	}
 	
 	"warden incorrect flags"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} You have the incorrect flags to become Warden."
+		"nl"		"{darkkhaki} Je hebt niet de juiste permissies om Hoofdbewaker te worden."
 	}
 	
 	"warden current"
 	{
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1} is the current Warden."
+		"nl"		"{darkkhaki} {1} is de huidige Hoofdbewaker."
 	}
 	
 	"warden friendly fire manage disabled"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Friendly fire management is currently disabled."
+		"nl"		"{darkkhaki} Friendly fire management is op dit moment uitgeschakeld."
 	}
 	
 	"warden collision manage disabled"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Collision management is currently disabled."
+		"nl"		"{darkkhaki} Botsing management is op dit moment uitgeschakeld."
 	}
 	
 	"warden new"
 	{
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1} is the new Warden."
+		"nl"		"{darkkhaki} {1} is de nieuwe Hoofdbewaker."
 	}
 	
 	"warden locked"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Warden is currently locked."
+		"nl"		"{darkkhaki} Hoofdbewaker is op dit moment niet beschikbaar. [LOCKED]"
 	}
 	
 	"warden locked lr round"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Warden is currently locked because it's a last request round."
+		"nl"		"{darkkhaki} Hoofdbewaker is op dit moment niet beschikbaar, wegens het een Last Request ronde is."
 	}
 	
 	"warden locked admin"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Warden is currently locked by administration."
+		"nl"		"{darkkhaki} Hoofdbewaker is op dit moment gesloten door een administrator."
 	}
 	
 	"warden locked natives"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Warden has been locked by the console."
+		"nl"		"{darkkhaki} Hoofdbeveiliger is gesloten door CONSOLE"
 	}
 	
 	"warden unlocked natives"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Warden has been unlocked by the console."
+		"nl"		"{darkkhaki} Hoofdbeveiliger is geopend door CONSOLE"
 	}
 	
 	"warden granted lr"
