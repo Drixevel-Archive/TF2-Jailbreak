@@ -6,6 +6,7 @@
 		"en"		"{darkkhaki} TF2 Jailbreak has been enabled."
 		"nl"		"{darkkhaki} TF2 Jailbreak is ingeschakeld."
 		"fr"		"{darkkhaki} TF2 Jailbreak est activé."
+		"ru"		"{darkkhaki} TF2 Jailbreak был включен."
 	}
 
 	"plugin disabled"
@@ -14,6 +15,7 @@
 		"en"		"{darkkhaki} TF2 Jailbreak has been disabled."
 		"nl"		"{darkkhaki} TF2 Jailbreak is uitgeschakeld."
 		"fr"		"{darkkhaki} TF2 Jailbreak est désactivé."
+		"ru"		"{darkkhaki} TF2 Jailbreak был отключен."
 	}
 	
 	"plugin advertisement"
@@ -22,6 +24,7 @@
 		"en"		"{darkkhaki} TF2 Jailbreak plugin by Keith Warren [Jack of Designs] - (http://www.jackofdesigns.com/)."
 		"nl"		"{darkkhaki} TF2 Jailbreak plugin door Keith Warren [Jack of Designs]  - (http://www.jackofdesigns.com/)."
 		"fr"		"{darkkhaki} TF2 Jailbreak plugin est codé par Keith Warren [Jack of Designs]  - (http://www.jackofdesigns.com/)."
+		"ru"		"{darkkhaki} TF2 Jailbreak плагин от Keith Warren [Jack of Designs] - (http://www.jackofdesigns.com/)."
 	}
 
 	"welcome message"
@@ -30,6 +33,7 @@
 		"en"		"{darkkhaki} Welcome to Team Fortress 2 Jailbreak! This server is running the [TF2Jail] plugin!"
 		"nl"		"{darkkhaki} Welkom bij Team Fortress 2 Jailbreak! Deze server draait op de [TF2Jail] plugin!"
 		"fr"		"{darkkhaki} Bienvenue sur Team Fortress 2 Jailbreak! Ce serveur utilise le [TF2Jail] plugin!"
+		"ru"		"{darkkhaki} Добро пожаловать на Team Fortress 2 Jailbreak! Этот сервер запущен на плагине [TF2Jail]!"
 	}
 	
 	"incompatible map"
@@ -38,6 +42,7 @@
 		"en"		"{darkkhaki} The current map is incompatible with this command."
 		"nl"		"{darkkhaki} De huidige map ondersteund deze commando niet."
 		"fr"		"{darkkhaki} Cette map est incompatible avec cette commande."
+		"ru"		"{darkkhaki} Эта карта несовместима с этой командой"
 	}
 	
 	"warden disabled"
@@ -46,6 +51,7 @@
 		"en"		"{darkkhaki} Warden is currently disabled."
 		"nl"		"{darkkhaki} Hoofdbewaker is op het moment uitgeschakeld."
 		"fr"		"{darkkhaki} Le Gardien est présentement désactivé."
+		"ru"		"{darkkhaki} В данный момент Командир отключен."
 	}
 	
 	"warden locked timer"
@@ -54,6 +60,7 @@
 		"en"		"{darkkhaki} Warden has been locked due to lack of a Warden."
 		"nl"		"{darkkhaki} Hoofdbewaker niet beschikbaar wegens het ontbreken van een hoofdbewaker."
 		"fr"		"{darkkhaki} La position du Gardien a été barré."
+		"ru"		"{darkkhaki} Командир был заблокирован, из-за долгого отсутствия командира."
 	}
 	
 	"warden incorrect flags"
@@ -62,6 +69,7 @@
 		"en"		"{darkkhaki} You have the incorrect flags to become Warden."
 		"nl"		"{darkkhaki} Je hebt niet de juiste permissies om Hoofdbewaker te worden."
 		"fr"		"{darkkhaki} Vous n'avez pas les droits requis pour etre Gardien."
+		"ru"		""
 	}
 	
 	"warden current"
@@ -70,6 +78,7 @@
 		"en"		"{darkkhaki} {1} is the current Warden."
 		"nl"		"{darkkhaki} {1} is de huidige Hoofdbewaker."
 		"fr"		"{darkkhaki} {1} est Le Gardien."
+		"ru"		"{darkkhaki} Сейчас Командир: {1}"
 	}
 	
 	"warden friendly fire manage disabled"
@@ -78,6 +87,7 @@
 		"en"		"{darkkhaki} Friendly fire management is currently disabled."
 		"nl"		"{darkkhaki} Friendly fire management is op dit moment uitgeschakeld."
 		"fr"		"{darkkhaki} Le contrôle du Friendly Fire est désactivé."
+		"ru"		"{darkkhaki} Огонь по своим отключен."
 	}
 	
 	"warden collision manage disabled"
@@ -86,6 +96,7 @@
 		"en"		"{darkkhaki} Collision management is currently disabled."
 		"nl"		"{darkkhaki} Botsing management is op dit moment uitgeschakeld."
 		"fr"		"{darkkhaki} Le contrôle de la collision est désactivé."
+		"ru"		"{darkkhaki} Подпирание отключено."
 	}
 	
 	"warden new"
@@ -94,6 +105,7 @@
 		"en"		"{darkkhaki} {1} is the new Warden."
 		"nl"		"{darkkhaki} {1} is de nieuwe Hoofdbewaker."
 		"fr"		"{darkkhaki} {1} est Le Gardien."
+		"ru"		"{darkkhaki} Новым Командиром стал {1}"
 	}
 	
 	"warden locked"
@@ -102,6 +114,7 @@
 		"en"		"{darkkhaki} Warden is currently locked."
 		"nl"		"{darkkhaki} Hoofdbewaker is op dit moment niet beschikbaar. [LOCKED]"
 		"fr"		"{darkkhaki} Le Gardien est barré. [LOCKED]"
+		"ru"		"{darkkhaki} Командир в настоящее время заблокирован."
 	}
 	
 	"warden locked lr round"
@@ -110,6 +123,7 @@
 		"en"		"{darkkhaki} Warden is currently locked because it's a last request round."
 		"nl"		"{darkkhaki} Hoofdbewaker is op dit moment niet beschikbaar, wegens het een Last Request ronde is."
 		"fr"		"{darkkhaki} Le Gardien est présentement barré car ceci est une Derniere Requete."
+		"ru"		"{darkkhaki} Командир в настоящее время заблокирован, потому что это раунд последнего желания."
 	}
 	
 	"warden locked admin"
@@ -118,6 +132,7 @@
 		"en"		"{darkkhaki} Warden is currently locked by administration."
 		"nl"		"{darkkhaki} Hoofdbewaker is op dit moment gesloten door een administrator."
 		"fr"		"{darkkhaki} Le Gardien a été barré par un Admin."
+		"ru"		"{darkkhaki} Командир заблокирован администратором."
 	}
 	
 	"warden locked natives"
@@ -126,6 +141,7 @@
 		"en"		"{darkkhaki} Warden has been locked by the console."
 		"nl"		"{darkkhaki} Hoofdbeveiliger is gesloten door CONSOLE"
 		"fr"		"{darkkhaki} Le Gardien a été barré par la Console."
+		"ru"		"{darkkhaki} Командир заблокирован в консоле."
 	}
 	
 	"warden unlocked natives"
@@ -134,6 +150,7 @@
 		"en"		"{darkkhaki} Warden has been unlocked by the console."
 		"nl"		"{darkkhaki} Hoofdbeveiliger is geopend door CONSOLE"
 		"fr"		"{darkkhaki} Le Gardien a été débarré par la Console."
+		"ru"		"{darkkhaki} Командир был разблокирован в консоле."
 	}
 	
 	"warden granted lr"
@@ -141,6 +158,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Warden has granted you last request."
 		"fr"		"{darkkhaki} Le Gardien vous a assigné votre Derniere Requete."
+		"ru"		"{darkkhaki} Командир дал тебе последнее желание."
 	}
 
 	"warden removed lr"
@@ -148,6 +166,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Last request has been reset. You may grant a Prisoner last request again."
 		"fr"		"{darkkhaki} La Derniere Requete a été réinitialisé. Vous pouvez assigner une Derniere Requete"
+		"ru"		"{darkkhaki} Последнее желание было сброшено. Вы можете дать заключенному желание снова."
 	}
 	
 	"warden disconnected center"
@@ -155,6 +174,7 @@
 		"#format"	""
 		"en"		"Warden has disconnected!"
 		"fr"		"Le Gardien s'est déconnecté!"
+		"ru"		"Командир отключился от сервера!"
 	}
 	
 	"warden disconnected"
@@ -162,6 +182,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} The Warden has disconnected. You may now choose a new Warden by typing !w in chat."
 		"fr"		"{darkkhaki} Le Gardien s'est déconnecté! Vouz pouvez choisir un nouveau Gardien avec !w."
+		"ru"		"{darkkhaki} Командир отключился от сервера. Теперь Вы можете стать Командиром введя !w в чате."
 	}
 	
 	"warden retired center"
@@ -169,6 +190,7 @@
 		"#format"	""
 		"en"		"Warden has retired!"
 		"fr"		"Le Gardien s'est retiré!"
+		"ru"		"Командир ушел в отставку!"
 	}
 	
 	"warden retired"
@@ -176,6 +198,7 @@
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1} has retired from Warden. A new Warden may now be chosen by typing !w in chat."
 		"fr"		"{darkkhaki} Le Gardien {1} s'est retiré. Vouz pouvez choisir un nouveau Gardien avec !w."
+		"ru"		"{darkkhaki} {1} ушел в отставку. Теперь Вы можете стать Командиром введя !w в чате."
 	}
 	
 	"not warden"
@@ -183,6 +206,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} You are not the Warden."
 		"fr"		"{darkkhaki} Vouz n'etes pas Le Gardien."
+		"ru"		"{darkkhaki} Вы не Командир."
 	}
 	
 	"dead warden"
@@ -190,6 +214,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} The Warden is now dead. You may now choose a new one by typing !w in chat."
 		"fr"		"{darkkhaki} Le Gardien est mort. Vous pouvez choisir un nouveau Gardien avec !w"
+		"ru"		"{darkkhaki} Командир умер. Теперь Вы можете стать Командиром введя !w в чате."
 	}
 	
 	"warden killed"
@@ -197,6 +222,7 @@
 		"#format"	""
 		"en"		"Warden has been killed!"
 		"fr"		"Le Gardien a été tué!"
+		"ru"		"Командир мертв!"
 	}
 	
 	"warden fired center"
@@ -204,6 +230,7 @@
 		"#format"	""
 		"en"		"Warden has been fired!"
 		"fr"		"Le Gardien a été viré"
+		"ru"		"Командир уволен!"
 	}
 	
 	"no warden current"
@@ -211,6 +238,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Warden is not currently taken."
 		"fr"		"{darkkhaki} Il y a déja un Gardien."
+		"ru"		"{darkkhaki} Командира в данный момент нет."
 	}
 
 	"warden message"
@@ -218,6 +246,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} You are now Warden! Type !wlist in chat to see the list of available commands."
 		"fr"		"{darkkhaki} Vous etes Le Gardien. Ecrivez !wlist pour un liste de commandes disponible."
+		"ru"		"{darkkhaki} Теперь Вы Командир! Введите !wlist в чате, чтобы увидеть список доступных команд."
 	}
 	
 	"warden limit reached"
@@ -225,6 +254,7 @@
 		"#format"	"{1:N},{2:d}"
 		"en"		"{darkkhaki} {1} has reached his limit for Warden this map which is set to {2} on the server."
 		"fr"		"{darkkhaki} {1} ne peut plus etre Gardien car il a ateint la limite de {2} sur ce serveur."
+		"ru"		"{darkkhaki} {1} достиг лиимита становления Командиром, установленный в {2} на этой карте."
 	}
 	
 	"warden voice muted"
@@ -239,6 +269,7 @@
 		"#format"	"{1:N}"
 		"en"		"Current Warden: {1}"
 		"fr"		"Le Gardien est: {1}"
+		"ru"		"Текущий Командир: {1}"
 	}
 	
 	"door controls disabled"
@@ -253,6 +284,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Please verify your microphone in order to become Warden."
 		"fr"		"{darkkhaki} Veuillez vérifier votre micro pour etre Le Gardien."
+		"ru"		"{darkkhaki} Пожалуйста, подтвердите наличине микрофона, сказав что-нибудь."
 	}
 	
 	"freekillers system disabled"
