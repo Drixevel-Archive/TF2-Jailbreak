@@ -1,4 +1,4 @@
-"Phrases"
+﻿"Phrases"
 {
 	"plugin enabled"
 	{
@@ -155,10 +155,22 @@
 	
 	"warden granted lr"
 	{
-		"#format"	""
-		"en"		"{darkkhaki} Warden has granted you last request."
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} Warden {1} has granted you last request."
 		"fr"		"{darkkhaki} Le Gardien vous a assigné votre Derniere Requete."
 		"ru"		"{darkkhaki} Командир дал тебе последнее желание."
+	}
+	
+	"console granted lr"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Console has granted you a last request."
+	}
+	
+	"admin granted lr"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} has granted you last request."
 	}
 
 	"warden removed lr"
@@ -402,7 +414,7 @@
 	"lr freeday message"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} Freedays are granted godmode for protection. If you attack or damage a Guard, your Freeday will be lifted."
+		"en"		"{darkkhaki} Freedays are granted immunity to guard damage but Wardens can kill you. If you attack or damage a Guard or the Warden, your Freeday will be lifted."
 		"fr"		"{darkkhaki} La Journée Libre donne le mode God. Si vous attaquez un Guarde, votre Journée Libre sera retiré."
 	}
 	
@@ -437,6 +449,18 @@
 	{
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1} has reached the maximum number of allowed clients for freeday on this server."
+	}
+	
+	"lr freeday removed invalid"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} is either not a valid client or is not an active Freeday."
+	}
+	
+	"lr cannot pick active round"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} You cannot pick an active last request during round transitions."
 	}
 
 	"microphone verified"
@@ -488,13 +512,13 @@
 	}
 	
 	"doors opened"
-	{		
+	{
 		"#format"	""
 		"en"		"{darkkhaki} The cell doors have been opened!"
 	}
 	
 	"doors manual open"
-	{		
+	{
 		"#format"	""
 		"en"		"{darkkhaki} The cell doors have been opened manually, timer has been cancelled."
 	}
@@ -532,7 +556,13 @@
 	"guards only"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} This command is restricted to Guards only."
+		"en"		"{darkkhaki} This command is restricted to Guards(BLU) only."
+	}
+	
+	"prisoners only"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} This command is restricted to Prisoners(RED) only."
 	}
 	
 	"cell doors open start"
@@ -595,7 +625,13 @@
 		"en"		"{darkkhaki}Warden has requested collision to be enabled. Waiting for admins to accept..."
 	}
 	
-	"no current requests"
+	"current last requests"
+	{
+		"#format"	"{1:s}"
+		"en"		"{darkkhaki} {1} is the current last request queued."
+	}
+	
+	"no current last requests"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} No requests are currently queued."
@@ -622,25 +658,25 @@
 	"Map Compatibility Cell Opener Detected"
 	{
 		"#format"	""
-		"en"		"Cell Opener - Detected"
+		"en"		"{darkkhaki}Cell Opener - {lime}Detected"
 	}
 	
 	"Map Compatibility Cell Opener Undetected"
 	{
 		"#format"	""
-		"en"		"Cell Opener - Undetected"
+		"en"		"{darkkhaki}Cell Opener - {collectors}Undetected"
 	}
 	
 	"Map Compatibility Cell Doors Detected"
 	{
 		"#format"	""
-		"en"		"Cell Doors - Detected"
+		"en"		"{darkkhaki}Cell Doors - {lime}Detected"
 	}
 	
 	"Map Compatibility Cell Doors Undetected"
 	{
 		"#format"	""
-		"en"		"Cell Doors - Undetected"
+		"en"		"{darkkhaki}Cell Doors - {collectors}Undetected"
 	}
 
 	"Admin Remove Warden"
@@ -815,5 +851,23 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Please type into chat what you want the LR name to be first then type what it is in chat after."
+	}
+	
+	"no description available"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} No description is currently available."
+	}
+	
+	"last request custom set"
+	{
+		"#format"	"{1:s}"
+		"en"		"{darkkhaki} Next round LR set to: {1}"
+	}
+	
+	"warden fire limit reached"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} You are not allowed to vote again, the warden fire limit has been reached."
 	}
 }

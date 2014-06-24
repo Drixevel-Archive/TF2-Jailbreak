@@ -5,8 +5,7 @@
 
 #define JTAG_COLORED	"{community}[TF2Jail]"
 #define JTAG	"[TF2Jail]"
-
-#tryinclude <tf2attributes>
+#define PLUGIN_VERSION	"5.3.5"
 
 // NOTE: Requires you check if the player is in-game, alive, etc.
 
