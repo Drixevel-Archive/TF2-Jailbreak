@@ -1,4 +1,4 @@
-﻿"Phrases"
+"Phrases"
 {
 	"plugin enabled"
 	{
@@ -141,7 +141,7 @@
 		"en"		"{darkkhaki} Warden has been locked by the console."
 		"nl"		"{darkkhaki} Hoofdbeveiliger is gesloten door CONSOLE"
 		"fr"		"{darkkhaki} Le Gardien a été barré par la Console."
-		"ru"		"{darkkhaki} Командир заблокирован в консоле."
+		"ru"		"{darkkhaki} Командир заблокирован из консоли."
 	}
 	
 	"warden unlocked natives"
@@ -150,7 +150,7 @@
 		"en"		"{darkkhaki} Warden has been unlocked by the console."
 		"nl"		"{darkkhaki} Hoofdbeveiliger is geopend door CONSOLE"
 		"fr"		"{darkkhaki} Le Gardien a été débarré par la Console."
-		"ru"		"{darkkhaki} Командир был разблокирован в консоле."
+		"ru"		"{darkkhaki} Командир был разблокирован из консоли."
 	}
 	
 	"warden granted lr"
@@ -171,6 +171,7 @@
 	{
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1} has granted you last request."
+		"ru"		"{darkkhaki} {1} дал вам последнее желание."
 	}
 
 	"warden removed lr"
@@ -274,6 +275,7 @@
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} WARNING: {1} is currently muted, they cannot speak on the microphone."
 		"fr"		"{darkkhaki} ATTENTION: {1} est presentement muet. Ils ne peuvent pas parler avec leurs micro"
+		"ru"		"{darkkhaki} ВНИМАНИЕ: {1} сейчас заглушен, он не может говорить в микрофон."
 	}
 	
 	"warden current screen"
@@ -289,6 +291,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Door controls are currently disabled."
 		"fr"		"{darkkhaki} Le contrôle des portes est désactivé."
+		"ru"		"{darkkhaki} Управление тюремными дверьми - отключено"
 	}
 	
 	"microphone check warden block"
@@ -304,6 +307,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} The Anti-Freekill system is currently disabled."
 		"fr"		"{darkkhaki} Le system Anti-Freekill est présentement désactivé."
+		"ru"		"{darkkhaki} Система Anti-Freekill выключена."
 	}
 	
 	"freekiller flagged while void"
@@ -325,6 +329,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Muting is currently disabled on this server. Everyone may talk."
 		"fr"		"{darkkhaki} Le systeme de muet est désactivé sur ce serveur. Tout le monde peut parler."
+		"ru"		"{darkkhaki} Заглушение игроков сейчас отключено на сервере. Каждый может говорить."
 	}
 	
 	"last guard"
@@ -332,6 +337,7 @@
 		"#format"	""
 		"en"		"One guard left..."
 		"fr"		"Il ne reste qu'un Gardien..."
+		"ru"		"Остался последний охранник..."
 	}
 
 	"Admin Reset Plugin"
@@ -346,6 +352,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Your freeday queue has been removed by an admin."
 		"fr"		"{darkkhaki} Your freeday queue has been removed by an admin."
+		"ru"		"{darkkhaki} Ваш Freeday был отключен администратором"
 	}
 	
 	"admin removed freeday active"
@@ -353,6 +360,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Your freeday status has been removed by an admin."
 		"fr"		"{darkkhaki} Un Admin a retiré votre Journée Libre."
+		
 	}
 
 	"fire warden minimum players not met"
@@ -367,6 +375,7 @@
 		"#format"	"{1:d},{2:d}"
 		"en"		"{darkkhaki} You have already voted to cast off this Warden. ({1} votes, {2} required)"
 		"fr"		"{darkkhaki} Vous avez déja votez pour virer ce Gardien. ({1} votes, {2} requis)"
+		"ru"		"{darkkhaki} Вы уже проголосовали за увольнение Командира.({1} из {2} требуемых)"
 	}
 	
 	"fire warden requested"
@@ -374,6 +383,7 @@
 		"#format"	"{1:s},{2:d},{3:d}"
 		"en"		"{darkkhaki} {1} wants to fire the current Warden. ({2} votes, {3} required)"
 		"fr"		"{darkkhaki} {1} veux virer le Gardien. ({2} votes, {3} requis)"
+		"ru"		"{darkkhaki} {1} хочет уволить командира.({2} из {3} требуемых)"
 	}
 	
 	"voted off of warden"
@@ -381,6 +391,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} You have been voted off! Please wait until next map and you may become Warden again."
 		"fr"		"{darkkhaki} Vous avez été voté en dehors! Veuillez attendre a la prochaine map pour etre Gardien."
+		"ru"		"{darkkhaki} Игроки запретили вам становиться командиром! Дождитесь смены карты и вы снова сможете стать Командиром."
 	}
 	
 	"last request in use"
@@ -402,6 +413,8 @@
 		"#format"	"{1:N},{2:N}"
 		"en"		"{darkkhaki} {1} has given {2} a last request."
 		"fr"		"{darkkhaki} {1} a donné a {2} une Derniere Requete."
+		"ru"		"{darkkhaki} {1} дал {2} последнее желание."
+		
 	}
 	
 	"last request freedays removed"
@@ -416,6 +429,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Freedays are granted immunity to guard damage but Wardens can kill you. If you attack or damage a Guard or the Warden, your Freeday will be lifted."
 		"fr"		"{darkkhaki} La Journée Libre donne le mode God. Si vous attaquez un Guarde, votre Journée Libre sera retiré."
+		"ru"		"{darkkhaki} Freeday дает иммунитет на получение урона от охранников, но Командир может убить вас. Если вы нанесете урон охраннику, ваш Freeday будет снят."
 	}
 	
 	"lr freeday lost center"
@@ -467,78 +481,92 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Thank you! Your microphone is now verified and you can join the Guards team."
+		"ru"		"{darkkhaki} Спасибо! Ваш микрофон теперь проверен, теперь вы можете играть за Синих."
 	}
 	
 	"microphone unverified"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Please verifiy that you have a microphone by talking in chat or enabling voice input."
+		"ru"		"{darkkhaki} Пожалуйста, подтвердите наличие микрофона, сказав что нибудь в него."
 	}
 
 	"muted player"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} You have been muted."
+		"ru"		"{darkkhaki} Ваш микрофон был отключен."
 	}
 
 	"unmuted player"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} You have been unmuted."
+		"en"		"{darkkhaki} Ваш микрофон был включен."
 	}
 
 	"red team muted"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Red team has been muted permanently."
+		"ru"		"{darkkhaki} Микрофоны красной команды были отключены."
 	}
 	
 	"red team muted temporarily"
 	{
 		"#format"	"{1:d}"
 		"en"		"{darkkhaki} Red team has been muted for {1} seconds."
+		"ru"		"{darkkhaki} Красная команда была заглушена {1} сек."
 	}
 	
 	"red team unmuted"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Red team has been unmuted."
+		"ru"		"{darkkhaki} Микрофоны красной команды включены."
 	}
 	
 	"stripped weapons and ammo"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Your weapons and ammo have been stripped."
+		"ru"		"{darkkhaki} У вас отобрали ваше оружие и патроны."
+		
 	}
 	
 	"doors opened"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} The cell doors have been opened!"
+		"ru"		"{darkkhaki} Двери тюремных камер были открыты!"
 	}
 	
 	"doors manual open"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} The cell doors have been opened manually, timer has been cancelled."
+		"ru"		"{darkkhaki} Двери тюремных камер были открыты в ручную, таймер отключен."
 	}
 
 	"doors closed"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} The cell doors have been closed!"
+		"ru"		"{darkkhaki} Двери тюремных камер были закрыты!"
 	}
 	
 	"doors locked"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} The cell doors have been locked!"
+		"ru"		"{darkkhaki} Двери тюремных камер заблокированы!"
 	}
 	
 	"doors unlocked"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} The cell doors have been unlocked!"
+		"ru"		"{darkkhaki} Двери тюремных камер разблокированы!"
 	}
 	
 	"prisoner has rebelled"
@@ -551,18 +579,21 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} You have been moved for Team balance."
+		"ru"		"{darkkhaki} Вы были перемещены для игрового баланса."
 	}
 	
 	"guards only"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} This command is restricted to Guards(BLU) only."
+		"ru"		"{darkkhaki} Эта команда доступна только для Синих."
 	}
 	
 	"prisoners only"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} This command is restricted to Prisoners(RED) only."
+		"ru"		"{darkkhaki} Эта команда доступна только для Красных."
 	}
 	
 	"cell doors open start"
@@ -593,36 +624,42 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki}Friendly fire is now enabled."
+		"ru"		"{darkkhaki}Огонь по своим включен."
 	}
 	
 	"friendlyfire disabled"
 	{
 		"#format"	""
 		"en"		"{darkkhaki}Friendly fire is now disabled."
+		"ru"		"{darkkhaki}Огонь по своим выключен."
 	}
 	
 	"friendlyfire request"
 	{
 		"#format"	""
 		"en"		"{darkkhaki}Warden has requested friendly fire to be enabled. Waiting for admins to accept..."
+		"ru"		"{darkkhaki}Командир запросил включение огня по своим. Ожидание ответа администратора..."
 	}
 	
 	"collision enabled"
 	{
 		"#format"	""
 		"en"		"{darkkhaki}Collision is now enabled."
+		"ru"		"{darkkhaki}Подпирание включено."
 	}
 	
 	"collision disabled"
 	{
 		"#format"	""
 		"en"		"{darkkhaki}Collision is now disabled."
+		"ru"		"{darkkhaki}Подпирание отключено."
 	}
 	
 	"collision request"
 	{
 		"#format"	""
 		"en"		"{darkkhaki}Warden has requested collision to be enabled. Waiting for admins to accept..."
+		"ru"		"{darkkhaki}Командир запросил включение подпирания. Ожидание ответа администратора..."
 	}
 	
 	"current last requests"
@@ -647,6 +684,7 @@
 	{
 		"#format"	"{1:N},{2:d}"
 		"en"		"{darkkhaki} {1} has been marked as a Freekiller and will be banned in {2} unless admin pardons it."
+		"ru"		"{darkkhaki} {1} Был отмечен как Freekiller и будет забанен через {2} если админ не помилует его."
 	}
 	
 	"freeday currently queued"
@@ -683,24 +721,28 @@
 	{
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} Fired {1} from Warden."
+		"en"		"{darkkhaki} Командир {1} уволен."
 	}
 	
 	"Admin Lock Warden"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Warden has been Locked."
+		"ru"		"{darkkhaki} Командир был заблокирован."
 	}
 	
 	"Admin Unlock Warden"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Warden has been Unlocked, you may now go Warden again."
+		"ru"		"{darkkhaki} Командир был разблокирован, вы можете опять стать командиром."
 	}
 	
 	"Admin Pardon Freekillers"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Pardoned all marked Freekillers."
+		"ru"		"{darkkhaki} Администратор помиловал всех фрикиллеров."
 	}
 	
 	"Admin Deny Last Request"
@@ -713,24 +755,29 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Opened the cell doors via admin commands."
+		"ru"		"{darkkhaki} Двери тюремных камер были открыты администратором."
+		
 	}
 	
 	"Admin Close Cells"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Closed the cell doors via admin commands."
+		"ru"		"{darkkhaki} Двери тюремных камер были закрыты администратором."
 	}
 	
 	"Admin Lock Cells"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Locked the cell doors via admin commands."
+		"ru"		"{darkkhaki} Двери тюремных камер были заблокированы администратором."
 	}
 	
 	"Admin Unlock Cells"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Unlocked the cell doors via admin commands."
+		"ru"		"{darkkhaki} Двери тюремных камер были разблокированы администратором."
 	}
 	
 	"Admin Force Warden Random"
@@ -755,24 +802,28 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Gave themselves a Last Request."
+		"ru"		"{darkkhaki} Администратор дал себе последнее желание."
 	}
 	
 	"Admin Scan Map Compatibility"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Scanning the map to check for compatibility with the TF2Jail plugin."
+		"ru"		"{darkkhaki} Сканирование карты на совместимость с плагином TF2Jail."
 	}
 	
 	"Admin Give Freeday Menu"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Giving someone a Freeday..."
+		"ru"		"{darkkhaki} Администратор дал кому-то Freeday..."
 	}
 	
 	"Admin Remove Freeday Menu"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Removing someone's Freeday..."
+		"ru"		"{darkkhaki} Администратор забирает у кого-то Freeday..."
 	}
 	
 	"Admin Accept Request FF"
@@ -821,6 +872,7 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Your settings are currently set to disabled. Type '!settings' and change your preference to become Warden."
+		"ru"		"{darkkhaki} Введите '!settings' и поменяйте настройки чтобы стать командиром."
 	}
 	
 	"preference blue on"
@@ -857,6 +909,7 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} No description is currently available."
+		"ru"		"{darkkhaki} Нет доступного описания."
 	}
 	
 	"last request custom set"
@@ -869,5 +922,6 @@
 	{
 		"#format"	""
 		"en"		"{darkkhaki} You are not allowed to vote again, the warden fire limit has been reached."
+		"ru"		"{darkkhaki} Вам нельзя больше голосовать, лимит на увольнение Командира был достигнут."
 	}
 }
