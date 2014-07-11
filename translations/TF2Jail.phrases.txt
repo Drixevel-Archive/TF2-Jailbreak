@@ -141,7 +141,7 @@
 		"en"		"{darkkhaki} Warden has been locked by the console."
 		"nl"		"{darkkhaki} Hoofdbeveiliger is gesloten door CONSOLE"
 		"fr"		"{darkkhaki} Le Gardien a été barré par la Console."
-		"ru"		"{darkkhaki} Командир заблокирован в консоле."
+		"ru"		"{darkkhaki} Командир заблокирован из консоли."
 	}
 	
 	"warden unlocked natives"
@@ -150,7 +150,7 @@
 		"en"		"{darkkhaki} Warden has been unlocked by the console."
 		"nl"		"{darkkhaki} Hoofdbeveiliger is geopend door CONSOLE"
 		"fr"		"{darkkhaki} Le Gardien a été débarré par la Console."
-		"ru"		"{darkkhaki} Командир был разблокирован в консоле."
+		"ru"		"{darkkhaki} Командир был разблокирован из консоли."
 	}
 	
 	"warden granted lr"
@@ -171,7 +171,7 @@
 	{
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1} has granted you last request."
-		"ru"		"{darkkhaki} {1} дал вам Последнее Желание."
+		"ru"		"{darkkhaki} {1} дал вам последнее желание."
 	}
 
 	"warden removed lr"
@@ -275,7 +275,7 @@
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} WARNING: {1} is currently muted, they cannot speak on the microphone."
 		"fr"		"{darkkhaki} ATTENTION: {1} est presentement muet. Ils ne peuvent pas parler avec leurs micro"
-		"ru"		"{darkkhaki} Внимание: {1} сейчас заглушен, он не может говорить в микрофон."
+		"ru"		"{darkkhaki} ВНИМАНИЕ: {1} сейчас заглушен, он не может говорить в микрофон."
 	}
 	
 	"warden current screen"
@@ -352,7 +352,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Your freeday queue has been removed by an admin."
 		"fr"		"{darkkhaki} Your freeday queue has been removed by an admin."
-		"ru"		"{darkkhaki} Ваш Freeday был отключен Администратором"
+		"ru"		"{darkkhaki} Ваш Freeday был отключен администратором"
 	}
 	
 	"admin removed freeday active"
@@ -375,7 +375,7 @@
 		"#format"	"{1:d},{2:d}"
 		"en"		"{darkkhaki} You have already voted to cast off this Warden. ({1} votes, {2} required)"
 		"fr"		"{darkkhaki} Vous avez déja votez pour virer ce Gardien. ({1} votes, {2} requis)"
-		"ru"		"{darkkhaki} Вы уже проголосовали за увольнение Командира.({1} голосов, {2} требуется)"
+		"ru"		"{darkkhaki} Вы уже проголосовали за увольнение Командира.({1} из {2} требуемых)"
 	}
 	
 	"fire warden requested"
@@ -383,7 +383,7 @@
 		"#format"	"{1:s},{2:d},{3:d}"
 		"en"		"{darkkhaki} {1} wants to fire the current Warden. ({2} votes, {3} required)"
 		"fr"		"{darkkhaki} {1} veux virer le Gardien. ({2} votes, {3} requis)"
-		"ru"		"{darkkhaki} {1} хочет уволить командира.({2} голосов, {3} требуется)"
+		"ru"		"{darkkhaki} {1} хочет уволить командира.({2} из {3} требуемых)"
 	}
 	
 	"voted off of warden"
@@ -684,7 +684,7 @@
 	{
 		"#format"	"{1:N},{2:d}"
 		"en"		"{darkkhaki} {1} has been marked as a Freekiller and will be banned in {2} unless admin pardons it."
-		"ru"		"{darkkhaki} {1} Был отмечен как Freekiller и будет забанен через {2} если админ не помилует его"
+		"ru"		"{darkkhaki} {1} Был отмечен как Freekiller и будет забанен через {2} если админ не помилует его."
 	}
 	
 	"freeday currently queued"
