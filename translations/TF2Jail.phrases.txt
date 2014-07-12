@@ -276,14 +276,6 @@
 		"fr"		"{darkkhaki} ATTENTION: {1} est presentement muet. Ils ne peuvent pas parler avec leurs micro"
 	}
 	
-	"warden current screen"
-	{
-		"#format"	"{1:N}"
-		"en"		"Current Warden: {1}"
-		"fr"		"Le Gardien est: {1}"
-		"ru"		"Текущий Командир: {1}"
-	}
-	
 	"door controls disabled"
 	{
 		"#format"	""
@@ -870,4 +862,28 @@
 		"#format"	""
 		"en"		"{darkkhaki} You are not allowed to vote again, the warden fire limit has been reached."
 	}
+	
+	//TEXT NODES (Do not set any color values to them)
+	
+	"1st day freeday node"
+	{
+		"#format"	""
+		"en"		"1st Day Freeday"
+	}
+	
+	"last request node"
+	{
+		"#format"	"{1:s}"
+		"en"		"Last Request: {1}"
+	}
+	
+	"warden current node"
+	{
+		"#format"	"{1:N}"
+		"en"		"Current Warden: {1}"
+		"fr"		"Le Gardien est: {1}"
+		"ru"		"Текущий Командир: {1}"
+	}
+	
+	//TEXT NODES END
 }

@@ -5,7 +5,7 @@
 
 #define JTAG_COLORED	"{community}[TF2Jail]"
 #define JTAG	"[TF2Jail]"
-#define PLUGIN_VERSION	"5.3.5"
+#define PLUGIN_VERSION	"5.4.0"
 
 // NOTE: Requires you check if the player is in-game, alive, etc.
 
@@ -139,16 +139,32 @@ native TF2Jail_IsLRRound();
 /**
  * Called when the Warden has been assigned/created via the plugin or natives.
  *
+ * @param client		Client who received Warden.
  * @noreturn
  **/
+forward TF2Jail_OnWardenCreated(client);
+
+#pragma deprecated Use TF2Jail_OnWardenCreated(client) instead.
 forward Warden_OnWardenCreated(client);
 
 /**
  * Called when the Warden has been removed/retired via the plugin or natives.
  *
+ * @param client		Client who lost Warden.
  * @noreturn
  **/
+forward TF2Jail_OnWardenRemoved(client);
+
+#pragma deprecated Use TF2Jail_OnWardenRemoved(client) instead.
 forward Warden_OnWardenRemoved(client);
+
+/**
+ * Called when a last request is about to be executed.
+ *
+ * @param Handler		String or text called by the Handler in the Last Request configuration file. (Use this to differentiate your custom LRs)
+ * @noreturn
+ **/
+ forward TF2Jail_OnLastRequestExecute(const String:Handler[]);
 
 public SharedPlugin:__pl_tf2jail = 
 {
