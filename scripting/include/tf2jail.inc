@@ -74,7 +74,7 @@ native TF2Jail_IsRebel(client);
 native TF2Jail_MarkRebel(client);
 
 /**
- * Returns if the cilent is a Freekiller.
+ * Returns if the client is a Freekiller.
  *
  * @param client		Client is Freekiller.
  * @return		True on success, false on failure.
