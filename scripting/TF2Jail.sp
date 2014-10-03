@@ -1134,7 +1134,7 @@ public OnClientConnected(client)
 {
 	g_Voted[client] = false;
 	g_Voters++;
-	g_VotesNeeded = RoundToFloor(float(g_Voters) * cv_WVotesNeeded);
+	g_VotesNeeded = RoundToFloor(float(g_Voters) * GetConVarFloat(cv_WVotesNeeded));
 }
 
 public OnClientCookiesCached(client)
@@ -1251,7 +1251,7 @@ public OnClientDisconnect(client)
 		}
 		
 		g_Voters--;
-		g_VotesNeeded = RoundToFloor(float(g_Voters) * cv_WVotesNeeded);
+		g_VotesNeeded = RoundToFloor(float(g_Voters) * GetConVarFloat(cv_WVotesNeeded));
 		
 		if (g_Votes && g_Voters && g_Votes >= g_VotesNeeded)
 		{
