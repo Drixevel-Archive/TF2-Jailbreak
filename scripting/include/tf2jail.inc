@@ -5,7 +5,16 @@
 
 #define JTAG_COLORED	"{community}[TF2Jail]"
 #define JTAG	"[TF2Jail]"
-#define PLUGIN_VERSION	"5.4.0"
+#define PLUGIN_VERSION	"5.4.5"
+
+//Door Controls
+enum eDoorsMode
+{
+	OPEN = 0,
+	CLOSE,
+	LOCK,
+	UNLOCK
+};
 
 // NOTE: Requires you check if the player is in-game, alive, etc.
 
@@ -74,7 +83,7 @@ native TF2Jail_IsRebel(client);
 native TF2Jail_MarkRebel(client);
 
 /**
- * Returns if the client is a Freekiller.
+ * Returns if the cilent is a Freekiller.
  *
  * @param client		Client is Freekiller.
  * @return		True on success, false on failure.
@@ -134,6 +143,14 @@ native TF2Jail_Log(const String:log[], any:...);
  * @return		True on success, false on failure.
  **/
 native TF2Jail_IsLRRound();
+
+/**
+ * Returns if the current round is a Last Request day.
+ *
+ * @param Status		Cell to execute. (OPEN, CLOSE, LOCK, UNLOCK) (If doors are locked, they must be unlocked to open)
+ * @return		True on success, false on incompatible map.
+ **/
+native TF2Jail_ManageCells(eDoorsMode:Status);
 
 //Forwards
 /**
@@ -195,5 +212,6 @@ public __pl_tf2jail_SetNTVOptional()
 	MarkNativeAsOptional("TF2Jail_LockWarden");
 	MarkNativeAsOptional("TF2Jail_UnlockWarden");
 	MarkNativeAsOptional("TF2Jail_IsLRRound");
+	MarkNativeAsOptional("TF2Jail_ManageCells");
 }
 #endif

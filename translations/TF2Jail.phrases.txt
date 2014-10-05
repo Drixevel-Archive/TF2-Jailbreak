@@ -81,6 +81,12 @@
 		"ru"		"{darkkhaki} Сейчас Командир: {1}"
 	}
 	
+	"warden exists"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Warden is currently in use, please fire or retire them."
+	}
+	
 	"warden friendly fire manage disabled"
 	{
 		"#format"	""
@@ -115,6 +121,18 @@
 		"nl"		"{darkkhaki} Hoofdbewaker is op dit moment niet beschikbaar. [LOCKED]"
 		"fr"		"{darkkhaki} Le Gardien est barré. [LOCKED]"
 		"ru"		"{darkkhaki} Командир в настоящее время заблокирован."
+	}
+	
+	"warden not locked"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Warden is not currently locked."
+	}
+	
+	"warden already locked"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Warden is already locked."
 	}
 	
 	"warden locked lr round"
@@ -352,7 +370,7 @@
 		"#format"	""
 		"en"		"{darkkhaki} Minimum players has not been met to fire Warden."
 		"fr"		"{darkkhaki} Le nombre minimal de joueurs pour virer un Guardien nà pas été ateint."
-	}	
+	}
 	
 	"fire warden already voted"
 	{
@@ -363,7 +381,7 @@
 	
 	"fire warden requested"
 	{
-		"#format"	"{1:s},{2:d},{3:d}"
+		"#format"	"{1:N},{2:d},{3:d}"
 		"en"		"{darkkhaki} {1} wants to fire the current Warden. ({2} votes, {3} required)"
 		"fr"		"{darkkhaki} {1} veux virer le Gardien. ({2} votes, {3} requis)"
 	}
@@ -619,8 +637,8 @@
 	
 	"current last requests"
 	{
-		"#format"	"{1:s}"
-		"en"		"{darkkhaki} {1} is the current last request queued."
+		"#format"	"{1:s},{2:i}"
+		"en"		"{darkkhaki} {1} [{2}] is the current last request queued."
 	}
 	
 	"no current last requests"
@@ -629,7 +647,13 @@
 		"en"		"{darkkhaki} No requests are currently queued."
 	}
 	
-	"no active warden commands"
+	"no warden requests queued"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} No Warden requests currently up."
+	}
+	
+	"no warden requests active"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} No Warden commands are currently active."
@@ -641,10 +665,34 @@
 		"en"		"{darkkhaki} {1} has been marked as a Freekiller and will be banned in {2} unless admin pardons it."
 	}
 	
+	"not freekiller"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} is not a currently marked Freekiller."
+	}
+	
+	"current freekiller"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} is already marked as a Free Killer."
+	}
+	
+	"not freeday"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} is not a current Freeday."
+	}
+	
 	"freeday currently queued"
 	{
 		"#format"	"{1:N}"
 		"en"		"{darkkhaki} {1} is already setup for a Freeday next round, please choose a new client."
+	}
+	
+	"currently a freeday"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} {1} is already a Freeday."
 	}
 	
 	"Map Compatibility Cell Opener Detected"
@@ -755,10 +803,34 @@
 		"en"		"{darkkhaki} Scanning the map to check for compatibility with the TF2Jail plugin."
 	}
 	
+	"Admin Pardon Freekiller Menu"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Clearing someone as a Freekiller..."
+	}
+	
+	"Admin Mark Freekiller"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} Marked {1} as a Free Killer."
+	}
+	
+	"Admin Give Freeday"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} Given {1} a Freeday."
+	}
+	
 	"Admin Give Freeday Menu"
 	{
 		"#format"	""
 		"en"		"{darkkhaki} Giving someone a Freeday..."
+	}
+	
+	"Admin Remove Freeday"
+	{
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} Removed {1}'s Freeday."
 	}
 	
 	"Admin Remove Freeday Menu"
@@ -862,6 +934,59 @@
 		"#format"	""
 		"en"		"{darkkhaki} You are not allowed to vote again, the warden fire limit has been reached."
 	}
+	
+	"force lr admin lock"
+	{
+		"#format"	"{1:N},{2:N}"
+		"en"		"{darkkhaki} {1} has forced a Last Request for {2}, locking the Last Request command until next round."
+	}
+	
+	"force lr locked"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} You cannot choose a last request at this time, a forced last request is queued."
+	}
+	
+	"fire warden disabled"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} Warden Fire is currently disabled, you cannot vote at this time."
+	}
+	
+	//MENU TITLES
+	
+	"warden commands"
+	{
+		"#format"	""
+		"en"		"Warden Commands:"
+	}
+	
+	"choose a player"
+	{
+		"#format"	""
+		"en"		"Choose a Player:"
+	}
+	
+	"list last requests"
+	{
+		"#format"	""
+		"en"		"List Last Requests:"
+	}
+	
+	"pick last requests"
+	{
+		"#format"	""
+		"en"		"Pick a Last Request:"
+	}
+	
+	"preferences title"
+	{
+		"#format"	""
+		"en"		"TF2Jail Preferences:"
+	}
+	
+	//MENU TITLES END
+	
 	
 	//TEXT NODES (Do not set any color values to them)
 	
