@@ -5,7 +5,7 @@
 
 #define JTAG_COLORED	"{community}[TF2Jail]"
 #define JTAG	"[TF2Jail]"
-#define PLUGIN_VERSION	"5.4.5"
+#define PLUGIN_VERSION	"5.4.6"
 
 //Door Controls
 enum eDoorsMode
@@ -156,7 +156,7 @@ native TF2Jail_ManageCells(eDoorsMode:Status);
 /**
  * Called when the Warden has been assigned/created via the plugin or natives.
  *
- * @param client		Client who received Warden.
+ * @param client		Client Index
  * @noreturn
  **/
 forward TF2Jail_OnWardenCreated(client);
@@ -167,7 +167,7 @@ forward Warden_OnWardenCreated(client);
 /**
  * Called when the Warden has been removed/retired via the plugin or natives.
  *
- * @param client		Client who lost Warden.
+ * @param client		Client Index
  * @noreturn
  **/
 forward TF2Jail_OnWardenRemoved(client);
@@ -182,6 +182,54 @@ forward Warden_OnWardenRemoved(client);
  * @noreturn
  **/
  forward TF2Jail_OnLastRequestExecute(const String:Handler[]);
+ 
+ /**
+ * Called when a client is given Freeday. (post)
+ *
+ * @param client		Client Index
+ * @noreturn
+ **/
+forward TF2Jail_OnFreedayGiven(client);
+
+ /**
+ * Called when a client has been removed from Freeday. (post)
+ *
+ * @param client		Client Index
+ * @noreturn
+ **/
+forward TF2Jail_OnFreedayRemoved(client);
+
+ /**
+ * Called when a client has marked as a Freekiller. (post)
+ *
+ * @param client		Client Index
+ * @noreturn
+ **/
+forward TF2Jail_OnFreekillerGiven(client);
+
+ /**
+ * Called when a client has been cleared from Freekiller. (post)
+ *
+ * @param client		Client Index
+ * @noreturn
+ **/
+forward TF2Jail_OnFreekillerRemoved(client);
+
+ /**
+ * Called when a client has marked as a Rebel. (post)
+ *
+ * @param client		Client Index
+ * @noreturn
+ **/
+forward TF2Jail_OnRebelGiven(client);
+
+ /**
+ * Called when a client has been cleared from Rebel. (post)
+ *
+ * @param client		Client Index
+ * @noreturn
+ **/
+forward TF2Jail_OnRebelRemoved(client);
 
 public SharedPlugin:__pl_tf2jail = 
 {
