@@ -5,7 +5,7 @@
 
 #define JTAG_COLORED	"{community}[TF2Jail]"
 #define JTAG	"[TF2Jail]"
-#define PLUGIN_VERSION	"5.4.6"
+#define PLUGIN_VERSION	"5.4.7"
 
 //Door Controls
 enum eDoorsMode
@@ -65,6 +65,14 @@ native TF2Jail_IsFreeday(client);
  * @noreturn
  **/
 native TF2Jail_GiveFreeday(client);
+
+/**
+ * Removes a client's Freeday.
+ *
+ * @param client		Client to remove Freeday from.
+ * @noreturn
+ **/
+native TF2Jail_RemoveFreeday(client);
 
 /**
  * Returns if the client is a Rebel.
@@ -251,6 +259,7 @@ public __pl_tf2jail_SetNTVOptional()
 	MarkNativeAsOptional("TF2Jail_WardenUnset");
 	MarkNativeAsOptional("TF2Jail_IsFreeday");
 	MarkNativeAsOptional("TF2Jail_GiveFreeday");
+	MarkNativeAsOptional("TF2Jail_RemoveFreeday");
 	MarkNativeAsOptional("TF2Jail_IsRebel");
 	MarkNativeAsOptional("TF2Jail_MarkRebel");
 	MarkNativeAsOptional("TF2Jail_IsFreekiller");
