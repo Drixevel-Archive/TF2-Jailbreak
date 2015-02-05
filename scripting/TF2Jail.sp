@@ -35,11 +35,14 @@
 //TF2Jail Include
 #include <tf2jail>
 
-#undef REQUIRE_EXTENSIONS
+//Required Extensions
 #include <sdkhooks>
-#include <SteamWorks>
-#define REQUIRE_EXTENSIONS
 
+//Non-Required Extensions
+#undef REQUIRE_EXTENSIONS
+#include <SteamWorks>
+
+//Non-Required Plugins
 #undef REQUIRE_PLUGIN
 #include <tf2-weapon-restrictions>
 #include <tf2attributes>
@@ -48,61 +51,53 @@
 #include <basecomm>
 #include <clientprefs>
 #include <voiceannounce_ex>
-#include <updater>
-#define REQUIRE_PLUGIN
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
+#define PLUGIN_VERSION	"5.5.0 dev"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
-#define WARDEN_MODEL	"models/jailbreak/Warden/warden_v2"
 
-#define UPDATE_URL				 "http://www.drixevel.com/files/plugins/tf2-jailbreak/tf2-jailbreak.txt"
-
-new Handle:hConVars[76] = {INVALID_HANDLE, ...};
+new Handle:hConVars[78] = {INVALID_HANDLE, ...};
 new Handle:hTextNodes[4] = {INVALID_HANDLE, ...};
 new Handle:hEngineConVars[3] = {INVALID_HANDLE, ...};
 
 new Handle:sFW_WardenCreated, Handle:sFW_WardenRemoved, Handle:sFW_OnLastRequestExecute, Handle:sFW_OnFreedayGiven, Handle:sFW_OnFreedayRemoved, Handle:sFW_OnFreekillerGiven, Handle:sFW_OnFreekillerRemoved, Handle:sFW_OnRebelGiven, Handle:sFW_OnRebelRemoved;
-new Handle:hRolePref_Blue, Handle:hRolePref_Warden, Handle:hLastRequestUses;
+new Handle:hRolePref_Blue, Handle:hRolePref_Warden, Handle:hLastRequestUses, Handle:hWardenSkinClasses, Handle:hWardenSkins;
 
-//new Handle:hParticle_Wardens[MAXPLAYERS+1];
-new Handle:hParticle_Rebels[MAXPLAYERS+1], Handle:hParticle_Freedays[MAXPLAYERS+1],
-Handle:hParticle_Freekillers[MAXPLAYERS+1];
+new Handle:hParticle_Wardens[MAXPLAYERS + 1], Handle:hParticle_Freedays[MAXPLAYERS + 1], Handle:hParticle_Rebels[MAXPLAYERS + 1], Handle:hParticle_Freekillers[MAXPLAYERS + 1];
 
 new Handle:hTimer_Advertisement, Handle:hTimer_FreekillingData, Handle:hTimer_OpenCells,
-Handle:hTimer_FriendlyFireEnable, Handle:hTimer_WardenLock, Handle:hTimer_RoundTimer, Handle:hTimer_RebelTimers[MAXPLAYERS+1];
+Handle:hTimer_FriendlyFireEnable, Handle:hTimer_WardenLock, Handle:hTimer_RoundTimer, Handle:hTimer_RebelTimers[MAXPLAYERS + 1];
 
 new Handle:hWardenMenu, Handle:hListLRsMenu;
 
 new bool:cv_Enabled , bool:cv_Advertise , bool:cv_Cvars , cv_Logging, bool:cv_Balance, Float:cv_BalanceRatio,
-bool:cv_RedMelee, bool:cv_Warden, bool:cv_WardenAuto, bool:cv_WardenModel, bool:cv_WardenForceSoldier,
+bool:cv_RedMelee, bool:cv_Warden, bool:cv_WardenAuto, bool:cv_WardenModels, bool:cv_WardenForceClass,
 bool:cv_WardenFF, bool:cv_WardenCC, bool:cv_WardenRequest, cv_WardenLimit, bool:cv_DoorControl, Float:cv_DoorOpenTimer,
 cv_RedMute, Float:cv_RedMuteTime, cv_BlueMute, bool:cv_DeadMute, bool:cv_MicCheck, bool:cv_MicCheckType, bool:cv_Rebels,
 Float:cv_RebelsTime, cv_Criticals, cv_Criticalstype, bool:cv_WVotesStatus, Float:cv_WVotesNeeded, cv_WVotesMinPlayers, cv_WVotesPostAction,
 cv_WVotesPassedLimit, bool:cv_Freekillers, Float:cv_FreekillersTime, cv_FreekillersKills, Float:cv_FreekillersWave, cv_FreekillersAction, String:cv_sBanMSG[255],
 String:cv_sBanMSGDC[255], cv_FreekillersBantime, cv_FreekillersBantimeDC, bool:cv_LRSEnabled, bool:cv_LRSAutomatic, bool:cv_LRSLockWarden,
-cv_FreedayLimit, bool:cv_1stDayFreeday, bool:cv_DemoCharge, bool:cv_DoubleJump, bool:cv_Airblast, String:cv_sParticle_Freekiller[100],
-String:cv_sParticle_Rebellion[100], String:cv_sParticle_Freeday[100], cv_WardenVoice, bool:cv_WardenWearables, bool:cv_FreedayTeleports, cv_WardenStabProtection,
+cv_FreedayLimit, bool:cv_1stDayFreeday, bool:cv_DemoCharge, bool:cv_DoubleJump, bool:cv_Airblast, bool:cv_RendererParticles,
+bool:cv_RendererColors, String:cv_sDefaultColor[24], cv_WardenVoice, bool:cv_WardenWearables, bool:cv_FreedayTeleports, cv_WardenStabProtection,
 bool:cv_KillPointServerCommand, bool:cv_RemoveFreedayOnLR, bool:cv_RemoveFreedayOnLastGuard, bool:cv_PrefStatus, cv_WardenTimer, bool:cv_AdminFlags,
 bool:cv_PrefBlue, bool:cv_PrefWarden, bool:cv_ConsoleSpew, bool:cv_PrefForce, bool:cv_FFButton, String:cv_sWeaponConfig[255], cv_KillFeeds, bool:cv_WardenDeathCrits,
-bool:cv_RoundTimerStatus, cv_RoundTime, cv_RoundTime_Freeday, bool:cv_RoundTime_Center, String:cv_sRoundTimer_Execute[64];
+bool:cv_RoundTimerStatus, cv_RoundTime, cv_RoundTime_Freeday, bool:cv_RoundTime_Center, String:cv_sRoundTimer_Execute[64], String:cv_sDefaultWardenModel[64],
+bool:cv_WardenModelMenu;
 
-new bool:e_Sourcebans = false;
-new bool:e_Voiceannounce_ex = false;
-new bool:e_SteamWorks = false;
-new bool:e_TF2Attributes = false;
-new bool:e_TF2WeaponRestrictions = false;
+//External Extensions/Plugin Booleans
+new bool:eSourcebans, bool:eSourceComms, bool:eSteamWorks, bool:eTF2Attributes, bool:eVoiceannounce_ex, bool:eTF2WeaponRestrictions;
 
 new bool:bIsMapCompatible = false, bool:bCellsOpened = false, bool:b1stRoundFreeday = false, bool:bVoidFreeKills = false,
 bool:bIsLRInUse = false, bool:bIsWardenLocked = false, bool:bOneGuardLeft = false, bool:bActiveRound = false,
 bool:bFreedayTeleportSet = false, bool:bLRConfigActive = true, bool:bLockWardenLR = false, bool:bDisableCriticles = false,
 bool:bLateLoad = false, bool:bAdminLockWarden = false, bool:bAdminLockedLR = false, bool:bDifferentWepRestrict = false;
 
-new bool:bBlockedDoubleJump[MAXPLAYERS+1], bool:bDisabledAirblast[MAXPLAYERS+1], bool:bIsMuted[MAXPLAYERS+1],
+new bool:bBlockedDoubleJump[MAXPLAYERS + 1], bool:bDisabledAirblast[MAXPLAYERS + 1], bool:bIsMuted[MAXPLAYERS + 1],
 bool:bIsRebel[MAXPLAYERS + 1], bool:bIsQueuedFreeday[MAXPLAYERS + 1], bool:bIsFreeday[MAXPLAYERS + 1], bool:bIsFreekiller[MAXPLAYERS + 1],
-bool:bHasTalked[MAXPLAYERS+1], bool:bLockedFromWarden[MAXPLAYERS+1], bool:bRolePreference_Blue[MAXPLAYERS+1], bool:bRolePreference_Warden[MAXPLAYERS+1],
-bool:bHasModel[MAXPLAYERS+1], bool:bVoted[MAXPLAYERS+1] = {false, ...};
+bool:bHasTalked[MAXPLAYERS + 1], bool:bLockedFromWarden[MAXPLAYERS + 1], bool:bRolePreference_Blue[MAXPLAYERS + 1], bool:bRolePreference_Warden[MAXPLAYERS + 1],
+bool:bHasModel[MAXPLAYERS + 1], bool:bVoted[MAXPLAYERS + 1] = {false, ...};
 
 new iWarden = -1, iCustom = -1, iLRPending = -1,
 iLRCurrent = -1, iVoters = 0, iVotes = 0,
@@ -114,18 +109,27 @@ new iFirstKill[MAXPLAYERS + 1], iKillcount[MAXPLAYERS + 1], iHasBeenWarden[MAXPL
 new String:sCellNames[32], String:sCellOpener[32], String:sFFButton[32], String:sDoorsList[][] = {"func_door", "func_door_rotating", "func_movelinear"},
 String:sLRConfig[PLATFORM_MAX_PATH], String:sCustomLR[32];
 
+new a_iDefaultColors[4];
+
+new a_iWardenColors[4];
+new String:sWardenParticle[64];
+
+new a_iFreedaysColors[4];
+new String:sFreedaysParticle[64];
+
+new a_iRebellersColors[4];
+new String:sRebellersParticle[64];
+
+new a_iFreekillersColors[4];
+new String:sFreekillersParticle[64];
+
+new Handle:hWardenModelsMenu;
+
 enum eWardenMenu
 {
 	Open = 0,
 	FriendlyFire,
 	Collision
-};
-
-enum eComms
-{
-	None = 0,
-	Basecomms,
-	Sourcecomms
 };
 
 enum eAttachedParticles
@@ -151,7 +155,6 @@ enum eTextNodeParams
 };
 
 new eWardenMenu:EnumWardenMenu;
-new eComms:EnumCommsList;
 new EnumTNPS[4][eTextNodeParams];
 
 /* Plugin Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -166,14 +169,22 @@ public Plugin:myinfo =
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:sError[], err_max)
 {
+	//TF2 only... wonder why.
 	if (GetEngineVersion() != Engine_TF2)
 	{
 		Format(sError, err_max, "This plug-in only works for Team Fortress 2.");
 		return APLRes_Failure;
 	}
-
+	
+	//Mark these as optional just in case either SourceBans itself or Sourcecomms along with SourceBans are running.
 	MarkNativeAsOptional("SBBanPlayer");
-
+	MarkNativeAsOptional("SourceComms_GetClientMuteType");
+	
+	//Mark these as optional anyways just in case the plugins aren't running.
+	MarkNativeAsOptional("BanClient");
+	MarkNativeAsOptional("BaseComm_IsClientMuted");
+	
+	//Natives
 	CreateNative("TF2Jail_WardenActive", Native_ExistWarden);
 	CreateNative("TF2Jail_IsWarden", Native_IsWarden);
 	CreateNative("TF2Jail_WardenSet", Native_SetWarden);
@@ -192,7 +203,8 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:sError[], err_max)
 	CreateNative("TF2Jail_Log", Native_Logging);
 	CreateNative("TF2Jail_IsLRRound", Native_IsLRRound);
 	CreateNative("TF2Jail_ManageCells", Native_ManageCells);
-
+	
+	//Forwards
 	sFW_WardenCreated = CreateGlobalForward("TF2Jail_OnWardenCreated", ET_Event, Param_Cell);
 	sFW_WardenRemoved = CreateGlobalForward("TF2Jail_OnWardenRemoved", ET_Event, Param_Cell);
 	sFW_OnLastRequestExecute = CreateGlobalForward("TF2Jail_OnLastRequestExecute", ET_Event, Param_String);
@@ -202,10 +214,13 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:sError[], err_max)
 	sFW_OnFreekillerRemoved = CreateGlobalForward("TF2Jail_OnFreekillerRemoved", ET_Event, Param_Cell);
 	sFW_OnRebelGiven = CreateGlobalForward("TF2Jail_OnRebelGiven", ET_Event, Param_Cell);
 	sFW_OnRebelRemoved = CreateGlobalForward("TF2Jail_OnRebelRemoved", ET_Event, Param_Cell);
-
+	
+	//Register the library
 	RegPluginLibrary("tf2jail");
-
+	
+	//Check if the plugin is late-load and set it correctly.
 	bLateLoad = late;
+	
 	return APLRes_Success;
 }
 
@@ -227,8 +242,8 @@ public OnPluginStart()
 	hConVars[7] = AutoExecConfig_CreateConVar("sm_tf2jail_melee", "1", "Strip Red Team of weapons: (1 = strip weapons, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	hConVars[8] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_enable", "1", "Allow Wardens: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	hConVars[9] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_auto", "1", "Automatically assign a random Wardens on round start: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[10] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_model", "1", "Does Wardens have a model: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[11] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_forcesoldier", "1", "Force Wardens to be Soldier class: (1 = yes, 0 = no)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	hConVars[10] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_models", "1", "Enable custom models for Warden: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	hConVars[11] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_forceclass", "1", "Force Wardens to be the class assigned to the models: (1 = yes, 0 = no)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	hConVars[12] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_friendlyfire", "1", "Allow Wardens to manage friendly fire: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	hConVars[13] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_collision", "1", "Allow Wardens to manage collision: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	hConVars[14] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_request", "0", "Require admin acceptance for cvar changes: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
@@ -267,9 +282,9 @@ public OnPluginStart()
 	hConVars[47] = AutoExecConfig_CreateConVar("sm_tf2jail_democharge", "1", "Allow demomen to charge: (1 = enable, 0 = disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	hConVars[48] = AutoExecConfig_CreateConVar("sm_tf2jail_doublejump", "1", "Deny scouts to double jump: (1 = enable, 0 = disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	hConVars[49] = AutoExecConfig_CreateConVar("sm_tf2jail_airblast", "1", "Deny pyros to airblast: (1 = enable, 0 = disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[50] = AutoExecConfig_CreateConVar("sm_tf2jail_particle_freekiller", "ghost_firepit", "Name of the Particle for Freekillers (0 = Disabled)", FCVAR_PLUGIN);
-	hConVars[51] = AutoExecConfig_CreateConVar("sm_tf2jail_particle_rebellion", "medic_radiusheal_red_volume", "Name of the Particle for Rebellion (0 = Disabled)", FCVAR_PLUGIN);
-	hConVars[52] = AutoExecConfig_CreateConVar("sm_tf2jail_particle_freeday", "eyeboss_team_sparks_red", "Name of the Particle for Freedays (0 = Disabled)", FCVAR_PLUGIN);
+	hConVars[50] = AutoExecConfig_CreateConVar("sm_tf2jail_renderer_particles", "1", "Status for particles to render from config: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	hConVars[51] = AutoExecConfig_CreateConVar("sm_tf2jail_renderer_colors", "1", "Status for colors to render from config: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	hConVars[52] = AutoExecConfig_CreateConVar("sm_tf2jail_renderer_default_color", "255, 255, 255, 255", "Default color to set clients to if one isn't present: (Default: 255, 255, 255, 255)", FCVAR_PLUGIN);
 	hConVars[53] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_voice", "1", "Voice management for Wardens: (0 = disabled, 1 = unmute, 2 = warning)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
 	hConVars[54] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_wearables", "1", "Strip Wardens wearables: (1 = enable, 0 = disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	hConVars[55] = AutoExecConfig_CreateConVar("sm_tf2jail_freeday_teleport", "1", "Status of teleporting: (1 = enable, 0 = disable) (Disables all functionality regardless of configs)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
@@ -289,10 +304,12 @@ public OnPluginStart()
 	hConVars[69] = AutoExecConfig_CreateConVar("sm_tf2jail_disable_killfeeds", "0", "Disable kill feeds status: (0 = None, 1 = Red, 2 = Blue, 3 = All)", FCVAR_PLUGIN, true, 0.0, true, 3.0);
 	hConVars[70] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_death_crits", "1", "Disable critical hits on Warden death: (0 = Disabled, 1 = Enabled)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	hConVars[71] = AutoExecConfig_CreateConVar("sm_tf2jail_roundtimer_status", "1", "Status of the round timer: (0 = Disabled, 1 = Enabled)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[72] = AutoExecConfig_CreateConVar("sm_tf2jail_roundtimer_time", "600", "Amount of time normally on the timer: (30.0 = minimum)", FCVAR_PLUGIN, true, 30.0);
-	hConVars[73] = AutoExecConfig_CreateConVar("sm_tf2jail_roundtimer_time_freeday", "300", "Amount of time on 1st day freeday: (30.0 = minimum)", FCVAR_PLUGIN, true, 30.0);
+	hConVars[72] = AutoExecConfig_CreateConVar("sm_tf2jail_roundtimer_time", "600", "Amount of time normally on the timer: (0.0 = disabled)", FCVAR_PLUGIN, true, 0.0);
+	hConVars[73] = AutoExecConfig_CreateConVar("sm_tf2jail_roundtimer_time_freeday", "300", "Amount of time on 1st day freeday: (0.0 = disabled)", FCVAR_PLUGIN, true, 0.0);
 	hConVars[74] = AutoExecConfig_CreateConVar("sm_tf2jail_roundtimer_center", "0", "Show center text for round timer: (0 = Disabled, 1 = Enabled)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	hConVars[75] = AutoExecConfig_CreateConVar("sm_tf2jail_roundtimer_execute", "sm_slay @red", "Commands to execute to server on timer end: (Minimum 64 characters)", FCVAR_PLUGIN);
+	hConVars[76] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_defaultmodel", "Warden V2", "Default model by name to set Wardens to: (Minimum 64 characters)", FCVAR_PLUGIN);
+	hConVars[77] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_models_menu", "1", "Status for the Warden models menu: (1 = Enabled, 0 = Disabled)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
 	AutoExecConfig_ExecuteFile();
 
@@ -335,6 +352,9 @@ public OnPluginStart()
 	RegConsoleCmd("sm_lastrequestlist", Command_ListLastRequests, "Display a list of last requests available.");
 	RegConsoleCmd("sm_cw", Command_CurrentWarden, "Display the name of the current Warden.");
 	RegConsoleCmd("sm_currentwarden", Command_CurrentWarden, "Display the name of the current Warden.");
+	RegConsoleCmd("sm_wm", Command_WardenModel, "Set your model while being Warden.");
+	RegConsoleCmd("sm_wmodel", Command_WardenModel, "Set your model while being Warden.");
+	RegConsoleCmd("sm_wardenmodel", Command_WardenModel, "Set your model while being Warden.");
 
 	RegAdminCmd("sm_rw", AdminRemoveWarden, ADMFLAG_GENERIC, "Remove the currently active Warden.");
 	RegAdminCmd("sm_removewarden", AdminRemoveWarden, ADMFLAG_GENERIC, "Remove the currently active Warden.");
@@ -384,6 +404,8 @@ public OnPluginStart()
 	BuildPath(Path_SM, sLRConfig, sizeof(sLRConfig), "configs/tf2jail/lastrequests.cfg");
 
 	hLastRequestUses = CreateArray();
+	hWardenSkinClasses = CreateTrie();
+	hWardenSkins = CreateTrie();
 
 	SetCookieMenuItem(TF2Jail_Preferences, 0, "TF2Jail Preferences");
 
@@ -392,62 +414,37 @@ public OnPluginStart()
 
 public OnAllPluginsLoaded()
 {
-	e_Sourcebans = LibraryExists("SourceBans");
-	e_SteamWorks = LibraryExists("SteamWorks");
-	e_TF2Attributes = LibraryExists("tf2attributes");
-
-	if (LibraryExists("sourcecomms"))
-	{
-		EnumCommsList = Sourcecomms;
-	}
-	else if (LibraryExists("basecomm"))
-	{
-		EnumCommsList = Basecomms;
-	}
-	else EnumCommsList = None;
-
-	e_Voiceannounce_ex = LibraryExists("voiceannounce_ex");
-	if (LibraryExists("updater")) Updater_AddPlugin(UPDATE_URL);
-	e_TF2WeaponRestrictions = LibraryExists("tf2weaponrestrictions");
+	eSourcebans = LibraryExists("SourceBans");
+	eSourceComms = LibraryExists("sourcecomms");
+	eSteamWorks = LibraryExists("SteamWorks");
+	eTF2Attributes = LibraryExists("tf2attributes");
+	eVoiceannounce_ex = LibraryExists("voiceannounce_ex");
+	eTF2WeaponRestrictions = LibraryExists("tf2weaponrestrictions");
 }
 
 public OnLibraryAdded(const String:sName[])
 {
-	e_Sourcebans = StrEqual(sName, "SourceBans", false);
-	e_SteamWorks = StrEqual(sName, "SteamWorks", false);
-	e_TF2Attributes = StrEqual(sName, "tf2attributes", false);
-
-	if (StrEqual(sName, "sourcecomms"))
-	{
-		EnumCommsList = Sourcecomms;
-	}
-	else if (StrEqual(sName, "basecomm"))
-	{
-		EnumCommsList = Basecomms;
-	}
-
-	e_Voiceannounce_ex = StrEqual(sName, "voiceannounce_ex", false);
-	e_TF2WeaponRestrictions = StrEqual(sName, "tf2weaponrestrictions", false);
+	eSourcebans = StrEqual(sName, "SourceBans", false);
+	eSourceComms = StrEqual(sName, "sourcecomms");
+	eSteamWorks = StrEqual(sName, "SteamWorks", false);
+	eTF2Attributes = StrEqual(sName, "tf2attributes", false);
+	eVoiceannounce_ex = StrEqual(sName, "voiceannounce_ex", false);
+	eTF2WeaponRestrictions = StrEqual(sName, "tf2weaponrestrictions", false);
 }
 
 public OnLibraryRemoved(const String:sName[])
 {
-	e_Sourcebans = StrEqual(sName, "SourceBans", false);
-	e_SteamWorks = StrEqual(sName, "SteamWorks", false);
-	e_TF2Attributes = StrEqual(sName, "tf2attributes", false);
-
-	if (StrEqual(sName, "sourcecomms") || StrEqual(sName, "basecomm"))
-	{
-		EnumCommsList = None;
-	}
-
-	e_Voiceannounce_ex = StrEqual(sName, "voiceannounce_ex", false);
-	e_TF2WeaponRestrictions = StrEqual(sName, "tf2weaponrestrictions", false);
+	eSourcebans = StrEqual(sName, "SourceBans", false);
+	eSourceComms = StrEqual(sName, "sourcecomms");
+	eSteamWorks = StrEqual(sName, "SteamWorks", false);
+	eTF2Attributes = StrEqual(sName, "tf2attributes", false);
+	eVoiceannounce_ex = StrEqual(sName, "voiceannounce_ex", false);
+	eTF2WeaponRestrictions = StrEqual(sName, "tf2weaponrestrictions", false);
 }
 
 public OnPluginPauseChange(bool:pause)
 {
-	if (e_SteamWorks)
+	if (eSteamWorks)
 	{
 		switch (pause)
 		{
@@ -481,8 +478,8 @@ public OnConfigsExecuted()
 	cv_RedMelee = GetConVarBool(hConVars[7]);
 	cv_Warden = GetConVarBool(hConVars[8]);
 	cv_WardenAuto = GetConVarBool(hConVars[9]);
-	cv_WardenModel = GetConVarBool(hConVars[10]);
-	cv_WardenForceSoldier = GetConVarBool(hConVars[11]);
+	cv_WardenModels = GetConVarBool(hConVars[10]);
+	cv_WardenForceClass = GetConVarBool(hConVars[11]);
 	cv_WardenFF = GetConVarBool(hConVars[12]);
 	cv_WardenCC = GetConVarBool(hConVars[13]);
 	cv_WardenRequest = GetConVarBool(hConVars[14]);
@@ -521,9 +518,9 @@ public OnConfigsExecuted()
 	cv_DemoCharge = GetConVarBool(hConVars[47]);
 	cv_DoubleJump = GetConVarBool(hConVars[48]);
 	cv_Airblast = GetConVarBool(hConVars[49]);
-	GetConVarString(hConVars[50], cv_sParticle_Freekiller, sizeof(cv_sParticle_Freekiller));
-	GetConVarString(hConVars[51], cv_sParticle_Rebellion, sizeof(cv_sParticle_Rebellion));
-	GetConVarString(hConVars[52], cv_sParticle_Freeday, sizeof(cv_sParticle_Freeday));
+	cv_RendererParticles = GetConVarBool(hConVars[50]);
+	cv_RendererColors = GetConVarBool(hConVars[51]);
+	GetConVarString(hConVars[52], cv_sDefaultColor, sizeof(cv_sDefaultColor));
 	cv_WardenVoice = GetConVarInt(hConVars[53]);
 	cv_WardenWearables = GetConVarBool(hConVars[54]);
 	cv_FreedayTeleports = GetConVarBool(hConVars[55]);
@@ -547,6 +544,8 @@ public OnConfigsExecuted()
 	cv_RoundTime_Freeday = GetConVarInt(hConVars[73]);
 	cv_RoundTime_Center = GetConVarBool(hConVars[74]);
 	GetConVarString(hConVars[75], cv_sRoundTimer_Execute, sizeof(cv_sRoundTimer_Execute));
+	GetConVarString(hConVars[76], cv_sDefaultWardenModel, sizeof(cv_sDefaultWardenModel));
+	cv_WardenModelMenu = GetConVarBool(hConVars[77]);
 
 	if (!cv_Enabled) return;
 
@@ -581,13 +580,21 @@ public OnConfigsExecuted()
 	ResetVotes();
 	ParseConfigs();
 	BuildMenus();
+	
+	new String:sStringArray[4][8];
+	ExplodeString(cv_sDefaultColor, ", ", sStringArray, 4, 8);
+	
+	for (new i = 0; i < 4; i++)
+	{
+		a_iDefaultColors[i] = StringToInt(sStringArray[i]);
+	}
 
 	Jail_Log("%s Jailbreak has successfully loaded.", JTAG);
 }
 
 public SteamWorks_SteamServersConnected()
 {
-	if (e_SteamWorks)
+	if (eSteamWorks)
 	{
 		new String:sDescription[64];
 		Format(sDescription, sizeof(sDescription), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
@@ -614,7 +621,7 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 			{
 				CPrintToChatAll("%s %t", JTAG_COLORED, "plugin enabled");
 
-				if (e_SteamWorks)
+				if (eSteamWorks)
 				{
 					new String:sDescription[64];
 					Format(sDescription, sizeof(sDescription), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
@@ -625,11 +632,9 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 				{
 					if (Client_IsIngame(i))
 					{
-						if (cv_WardenModel && IsWarden(i))
+						if (cv_WardenModels && IsWarden(i))
 						{
-							decl String:sWardenModel[PLATFORM_MAX_PATH];
-							Format(sWardenModel, sizeof(sWardenModel), "%s.mdl", WARDEN_MODEL);
-							SetModel(i, sWardenModel);
+							SetWardenModel(i, cv_sDefaultWardenModel);
 						}
 					}
 				}
@@ -638,7 +643,7 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 			{
 				CPrintToChatAll("%s %t", JTAG_COLORED, "plugin disabled");
 
-				if (e_SteamWorks)
+				if (eSteamWorks)
 				{
 					SteamWorks_SetGameDescription("Team Fortress");
 				}
@@ -647,7 +652,7 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 				{
 					if (Client_IsIngame(i))
 					{
-						if (cv_WardenModel && IsWarden(i))
+						if (cv_WardenModels && IsWarden(i))
 						{
 							RemoveModel(i);
 						}
@@ -729,16 +734,14 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 	}
 	else if (cvar == hConVars[10])
 	{
-		cv_WardenModel = bool:iNewValue;
+		cv_WardenModels = bool:iNewValue;
 		for (new i = 1; i <= MaxClients; i++)
 		{
 			if (Client_IsIngame(i) && IsWarden(i))
 			{
-				if (cv_WardenModel)
+				if (cv_WardenModels)
 				{
-					decl String:sWardenModel[PLATFORM_MAX_PATH];
-					Format(sWardenModel, sizeof(sWardenModel), "%s.mdl", WARDEN_MODEL);
-					SetModel(i, sWardenModel);
+					SetWardenModel(i, cv_sDefaultWardenModel);
 				}
 				else RemoveModel(i);
 			}
@@ -746,7 +749,7 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 	}
 	else if (cvar == hConVars[11])
 	{
-		cv_WardenForceSoldier = bool:iNewValue;
+		cv_WardenForceClass = bool:iNewValue;
 	}
 	else if (cvar == hConVars[12])
 	{
@@ -944,15 +947,15 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 	}
 	else if (cvar == hConVars[50])
 	{
-		GetConVarString(hConVars[50], cv_sParticle_Freekiller, sizeof(cv_sParticle_Freekiller));
+		cv_RendererParticles = bool:iNewValue;
 	}
 	else if (cvar == hConVars[51])
 	{
-		GetConVarString(hConVars[51], cv_sParticle_Rebellion, sizeof(cv_sParticle_Rebellion));
+		cv_RendererColors = bool:iNewValue;
 	}
 	else if (cvar == hConVars[52])
 	{
-		GetConVarString(hConVars[52], cv_sParticle_Freeday, sizeof(cv_sParticle_Freeday));
+		GetConVarString(hConVars[52], cv_sDefaultColor, sizeof(cv_sDefaultColor));
 	}
 	else if (cvar == hConVars[53])
 	{
@@ -1046,12 +1049,15 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 	{
 		GetConVarString(hConVars[75], cv_sRoundTimer_Execute, sizeof(cv_sRoundTimer_Execute));
 	}
+	else if (cvar == hConVars[76])
+	{
+		GetConVarString(hConVars[76], cv_sDefaultWardenModel, sizeof(cv_sDefaultWardenModel));
+	}
+	else if (cvar == hConVars[77])
+	{
+		cv_WardenModelMenu = bool:iNewValue;
+	}
 }
-
-public Action:Updater_OnPluginChecking() Jail_Log("%s Checking if TF2Jail requires an update...", JTAG);
-public Action:Updater_OnPluginDownloading() Jail_Log("%s New version has been found, downloading new files...", JTAG);
-public Updater_OnPluginUpdated() Jail_Log("%s Download complete, updating files...", JTAG);
-public Updater_OnPluginUpdating() Jail_Log("%s Updates complete! You may now reload the plugin or wait for map change/server restart.", JTAG);
 
 public TF2WeaponRestrictions_RestrictionChanged(const String:sRestriction[])
 {
@@ -1074,43 +1080,89 @@ public OnMapStart()
 	{
 		iHasBeenWarden[i] = 0;
 	}
-
-	if (cv_WardenModel)
+	
+	if (cv_WardenModels)
 	{
-		decl String:sModelName[PLATFORM_MAX_PATH];
-		Format(sModelName, sizeof(sModelName), "%s.mdl", WARDEN_MODEL);
-		if (PrecacheModel(sModelName, true))
+		ClearTrie(hWardenSkinClasses);
+		ClearTrie(hWardenSkins);
+		
+		if (hWardenModelsMenu != INVALID_HANDLE)
 		{
-			decl i;
-
-			new String:sModels[][] = { ".mdl", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd", ".phy" };
-			for (i = 0; i < sizeof(sModels); i++)
-			{
-				Format(sModelName, sizeof(sModelName), "%s%s", WARDEN_MODEL, sModels[i]);
-				if (FileExists(sModelName, true)) AddFileToDownloadsTable(sModelName);
-			}
-
-			new String:sMaterials[][] = { ".vtf", ".vmt" };
-			for (i = 0; i < sizeof(sMaterials); i++)
-			{
-				Format(sModelName, sizeof(sModelName), "materials/models/jailbreak/warden/NineteenEleven%s", sMaterials[i]);
-				if (FileExists(sModelName, true)) AddFileToDownloadsTable(sModelName);
-
-				Format(sModelName, sizeof(sModelName), "materials/models/jailbreak/warden/warden_body%s", sMaterials[i]);
-				if (FileExists(sModelName, true)) AddFileToDownloadsTable(sModelName);
-
-				Format(sModelName, sizeof(sModelName), "materials/models/jailbreak/warden/warden_hat%s", sMaterials[i]);
-				if (FileExists(sModelName, true)) AddFileToDownloadsTable(sModelName);
-
-				Format(sModelName, sizeof(sModelName), "materials/models/jailbreak/warden/warden_head%s", sMaterials[i]);
-				if (FileExists(sModelName, true)) AddFileToDownloadsTable(sModelName);
-			}
+			RemoveAllMenuItems(hWardenModelsMenu);
 		}
-		else
+		
+		new Handle:hConfig = CreateKeyValues("TF2Jail_WardenModels");
+		
+		new String:sWardenModelsConfig[PLATFORM_MAX_PATH];
+		BuildPath(Path_SM, sWardenModelsConfig, sizeof(sWardenModelsConfig), "configs/tf2jail/wardenmodels.cfg");
+		FileToKeyValues(hConfig, sWardenModelsConfig);
+		
+		if (KvGotoFirstSubKey(hConfig, false))
 		{
-			Jail_Log("Error precaching model, please check configurations and file integrity.");
-			cv_WardenModel = false;
+			do {
+				new String:sName[64];
+				KvGetSectionName(hConfig, sName, sizeof(sName));
+				
+				new String:sModel[64];
+				KvGetString(hConfig, "model", sModel, sizeof(sModel));
+				
+				new String:sClass[64];
+				KvGetString(hConfig, "class", sClass, sizeof(sClass), "none");
+				
+				if (strlen(sModel) == 0)
+				{
+					Jail_Log("ERROR: Model for '%s' not set, please add it. Skipping this model.", sName);
+					continue;
+				}
+				
+				if (!KvJumpToKey(hConfig, "files"))
+				{
+					Jail_Log("ERROR: No files set to download for Warden model '%s'. Skipping this model.", sName);
+					continue;
+				}
+				
+				if (!KvGotoFirstSubKey(hConfig, false))
+				{
+					Jail_Log("ERROR: Files subsection is empty for Warden model '%s'. Skipping this model.", sName);
+					continue;
+				}
+								
+				switch (FileExists(sModel, true))
+				{
+					case true:
+						{
+							AddFileToDownloadsTable(sModel);
+							SetTrieString(hWardenSkins, sName, sModel, false);
+							if (hWardenModelsMenu != INVALID_HANDLE)
+							{
+								AddMenuItem(hWardenModelsMenu, sName, sName);
+							}
+						}
+					case false:
+						{
+							Jail_Log("ERROR: Main model file is missing for Warden Model '%s'. Skipping this model.", sName);
+							continue;
+						}
+				}
+				
+				SetTrieString(hWardenSkinClasses, sName, sClass, false);
+				
+				do {
+					new String:sDownload[PLATFORM_MAX_PATH];
+					KvGetString(hConfig, NULL_STRING, sDownload, sizeof(sDownload));
+					
+					switch (FileExists(sDownload, true))
+					{
+						case true: AddFileToDownloadsTable(sDownload);
+						case false: Jail_Log("WARNING: File '%s' is missing for Warden Model '%s'.", sDownload, sName);
+					}
+				} while (KvGotoNextKey(hConfig, false));
+				KvGoBack(hConfig);
+				
+			} while (KvGotoNextKey(hConfig, false));
 		}
+		
+		CloseHandle(hConfig);
 	}
 
 	if (cv_Freekillers) PrecacheSound("ui/system_message_alert.wav", true);
@@ -1185,7 +1237,7 @@ public OnClientCookiesCached(client)
 
 	if (Client_IsIngame(client))
 	{
-		decl String:sValue[8];
+		new String:sValue[8];
 
 		if (cv_PrefStatus)
 		{
@@ -1270,7 +1322,7 @@ public Action:OnTakeDamage(client, &attacker, &inflictor, &Float:damage, &damage
 	{
 		if (IsWarden(client))
 		{
-			decl String:sClassName[64];
+			new String:sClassName[64];
 			GetEntityClassname(GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon"), sClassName, sizeof(sClassName));
 			if (StrEqual(sClassName, "tf_weapon_knife") && (damagetype & DMG_CRIT == DMG_CRIT))
 			{
@@ -1318,8 +1370,6 @@ public OnClientDisconnect(client)
 	bIsQueuedFreeday[client] = false;
 	iKillcount[client] = 0;
 	iFirstKill[client] = 0;
-
-	SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 }
 
 public OnPlayerSpawn(Handle:event, const String:sName[], bool:dontBroadcast)
@@ -1379,14 +1429,13 @@ public OnPlayerSpawn(Handle:event, const String:sName[], bool:dontBroadcast)
 			}
 		case TFTeam_Blue:
 			{
-				if (e_Voiceannounce_ex && cv_MicCheck)
+				if (eVoiceannounce_ex && cv_MicCheck)
 				{
 					if (cv_MicCheckType)
 					{
 						if (!bHasTalked[client] && !IsVIP(client))
 						{
 							ChangeClientTeam(client, _:TFTeam_Red);
-							TF2_RespawnPlayer(client);
 							CPrintToChat(client, "%s %t", JTAG_COLORED, "microphone unverified");
 						}
 					}
@@ -1571,7 +1620,7 @@ public OnRoundStart(Handle:event, const String:sName[], bool:dontBroadcast)
 		DoorHandler(OPEN);
 		PrintCenterTextAll("1st round freeday");
 
-		decl String:s1stDay[255];
+		new String:s1stDay[255];
 		Format(s1stDay, sizeof(s1stDay), "%t", "1st day freeday node");
 		SetTextNode(hTextNodes[0], s1stDay, EnumTNPS[0][fCoord_X], EnumTNPS[0][fCoord_Y], EnumTNPS[0][fHoldTime], EnumTNPS[0][iRed], EnumTNPS[0][iGreen], EnumTNPS[0][iBlue], EnumTNPS[0][iAlpha], EnumTNPS[0][iEffect], EnumTNPS[0][fFXTime], EnumTNPS[0][fFadeIn], EnumTNPS[0][fFadeOut]);
 		Jail_Log("1st day freeday has been activated.");
@@ -1617,7 +1666,7 @@ public OnRoundStart(Handle:event, const String:sName[], bool:dontBroadcast)
 		}
 	}
 
-	if (e_TF2WeaponRestrictions && bDifferentWepRestrict)
+	if (eTF2WeaponRestrictions && bDifferentWepRestrict)
 	{
 		WeaponRestrictions_SetConfig(cv_sWeaponConfig);
 		bDifferentWepRestrict = false;
@@ -1645,10 +1694,14 @@ public OnArenaRoundStart(Handle:event, const String:sName[], bool:dontBroadcast)
 
 	ClearTimer(hTimer_RoundTimer);
 
-	if (cv_RoundTimerStatus && cv_RoundTime > 0)
+	if (cv_RoundTimerStatus)
 	{
 		iRoundTime = b1stRoundFreeday ? cv_RoundTime_Freeday : cv_RoundTime;
-		hTimer_RoundTimer = CreateTimer(1.0, Timer_Round, INVALID_HANDLE, TIMER_REPEAT);
+		
+		if (iRoundTime != 0)
+		{
+			hTimer_RoundTimer = CreateTimer(1.0, Timer_Round, INVALID_HANDLE, TIMER_REPEAT);
+		}
 	}
 
 	bIsWardenLocked = false;
@@ -1741,14 +1794,14 @@ public OnArenaRoundStart(Handle:event, const String:sName[], bool:dontBroadcast)
 
 			new bool:IsFreedayRound = false;
 
-			decl String:sHandler[PLATFORM_MAX_PATH];
+			new String:sHandler[PLATFORM_MAX_PATH];
 			KvGetString(hConfig, "Handler", sHandler, sizeof(sHandler));
 
 			Call_StartForward(sFW_OnLastRequestExecute);
 			Call_PushString(sHandler);
 			Call_Finish();
 
-			decl String:sExecute[255];
+			new String:sExecute[255];
 			if (KvGetString(hConfig, "Execute_Cmd", sExecute, sizeof(sExecute)))
 			{
 				if (strlen(sExecute) != 0)
@@ -1759,7 +1812,7 @@ public OnArenaRoundStart(Handle:event, const String:sName[], bool:dontBroadcast)
 				}
 			}
 
-			if (e_TF2WeaponRestrictions)
+			if (eTF2WeaponRestrictions)
 			{
 				new String:sRestrictions[255];
 
@@ -1853,7 +1906,7 @@ public OnArenaRoundStart(Handle:event, const String:sName[], bool:dontBroadcast)
 				KvGoBack(hConfig);
 			}
 
-			decl String:sActive[255];
+			new String:sActive[255];
 			if (KvGetString(hConfig, "Activated", sActive, sizeof(sActive)))
 			{
 				if (IsFreedayRound)
@@ -1862,7 +1915,7 @@ public OnArenaRoundStart(Handle:event, const String:sName[], bool:dontBroadcast)
 					{
 						if (bIsFreeday[i])
 						{
-							decl String:index_name[MAX_NAME_LENGTH];
+							new String:index_name[MAX_NAME_LENGTH];
 							GetClientName(i, index_name, sizeof(index_name));
 							ReplaceString(sActive, sizeof(sActive), "{NAME}", index_name);
 							CPrintToChatAll("%s %s", JTAG_COLORED, sActive);
@@ -2031,7 +2084,7 @@ public OnClientSayCommand_Post(client, const String:sCommand[], const String:sAr
 
 public bool:OnClientSpeakingEx(client)
 {
-	if (cv_Enabled && e_Voiceannounce_ex && cv_MicCheck && !bHasTalked[client])
+	if (cv_Enabled && eVoiceannounce_ex && cv_MicCheck && !bHasTalked[client])
 	{
 		bHasTalked[client] = true;
 		CPrintToChat(client, "%s %t", JTAG_COLORED, "microphone verified");
@@ -2427,7 +2480,7 @@ public Action:Command_GiveLastRequest(client, args)
 	new Handle:hMenu = CreateMenu(MenuHandle_ForceLR);
 	SetMenuTitle(hMenu,"%s", "choose a player");
 
-	decl String:sUserID[12], String:sDisplay[MAX_NAME_LENGTH+12];
+	new String:sUserID[12], String:sDisplay[MAX_NAME_LENGTH+12];
 	for (new i = 1; i <= MaxClients; i++)
 	{
 		if (Client_IsIngame(i) && IsPlayerAlive(i) && GetClientTeam(i) == _:TFTeam_Red)
@@ -2513,7 +2566,7 @@ public Action:Command_CurrentLastRequest(client, args)
 
 		if (KvJumpToKey(hConfig, sLastRequestID))
 		{
-			decl String:sLRID[64], String:sLRName[255];
+			new String:sLRID[64], String:sLRName[255];
 			KvGetSectionName(hConfig, sLRID, sizeof(sLRID));
 			KvGetString(hConfig, "Name", sLRName, sizeof(sLRName));
 			CReplyToCommand(client, "%s %t", JTAG_COLORED, "current last requests", sLRName, sLRID);
@@ -2553,7 +2606,7 @@ public Action:Command_ListLastRequests(client, args)
 public Action:Command_CurrentWarden(client, args)
 {
 	if (!cv_Enabled) return Plugin_Handled;
-
+	
 	if (!cv_Warden)
 	{
 		CReplyToCommand(client, "%s %t", JTAG_COLORED, "warden disabled");
@@ -2561,6 +2614,31 @@ public Action:Command_CurrentWarden(client, args)
 	}
 
 	CReplyToCommand(client, "%s %t", JTAG_COLORED, WardenExists() ? "warden current" : "no warden current", iWarden);
+
+	return Plugin_Handled;
+}
+
+new String:sWardenModel[MAXPLAYERS + 1][64];
+
+public Action:Command_WardenModel(client, args)
+{
+	if (!cv_Enabled) return Plugin_Handled;
+	
+	if (!Client_IsIngame(client))
+	{
+		CReplyToCommand(client, "%s %t", JTAG, "Command is in-game only");
+		return Plugin_Handled;
+	}
+	
+	if (!cv_WardenModelMenu) return Plugin_Handled;
+	
+	if (IsVoteInProgress()) return Plugin_Handled;
+	
+	switch (DisplayMenu(hWardenModelsMenu, client, MENU_TIME_FOREVER))
+	{
+		case true: CPrintToChat(client, "%s %t", JTAG_COLORED, "warden model information", sWardenModel[client]);
+		case false: CPrintToChat(client, "%s %t", JTAG_COLORED, "warden model missing menu");
+	}
 
 	return Plugin_Handled;
 }
@@ -2597,7 +2675,7 @@ public Action:AdminPardonFreekiller(client, args)
 
 	if (args > 0)
 	{
-		decl String:sArg[64];
+		new String:sArg[64];
 		GetCmdArgString(sArg, sizeof(sArg));
 
 		new target = FindTarget(client, sArg, true);
@@ -2840,7 +2918,7 @@ public Action:AdminForceLR(client, args)
 
 	if (args > 0)
 	{
-		decl String:sArg[64];
+		new String:sArg[64];
 		GetCmdArgString(sArg, sizeof(sArg));
 
 		new target = FindTarget(client, sArg, true);
@@ -2909,7 +2987,7 @@ public Action:AdminResetPlugin(client, args)
 	BuildMenus();
 
 	CReplyToCommand(client, "%s %t", JTAG_COLORED, "Admin Reset Plugin");
-	Jail_Log("%N has reset the plugin of all it's bools, integers and floats.", client);
+	Jail_Log("%N has reset the plugin of all its bools, integers and floats.", client);
 
 	return Plugin_Handled;
 }
@@ -2948,7 +3026,7 @@ public Action:AdminGiveFreeday(client, args)
 
 	if (args > 0)
 	{
-		decl String:sArg[64];
+		new String:sArg[64];
 		GetCmdArgString(sArg, sizeof(sArg));
 
 		new target = FindTarget(client, sArg, true);
@@ -2988,7 +3066,7 @@ public Action:AdminRemoveFreeday(client, args)
 
 	if (args > 0)
 	{
-		decl String:sArg[64];
+		new String:sArg[64];
 		GetCmdArgString(sArg, sizeof(sArg));
 
 		new target = FindTarget(client, sArg, true);
@@ -3130,7 +3208,7 @@ public Action:AdminMarkFreekiller(client, args)
 		return Plugin_Handled;
 	}
 
-	decl String:sArg[64];
+	new String:sArg[64];
 	GetCmdArgString(sArg, sizeof(sArg));
 
 	new target = FindTarget(client, sArg, true);
@@ -3169,7 +3247,7 @@ PardonFreekillersMenu(client)
 	new Handle:hMenu = CreateMenu(MenuHandle_PardonFreekillers);
 	SetMenuTitle(hMenu, "%s", "choose a player");
 
-	decl String:sUserID[12], String:sName[MAX_NAME_LENGTH+12];
+	new String:sUserID[12], String:sName[MAX_NAME_LENGTH+12];
 	for (new i = 1; i <= MaxClients; i++)
 	{
 		if (Client_IsIngame(i) && bIsFreekiller[i])
@@ -3191,7 +3269,7 @@ public MenuHandle_PardonFreekillers(Handle:hMenu, MenuAction:action, param1, par
 	{
 	case MenuAction_Select:
 		{
-			decl String:sInfo[32];
+			new String:sInfo[32];
 			GetMenuItem(hMenu, param2, sInfo, sizeof(sInfo));
 
 			new target = GetClientOfUserId(StringToInt(sInfo));
@@ -3221,7 +3299,7 @@ GiveFreedaysMenu(client)
 	new Handle:hMenu = CreateMenu(MenuHandle_FreedayAdmins);
 	SetMenuTitle(hMenu, "%s", "choose a player");
 
-	decl String:sUserID[12], String:sDisplay[MAX_NAME_LENGTH+12];
+	new String:sUserID[12], String:sDisplay[MAX_NAME_LENGTH+12];
 	for (new i = 1; i <= MaxClients; i++)
 	{
 		if (Client_IsIngame(i) && !bIsFreeday[i])
@@ -3243,7 +3321,7 @@ public MenuHandle_FreedayAdmins(Handle:hMenu, MenuAction:action, param1, param2)
 	{
 	case MenuAction_Select:
 		{
-			decl String:sInfo[32];
+			new String:sInfo[32];
 			GetMenuItem(hMenu, param2, sInfo, sizeof(sInfo));
 
 			new target = GetClientOfUserId(StringToInt(sInfo));
@@ -3273,7 +3351,7 @@ RemoveFreedaysMenu(client)
 	new Handle:hMenu = CreateMenu(MenuHandle_RemoveFreedays);
 	SetMenuTitle(hMenu, "%s", "choose a player");
 
-	decl String:sUserID[12], String:sName[MAX_NAME_LENGTH+12];
+	new String:sUserID[12], String:sName[MAX_NAME_LENGTH+12];
 	for (new i = 1; i <= MaxClients; i++)
 	{
 		if (Client_IsIngame(i) && bIsFreeday[i])
@@ -3383,6 +3461,21 @@ public MenuHandle_ForceLR(Handle:hMenu, MenuAction:action, param1, param2)
 	}
 }
 
+public MenuHandle_WardenModels(Handle:hMenu, MenuAction:action, param1, param2)
+{
+	switch (action)
+	{
+	case MenuAction_Select:
+		{
+			new String:sInfo[64];
+			GetMenuItem(hMenu, param2, sInfo, sizeof(sInfo));
+
+			strcopy(sWardenModel[param1], sizeof(sWardenModel[]), sInfo);
+			CPrintToChat(param1, "%s %t", JTAG_COLORED, "warden model set", sWardenModel[param1]);
+		}
+	}
+}
+
 ListLastRequests(client)
 {
 	if (IsVoteInProgress()) return;
@@ -3408,7 +3501,7 @@ public MenuHandle_ListLRs(Handle:hMenu, MenuAction:action, param1, param2)
 					KvGetSectionName(hConfig, sSectionIDs, sizeof(sSectionIDs));
 					if (StrEqual(sSectionIDs, sInfo))
 					{
-						decl String:sDescription[256];
+						new String:sDescription[256];
 						KvGetString(hConfig, "Description", sDescription, sizeof(sDescription));
 
 						if (strlen(sDescription) != 0)
@@ -3441,7 +3534,7 @@ FreedayforClientsMenu(client, bool:active = false, bool:rep = false)
 	SetMenuTitle(hMenu, "%s", "choose a player");
 	SetMenuExitBackButton(hMenu, false);
 
-	decl String:sUserID[12], String:sName[MAX_NAME_LENGTH+12];
+	new String:sUserID[12], String:sName[MAX_NAME_LENGTH+12];
 	for (new i = 1; i <= MaxClients; i++)
 	{
 		if (Client_IsIngame(i))
@@ -3464,7 +3557,7 @@ public MenuHandle_FreedayForClients(Handle:hMenu, MenuAction:action, param1, par
 	{
 	case MenuAction_Select:
 		{
-			decl String:sInfo[32];
+			new String:sInfo[32];
 			GetMenuItem(hMenu, param2, sInfo, sizeof(sInfo));
 
 			new target = GetClientOfUserId(StringToInt(sInfo));
@@ -3512,7 +3605,7 @@ public MenuHandle_FreedayForClientsActive(Handle:hMenu, MenuAction:action, param
 	{
 	case MenuAction_Select:
 		{
-			decl String:sInfo[32];
+			new String:sInfo[32];
 			GetMenuItem(hMenu, param2, sInfo, sizeof(sInfo));
 
 			new target = GetClientOfUserId(StringToInt(sInfo));
@@ -3556,10 +3649,12 @@ public MenuHandle_FreedayForClientsActive(Handle:hMenu, MenuAction:action, param
 
 PreferenceMenu(client)
 {
+	if (IsVoteInProgress()) return;
+	
 	new Handle:hMenu = CreateMenu(MenuHandle_Preferences);
 	SetMenuTitle(hMenu, "%s", "preferences title");
 
-	decl String:sValue[64];
+	new String:sValue[64];
 
 	Format(sValue, sizeof(sValue), "%s", bRolePreference_Blue[client] ? "Blue Preference [ON]" : "Blue Preference [OFF]");
 	AddMenuItem(hMenu, "Pref_Blue", sValue, cv_PrefBlue ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
@@ -3631,10 +3726,13 @@ public MenuHandle_Preferences(Handle:hMenu, MenuAction:action, param1, param2)
 LastRequestStart(client, sender = 0, bool:Timer = true, bool:lock = false)
 {
 	if (IsVoteInProgress()) return;
+	
 	new Handle:hStartLRMenu = CreateMenu(MenuHandle_GiveLR);
 	SetMenuTitle(hStartLRMenu, "%s", "pick last requests");
 	SetMenuExitButton(hStartLRMenu, true);
+	
 	ParseLastRequests(client, hStartLRMenu);
+	
 	DisplayMenu(hStartLRMenu, client, MENU_TIME_FOREVER);
 
 	if (IsWarden(sender))
@@ -3674,7 +3772,7 @@ public MenuHandle_GiveLR(Handle:hMenu, MenuAction:action, param1, param2)
 
 			if (!FileToKeyValues(hConfig, sLRConfig))
 			{
-				Jail_Log("Last requests menu seems to be empty, please verify it's integrity.");
+				Jail_Log("Last requests menu seems to be empty, please verify its integrity.");
 				CPrintToChatAll("%s %t", JTAG_COLORED, "last request config invalid");
 				CloseHandle(hConfig);
 				return;
@@ -3699,7 +3797,7 @@ public MenuHandle_GiveLR(Handle:hMenu, MenuAction:action, param1, param2)
 				return;
 			}
 
-			decl String:sAnnounce[255], String:sClientName[MAX_NAME_LENGTH], String:sActive[255];
+			new String:sAnnounce[255], String:sClientName[MAX_NAME_LENGTH], String:sActive[255];
 
 			GetClientName(param1, sClientName, sizeof(sClientName));
 
@@ -3749,10 +3847,10 @@ public MenuHandle_GiveLR(Handle:hMenu, MenuAction:action, param1, param2)
 					CPrintToChatAll("%s %s", JTAG_COLORED, sActive);
 				}
 
-				decl String:sExecute[255];
+				new String:sExecute[255];
 				if (KvGetString(hConfig, "Execute_Cmd", sExecute, sizeof(sExecute)))
 				{
-					decl String:sIndex[64];
+					new String:sIndex[64];
 					IntToString(GetClientUserId(param1), sIndex, sizeof(sIndex));
 					ReplaceString(sExecute, sizeof(sExecute), "{client}", sIndex);
 
@@ -3764,9 +3862,9 @@ public MenuHandle_GiveLR(Handle:hMenu, MenuAction:action, param1, param2)
 					}
 				}
 
-				if (e_TF2WeaponRestrictions)
+				if (eTF2WeaponRestrictions)
 				{
-					decl String:sWeaponsConfig[255];
+					new String:sWeaponsConfig[255];
 					if (KvGetString(hConfig, "WeaponsConfig", sWeaponsConfig, sizeof(sWeaponsConfig)))
 					{
 						if (!StrEqual(sWeaponsConfig, "default"))
@@ -3933,8 +4031,13 @@ GiveFreeday(client)
 	new flags = GetEntityFlags(client)|FL_NOTARGET;
 	SetEntityFlags(client, flags);
 	if (cv_FreedayTeleports && bFreedayTeleportSet) TeleportEntity(client, iFreedayPosition, NULL_VECTOR, NULL_VECTOR);
-
-	hParticle_Freedays[client] = CreateParticle(cv_sParticle_Freeday, 999999.0, client, ATTACH_NORMAL);
+	
+	if (cv_RendererParticles && strlen(sFreedaysParticle) != 0)
+	{
+		hParticle_Freedays[client] = CreateParticle(sFreedaysParticle, 999999.0, client, ATTACH_NORMAL);
+	}
+	
+	if (cv_RendererColors) SetEntityRenderColor(client, a_iFreedaysColors[0], a_iFreedaysColors[1], a_iFreedaysColors[2], a_iFreedaysColors[3]);
 
 	bIsQueuedFreeday[client] = false;
 	bIsFreeday[client] = true;
@@ -3959,6 +4062,8 @@ RemoveFreeday(client)
 		CloseHandle(hParticle_Freedays[client]);
 		hParticle_Freedays[client] = INVALID_HANDLE;
 	}
+	
+	if (cv_RendererColors) SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
 
 	Jail_Log("%N is no longer a Freeday.", client);
 
@@ -3970,8 +4075,13 @@ RemoveFreeday(client)
 MarkRebel(client)
 {
 	bIsRebel[client] = true;
-
-	hParticle_Rebels[client] = CreateParticle(cv_sParticle_Rebellion, 999999.0, client, ATTACH_NORMAL);
+	
+	if (cv_RendererParticles && strlen(sRebellersParticle) != 0)
+	{
+		hParticle_Rebels[client] = CreateParticle(sRebellersParticle, 999999.0, client, ATTACH_NORMAL);
+	}
+	
+	if (cv_RendererColors) SetEntityRenderColor(client, a_iRebellersColors[0], a_iRebellersColors[1], a_iRebellersColors[2], a_iRebellersColors[3]);
 
 	CPrintToChatAll("%s %t", JTAG_COLORED, "prisoner has rebelled", client);
 	if (cv_RebelsTime >= 1.0)
@@ -3996,17 +4106,22 @@ MarkFreekiller(client, bool:void = false)
 	}
 
 	bIsFreekiller[client] = true;
-
-	hParticle_Freekillers[client] = CreateParticle(cv_sParticle_Freekiller, 999999.0, client, ATTACH_NORMAL);
+	
+	if (cv_RendererParticles && strlen(sFreekillersParticle) != 0)
+	{
+		hParticle_Freekillers[client] = CreateParticle(sFreekillersParticle, 999999.0, client, ATTACH_NORMAL);
+	}
+	
+	if (cv_RendererColors) SetEntityRenderColor(client, a_iFreekillersColors[0], a_iFreekillersColors[1], a_iFreekillersColors[2], a_iFreekillersColors[3]);
 
 	TF2_RemoveAllWeapons(client);
 	EmitSoundToAll("ui/system_message_alert.wav", _, _, _, _, 1.0, _, _, _, _, _, _);
 	CPrintToChatAll("%s %t", JTAG_COLORED, "freekiller timer start", client, RoundFloat(cv_FreekillersWave));
 
-	decl String:sAuth[24];
+	new String:sAuth[24];
 	GetClientAuthString(client, sAuth, sizeof(sAuth[]));
 
-	decl String:sName[MAX_NAME_LENGTH];
+	new String:sName[MAX_NAME_LENGTH];
 	GetClientName(client, sName, sizeof(sName[]));
 
 	new Handle:pack;
@@ -4035,6 +4150,8 @@ ClearFreekiller(client)
 		CloseHandle(hParticle_Freekillers[client]);
 		hParticle_Freekillers[client] = INVALID_HANDLE;
 	}
+	
+	if (cv_RendererColors) SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
 
 	Jail_Log("%N has been cleared as a Freekiller.", client);
 
@@ -4045,18 +4162,10 @@ ClearFreekiller(client)
 
 bool:AlreadyMuted(client)
 {
-	switch (EnumCommsList)
+	switch (eSourceComms)
 	{
-	case Basecomms:
-		{
-			if (!BaseComm_IsClientMuted(client)) return false;
-			return true;
-		}
-	case Sourcecomms:
-		{
-			if (SourceComms_GetClientMuteType(client) == bNot) return false;
-			return true;
-		}
+		case true: if (SourceComms_GetClientMuteType(client) != bNot) return true;
+		case false: if (BaseComm_IsClientMuted(client)) return true;
 	}
 	return false;
 }
@@ -4122,7 +4231,7 @@ ParseLastRequests(client, Handle:hMenu)
 
 	if (FileToKeyValues(hConfig, sLRConfig) && KvGotoFirstSubKey(hConfig))
 	{
-		decl String:sLRID[64], String:sLRName[255];
+		new String:sLRID[64], String:sLRName[255];
 		do {
 			new bool:IsDisabled = false;
 			KvGetSectionName(hConfig, sLRID, sizeof(sLRID));
@@ -4174,13 +4283,14 @@ ParseConfigs()
 	ParseMapConfig();
 	ParseNodeConfig();
 	ParseLastRequestConfig(true);
+	ParseRoleRenderersConfig();
 }
 
 ParseMapConfig()
 {
 	new Handle:hConfig = CreateKeyValues("TF2Jail_MapConfig");
 
-	decl String:sConfig[PLATFORM_MAX_PATH];
+	new String:sConfig[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sConfig, sizeof(sConfig), "configs/tf2jail/mapconfig.cfg");
 
 	new String:sMapName[128];
@@ -4192,7 +4302,7 @@ ParseMapConfig()
 	{
 		if (KvJumpToKey(hConfig, sMapName))
 		{
-			decl String:CellNames[32], String:CellsButton[32], String:FFButton[32];
+			new String:CellNames[32], String:CellsButton[32], String:FFButton[32];
 
 			KvGetString(hConfig, "CellNames", CellNames, sizeof(CellNames), "");
 			if (strlen(CellNames) != 0)
@@ -4276,7 +4386,7 @@ ParseNodeConfig()
 {
 	new Handle:hConfig = CreateKeyValues("TF2Jail_Nodes");
 
-	decl String:sConfig[PLATFORM_MAX_PATH];
+	new String:sConfig[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sConfig, sizeof(sConfig), "configs/tf2jail/textnodes.cfg");
 
 	if (FileToKeyValues(hConfig, sConfig))
@@ -4299,7 +4409,7 @@ ParseNodeConfig()
 			} while (KvGotoNextKey(hConfig, false));
 		}
 	}
-	else Jail_Log("Couldn't parse text node configuration file, please verify it's integrity.");
+	else Jail_Log("Couldn't parse text node configuration file, please verify its integrity.");
 
 	CloseHandle(hConfig);
 }
@@ -4333,8 +4443,43 @@ ParseLastRequestConfig(bool:DefaultValue = false)
 	CloseHandle(hConfig);
 }
 
+ParseRoleRenderersConfig()
+{
+	new Handle:hConfig = CreateKeyValues("TF2Jail_RoleRenders");
+
+	new String:sConfig[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, sConfig, sizeof(sConfig), "configs/tf2jail/rolerenderers.cfg");
+
+	if (!FileToKeyValues(hConfig, sConfig))
+	{
+		Jail_Log("Couldn't parse role renderers configuration file, please verify its integrity.");
+		CloseHandle(hConfig);
+		return;
+	}
+	
+	SetRoleRender(hConfig, "Warden", a_iWardenColors, sWardenParticle);
+	SetRoleRender(hConfig, "Freedays", a_iFreedaysColors, sFreedaysParticle);
+	SetRoleRender(hConfig, "Rebellers", a_iRebellersColors, sRebellersParticle);
+	SetRoleRender(hConfig, "Freekillers", a_iFreekillersColors, sFreekillersParticle);
+
+	CloseHandle(hConfig);
+}
+
+SetRoleRender(Handle:hConfig, const String:sRole[], iColor[4], String:sParticle[64])
+{
+	if (KvJumpToKey(hConfig, sRole))
+	{
+		iColor[0] = 255, iColor[1] = 255, iColor[2] = 255, iColor[3] = 255;
+		KvGetColor(hConfig, "Color", iColor[0], iColor[1], iColor[2], iColor[3]);
+		
+		KvGetString(hConfig, "Particle", sParticle, sizeof(sParticle));
+		KvGoBack(hConfig);
+	}
+}
+
 BuildMenus()
 {
+	//Wardens Menu
 	if (hWardenMenu != INVALID_HANDLE)
 	{
 		CloseHandle(hWardenMenu);
@@ -4347,25 +4492,26 @@ BuildMenus()
 
 	new Handle:hConfig = CreateKeyValues("WardenMenu");
 
-	decl String:sConfig[PLATFORM_MAX_PATH];
+	new String:sConfig[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sConfig, sizeof(sConfig), "configs/tf2jail/wardenmenu.cfg");
 
 	FileToKeyValues(hConfig, sConfig);
 	KvGotoFirstSubKey(hConfig, false);
 	do {
-		decl String:sLRID[64], String:sLRName[255];
+		new String:sLRID[64], String:sLRName[255];
 		KvGetSectionName(hConfig, sLRID, sizeof(sLRID));
 		KvGetString(hConfig, NULL_STRING, sLRName, sizeof(sLRName));
 		AddMenuItem(hWardenMenu, sLRID, sLRName);
 	} while (KvGotoNextKey(hConfig, false));
 	CloseHandle(hConfig);
-
+	
+	//List of Last Requests Menu
 	if (hListLRsMenu != INVALID_HANDLE)
 	{
 		CloseHandle(hListLRsMenu);
 		hListLRsMenu = INVALID_HANDLE;
 	}
-
+	
 	hListLRsMenu = CreateMenu(MenuHandle_ListLRs);
 	SetMenuTitle(hListLRsMenu, "%s", "list last requests");
 	SetMenuExitButton(hListLRsMenu, true);
@@ -4373,7 +4519,7 @@ BuildMenus()
 	hConfig = CreateKeyValues("TF2Jail_LastRequests");
 	if (FileToKeyValues(hConfig, sLRConfig) && KvGotoFirstSubKey(hConfig))
 	{
-		decl String:sLRID[64], String:sLRName[255];
+		new String:sLRID[64], String:sLRName[255];
 		do {
 			KvGetSectionName(hConfig, sLRID, sizeof(sLRID));
 			KvGetString(hConfig, "Name", sLRName, sizeof(sLRName));
@@ -4403,6 +4549,14 @@ BuildMenus()
 		} while (KvGotoNextKey(hConfig));
 	}
 	CloseHandle(hConfig);
+	
+	//Warden Models Menu
+	if (hWardenModelsMenu == INVALID_HANDLE)
+	{
+		hWardenModelsMenu = CreateMenu(MenuHandle_WardenModels);
+	}
+	
+	SetMenuTitle(hWardenModelsMenu, "%s", "warden models title");
 }
 
 EmptyWeaponSlots(client)
@@ -4451,10 +4605,10 @@ Jail_Log(const String:sFormat[], any:...)
 	{
 	case 1:
 		{
-			decl String:sDate[20];
+			new String:sDate[20];
 			FormatTime(sDate, sizeof(sDate), "%Y-%m-%d", GetTime());
 
-			decl String:sPath[PLATFORM_MAX_PATH], String:sPathFinal[PLATFORM_MAX_PATH];
+			new String:sPath[PLATFORM_MAX_PATH], String:sPathFinal[PLATFORM_MAX_PATH];
 			Format(sPath, sizeof(sPath), "logs/TF2Jail_%s.log", sDate);
 			BuildPath(Path_SM, sPathFinal, sizeof(sPathFinal), sPath);
 			LogToFileEx(sPathFinal, "%s", sFormat);
@@ -4616,7 +4770,7 @@ ClearTimer(&Handle:timer)
 
 AddAttribute(client, String:sAttribute[], Float:value)
 {
-	if (e_TF2Attributes && Client_IsIngame(client))
+	if (eTF2Attributes && Client_IsIngame(client))
 	{
 		TF2Attrib_SetByName(client, sAttribute, value);
 	}
@@ -4624,7 +4778,7 @@ AddAttribute(client, String:sAttribute[], Float:value)
 
 RemoveAttribute(client, String:sAttribute[])
 {
-	if (e_TF2Attributes && Client_IsIngame(client))
+	if (eTF2Attributes && Client_IsIngame(client))
 	{
 		TF2Attrib_RemoveByName(client, sAttribute);
 	}
@@ -4638,7 +4792,7 @@ FindEntityByClassnameSafe(iStart, String:sClassName[])
 
 RemoveValveHat(client, bool:unhide = false)
 {
-	decl String:sNetClass[32];
+	new String:sNetClass[32];
 
 	new edict = MaxClients + 1;
 	while ((edict = FindEntityByClassnameSafe(edict, "tf_wearable")) != -1)
@@ -4684,7 +4838,7 @@ Handle:CreateParticle(String:sType[], Float:time, client, eAttachedParticles:att
 
 	if (IsValidEdict(particle))
 	{
-		decl Float:pos[3];
+		new Float:pos[3];
 		GetEntPropVector(client, Prop_Send, "m_vecOrigin", pos);
 		pos[0] += xOffs;
 		pos[1] += yOffs;
@@ -4736,7 +4890,7 @@ public Action:CheckClient(Handle:timer, Handle:hPack)
 	new client = GetClientOfUserId(ReadPackCell(hPack));
 	new entity = EntRefToEntIndex(ReadPackCell(hPack));
 
-	if (!Client_IsIngame(client) || !IsPlayerAlive(client))
+	if (!cv_RendererParticles || !Client_IsIngame(client) || !IsPlayerAlive(client))
 	{
 		if (!IsValidEdict(entity))
 		{
@@ -4751,7 +4905,7 @@ public Action:CheckClient(Handle:timer, Handle:hPack)
 
 stock PrintToConsoleAll(const String:format[], any:...)
 {
-	decl String:text[192];
+	new String:text[192];
 	for (new x = 1; x <= MaxClients; x++)
 	{
 		if (IsClientInGame(x))
@@ -4767,7 +4921,7 @@ TF2_SwitchtoSlot(client, slot)
 {
 	if (slot >= 0 && slot <= 5 && Client_IsIngame(client) && IsPlayerAlive(client))
 	{
-		decl String:sClassName[64];
+		new String:sClassName[64];
 		new wep = GetPlayerWeaponSlot(client, slot);
 		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
 		{
@@ -4800,10 +4954,14 @@ WardenSet(client)
 		}
 	}
 
-	if (cv_WardenForceSoldier)
+	if (cv_WardenForceClass)
 	{
+		new String:sClass[PLATFORM_MAX_PATH];
+		GetTrieString(hWardenSkinClasses, cv_sDefaultWardenModel, sClass, sizeof(sClass));
+		new TFClassType:iClass = TF2_GetClass(sClass);
+		
 		new Health = GetClientHealth(client);
-		TF2_SetPlayerClass(client, TFClass_Soldier);
+		TF2_SetPlayerClass(client, iClass);
 		TF2_RegeneratePlayer(client);
 		new Health2 = GetClientHealth(client);
 		if (Health < Health2)
@@ -4812,19 +4970,24 @@ WardenSet(client)
 		}
 	}
 
-	if (cv_WardenModel)
+	if (cv_WardenModels)
 	{
-		decl String:sModelName[PLATFORM_MAX_PATH];
-		Format(sModelName, PLATFORM_MAX_PATH, "%s.mdl", WARDEN_MODEL);
-		SetModel(client, sModelName);
+		SetWardenModel(client, cv_sDefaultWardenModel);
 	}
+	
+	if (cv_RendererParticles && strlen(sWardenParticle) != 0)
+	{
+		hParticle_Wardens[client] = CreateParticle(sWardenParticle, 999999.0, client, ATTACH_NORMAL);
+	}
+	
+	if (cv_RendererColors) SetEntityRenderColor(client, a_iWardenColors[0], a_iWardenColors[1], a_iWardenColors[2], a_iWardenColors[3]);
 
 	if (cv_WardenStabProtection == 1)
 	{
 		AddAttribute(client, "backstab shield", 1.0);
 	}
 
-	decl String:sWarden[255];
+	new String:sWarden[255];
 	Format(sWarden, sizeof(sWarden), "%t", "warden current node", iWarden);
 	SetTextNode(hTextNodes[2], sWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
 
@@ -4841,12 +5004,22 @@ WardenSet(client)
 	CPrintToChat(client, "%s %t", JTAG_COLORED, "warden message");
 }
 
+SetWardenModel(client, const String:sModel[])
+{
+	if (!IsWarden(client)) return;
+	
+	new String:sModelPlatform[PLATFORM_MAX_PATH];
+	GetTrieString(hWardenSkins, sModel, sModelPlatform, sizeof(sModelPlatform));
+	SetModel(client, sModelPlatform);
+	CPrintToChat(client, "%s %t", JTAG_COLORED, "warden model message", sModel);
+}
+
 WardenUnset(client)
 {
 	if (!WardenExists()) return;
 
 	iWarden = -1;
-	if (cv_WardenModel)
+	if (cv_WardenModels)
 	{
 		RemoveModel(client);
 	}
@@ -4867,6 +5040,14 @@ WardenUnset(client)
 			hTimer_WardenLock = CreateTimer(float(cv_WardenTimer), DisableWarden, INVALID_HANDLE, TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
+	
+	if (hParticle_Wardens[client] != INVALID_HANDLE)
+	{
+		CloseHandle(hParticle_Wardens[client]);
+		hParticle_Wardens[client] = INVALID_HANDLE;
+	}
+	
+	if (cv_RendererColors) SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
 
 	RemoveAttribute(client, "backstab shield");
 
@@ -4994,7 +5175,7 @@ public Action:Timer_Round(Handle:hTimer)
 {
 	iRoundTime--;
 
-	decl String:sRoundTimer[64];
+	new String:sRoundTimer[64];
 	Format(sRoundTimer, sizeof(sRoundTimer), "%02d:%02d", iRoundTime / 60, iRoundTime % 60);
 
 	if (hTextNodes[3] && hTextNodes[3] != INVALID_HANDLE)
@@ -5081,7 +5262,7 @@ public Action:BanClientTimerFreekiller(Handle:hTimer, Handle:data)
 	{
 	case 2:
 		{
-			switch (e_Sourcebans)
+			switch (eSourcebans)
 			{
 				case true:
 					{
@@ -5136,6 +5317,7 @@ public Action:RemoveRebel(Handle:hTimer, any:data)
 			CloseHandle(hParticle_Rebels[client]);
 			hParticle_Rebels[client] = INVALID_HANDLE;
 		}
+		if (cv_RendererColors) SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
 		Jail_Log("%N is no longer a Rebeller.", client);
 	}
 
@@ -5513,7 +5695,7 @@ public Native_Logging(Handle:plugin, numParams)
 {
 	if (!cv_Enabled) ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 
-	decl String:sFormat[1024];
+	new String:sFormat[1024];
 	FormatNativeString(0, 1, 2, sizeof(sFormat), _, sFormat);
 
 	Jail_Log(sFormat);

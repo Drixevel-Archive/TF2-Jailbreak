@@ -953,6 +953,30 @@
 		"en"		"{darkkhaki} Warden Fire is currently disabled, you cannot vote at this time."
 	}
 	
+	"warden model message"
+	{
+		"#format"	"{1:s}"
+		"en"		"{darkkhaki} Your model has been set to {1}."
+	}
+	
+	"warden model information"
+	{
+		"#format"	"{1:s}"
+		"en"		"{darkkhaki} Your current model is {1}. Your model will update the next time you spawn as a Warden."
+	}
+	
+	"warden model missing menu"
+	{
+		"#format"	""
+		"en"		"{darkkhaki} There was an error creating the menu, please wait for a map change or contact an administrator."
+	}
+	
+	"warden model set"
+	{
+		"#format"	"{1:s}"
+		"en"		"{darkkhaki} You have set your model to {1}, it will update on next spawn as Warden."
+	}
+	
 	//MENU TITLES
 	
 	"warden commands"
@@ -983,6 +1007,12 @@
 	{
 		"#format"	""
 		"en"		"TF2Jail Preferences:"
+	}
+	
+	"warden models title"
+	{
+		"#format"	""
+		"en"		"Choose a Warden model:"
 	}
 	
 	//MENU TITLES END

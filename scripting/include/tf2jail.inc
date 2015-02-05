@@ -5,7 +5,6 @@
 
 #define JTAG_COLORED	"{community}[TF2Jail]"
 #define JTAG	"[TF2Jail]"
-#define PLUGIN_VERSION	"5.4.7"
 
 //Door Controls
 enum eDoorsMode
