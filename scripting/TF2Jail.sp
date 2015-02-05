@@ -524,7 +524,7 @@ public OnConfigsExecuted()
 	cv_WardenVoice = GetConVarInt(hConVars[53]);
 	cv_WardenWearables = GetConVarBool(hConVars[54]);
 	cv_FreedayTeleports = GetConVarBool(hConVars[55]);
-	cv_WardenStabProtection = GetConVarInt(hConVars[56]);
+	cv_WardenStabProtection = GetConVarBool(hConVars[56]);
 	cv_KillPointServerCommand = GetConVarBool(hConVars[57]);
 	cv_RemoveFreedayOnLR = GetConVarBool(hConVars[58]);
 	cv_RemoveFreedayOnLastGuard = GetConVarBool(hConVars[59]);
@@ -971,7 +971,7 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 	}
 	else if (cvar == hConVars[56])
 	{
-		cv_WardenStabProtection = iNewValue;
+		cv_WardenStabProtection = bool:iNewValue;
 	}
 	else if (cvar == hConVars[57])
 	{
@@ -1318,17 +1318,14 @@ public Action:OnTakeDamage(client, &attacker, &inflictor, &Float:damage, &damage
 		}
 	}
 
-	if (cv_WardenStabProtection == 2)
+	if (cv_WardenStabProtection && IsWarden(client))
 	{
-		if (IsWarden(client))
+		new String:sClassName[64];
+		GetEntityClassname(GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon"), sClassName, sizeof(sClassName));
+		if (StrEqual(sClassName, "tf_weapon_knife") && (damagetype & DMG_CRIT == DMG_CRIT))
 		{
-			new String:sClassName[64];
-			GetEntityClassname(GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon"), sClassName, sizeof(sClassName));
-			if (StrEqual(sClassName, "tf_weapon_knife") && (damagetype & DMG_CRIT == DMG_CRIT))
-			{
-				damage = 0.0;
-				return Plugin_Changed;
-			}
+			damage = 0.0;
+			return Plugin_Changed;
 		}
 	}
 	return Plugin_Continue;
@@ -2655,8 +2652,7 @@ public Action:AdminRemoveWarden(client, args)
 	}
 
 	PrintCenterTextAll("%t", "warden fired center");
-	CReplyToCommand(client, "%s %t", JTAG_COLORED, "Admin Remove Warden", iWarden);
-	CPrintToChatAll("%s %t", JTAG_COLORED, "Admin Remove Warden Message", client, iWarden);
+	CShowActivity2(client, JTAG_COLORED, "%t", "Admin Remove Warden", client, iWarden);
 	Jail_Log("%N has removed %N's Warden status with admin.", client, iWarden);
 	WardenUnset(iWarden);
 
@@ -4982,11 +4978,6 @@ WardenSet(client)
 	
 	if (cv_RendererColors) SetEntityRenderColor(client, a_iWardenColors[0], a_iWardenColors[1], a_iWardenColors[2], a_iWardenColors[3]);
 
-	if (cv_WardenStabProtection == 1)
-	{
-		AddAttribute(client, "backstab shield", 1.0);
-	}
-
 	new String:sWarden[255];
 	Format(sWarden, sizeof(sWarden), "%t", "warden current node", iWarden);
 	SetTextNode(hTextNodes[2], sWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
@@ -5016,9 +5007,10 @@ SetWardenModel(client, const String:sModel[])
 
 WardenUnset(client)
 {
-	if (!WardenExists()) return;
+	if (!IsWarden(client)) return;
 
 	iWarden = -1;
+	
 	if (cv_WardenModels)
 	{
 		RemoveModel(client);
@@ -5048,9 +5040,7 @@ WardenUnset(client)
 	}
 	
 	if (cv_RendererColors) SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
-
-	RemoveAttribute(client, "backstab shield");
-
+	
 	EnumWardenMenu = Open;
 
 	Call_StartForward(sFW_WardenRemoved);
