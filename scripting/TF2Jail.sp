@@ -2866,7 +2866,7 @@ public Action:AdminForceWarden(client, args)
 		if (Team_GetClientCount(_:TFTeam_Blue, CLIENTFILTER_ALIVE) < 2)
 		{
 			WardenSet(target);
-			CShowActivity2(client, JTAG_COLORED, "%t", "Admin Force warden", target);
+			CShowActivity2(client, JTAG_COLORED, "%t", "Admin Force Warden", target);
 			Jail_Log("%N has forced a %N Warden.", client, target);
 			return Plugin_Handled;
 		}
@@ -2876,7 +2876,7 @@ public Action:AdminForceWarden(client, args)
 			if (cv_PrefForce)
 			{
 				WardenSet(target);
-				CShowActivity2(client, JTAG_COLORED, "%t", "Admin Force warden", target);
+				CShowActivity2(client, JTAG_COLORED, "%t", "Admin Force Warden", target);
 				Jail_Log("%N has forced a %N Warden.", client, target);
 				return Plugin_Handled;
 			}
@@ -2884,19 +2884,19 @@ public Action:AdminForceWarden(client, args)
 			if (bRolePreference_Warden[target])
 			{
 				WardenSet(target);
-				CShowActivity2(client, JTAG_COLORED, "%t", "Admin Force warden", target);
+				CShowActivity2(client, JTAG_COLORED, "%t", "Admin Force Warden", target);
 				Jail_Log("%N has forced a %N Warden.", client, target);
 			}
 			else
 			{
-				CReplyToCommand(client, "%s %t", JTAG, "Admin Force warden Not Preferred", target);
+				CReplyToCommand(client, "%s %t", JTAG, "Admin Force Warden Not Preferred", target);
 				Jail_Log("%N has their preference set to prisoner only, finding another client...", target);
 			}
 			return Plugin_Handled;
 		}
 
 		WardenSet(target);
-		CShowActivity2(client, JTAG_COLORED, "%t", "Admin Force warden", target);
+		CShowActivity2(client, JTAG_COLORED, "%t", "Admin Force Warden", target);
 		Jail_Log("%N has forced a %N Warden.", client, target);
 
 		return Plugin_Handled;
@@ -5145,19 +5145,19 @@ FindWardenRandom(client)
 			if (Team_GetClientCount(_:TFTeam_Blue, CLIENTFILTER_ALIVE) == 1)
 			{
 				WardenSet(Random);
-				CShowActivity2(client, JTAG_COLORED, "%t", "Admin Force warden Random", Random);
+				CShowActivity2(client, JTAG_COLORED, "%t", "Admin Force Warden Random", Random);
 				Jail_Log("%N has given %N Warden by Force.", client, Random);
 			}
 
 			if (bRolePreference_Warden[Random])
 			{
 				WardenSet(Random);
-				CShowActivity2(client, JTAG_COLORED, "%t", "Admin Force warden Random", Random);
+				CShowActivity2(client, JTAG_COLORED, "%t", "Admin Force Warden Random", Random);
 				Jail_Log("%N has given %N Warden by Force.", client, Random);
 			}
 			else
 			{
-				CPrintToChat(client, "%s %t", JTAG_COLORED, "Admin Force Random warden Not Preferred", Random);
+				CPrintToChat(client, "%s %t", JTAG_COLORED, "Admin Force Random Warden Not Preferred", Random);
 				Jail_Log("%N has their preference set to prisoner only, finding another client...", Random);
 				FindWardenRandom(client);
 			}
@@ -5165,7 +5165,7 @@ FindWardenRandom(client)
 		}
 
 		WardenSet(Random);
-		CShowActivity2(client, JTAG_COLORED, "%t", "Admin Force warden Random", Random);
+		CShowActivity2(client, JTAG_COLORED, "%t", "Admin Force Warden Random", Random);
 		Jail_Log("%N has given %N Warden by Force.", client, Random);
 	}
 }
