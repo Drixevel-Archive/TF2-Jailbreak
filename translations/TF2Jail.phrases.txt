@@ -1,5 +1,11 @@
 ﻿"Phrases"
 {
+	"plugin tag"
+	{
+		"#format"	""
+		"en"		"{community}[TF2Jail]"
+	}
+	
 	"plugin enabled"
 	{
 		"#format"	""
@@ -601,14 +607,14 @@
 
 	"friendlyfire enabled"
 	{
-		"#format"	""
-		"en"		"{darkkhaki}Friendly fire is now enabled."
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} Warden {green}{1} {darkkhaki}has enabled Friendly Fire!"
 	}
 	
 	"friendlyfire disabled"
 	{
-		"#format"	""
-		"en"		"{darkkhaki}Friendly fire is now disabled."
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} Warden {green}{1} {darkkhaki}has disabled Friendly Fire!"
 	}
 	
 	"friendlyfire request"
@@ -619,14 +625,14 @@
 	
 	"collision enabled"
 	{
-		"#format"	""
-		"en"		"{darkkhaki}Collision is now enabled."
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} Warden {green}{1} {darkkhaki}has enabled Friendly Fire!"
 	}
 	
 	"collision disabled"
 	{
-		"#format"	""
-		"en"		"{darkkhaki}Collision is now disabled."
+		"#format"	"{1:N}"
+		"en"		"{darkkhaki} Warden {green}{1} {darkkhaki}has disabled Friendly Fire!"
 	}
 	
 	"collision request"
@@ -968,7 +974,7 @@
 	"warden model missing menu"
 	{
 		"#format"	""
-		"en"		"{darkkhaki} There was an error creating the menu, please wait for a map change or contact an administrator."
+		"en"		"{darkkhaki} There was an error creating the menu, please contact an administrator."
 	}
 	
 	"warden model set"
@@ -1012,7 +1018,7 @@
 	"warden models title"
 	{
 		"#format"	""
-		"en"		"Choose a Warden model:"
+		"en"		"Choose a Warden Model:"
 	}
 	
 	//MENU TITLES END

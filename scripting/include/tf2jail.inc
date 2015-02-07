@@ -3,9 +3,6 @@
 #endif
 #define _tf2jail_included
 
-#define JTAG_COLORED	"{community}[TF2Jail]"
-#define JTAG	"[TF2Jail]"
-
 //Door Controls
 enum eDoorsMode
 {
