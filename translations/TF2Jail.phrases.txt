@@ -983,6 +983,12 @@
 		"en"		"{darkkhaki} You have set your model to {1}, it will update on next spawn as Warden."
 	}
 	
+	"freekiller disconnected"
+	{
+		"#format"	"{1:s},{2:s}"
+		"en"		"{darkkhaki} {1} [{2}] has been banned for disconnecting while marked for Freekilling."
+	}
+	
 	//MENU TITLES
 	
 	"warden commands"

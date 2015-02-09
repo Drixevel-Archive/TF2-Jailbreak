@@ -1848,13 +1848,13 @@ public OnArenaRoundStart(Handle:event, const String:sName[], bool:dontBroadcast)
 							new String:index_name[MAX_NAME_LENGTH];
 							GetClientName(i, index_name, sizeof(index_name));
 							ReplaceString(sActive, sizeof(sActive), "{NAME}", index_name);
-							CPrintToChatAll("%s %s", "plugin tag", sActive);
+							CPrintToChatAll("%t %s", "plugin tag", sActive);
 						}
 					}
 				}
 				else
 				{
-					CPrintToChatAll("%s %s", "plugin tag", sActive);
+					CPrintToChatAll("%t %s", "plugin tag", sActive);
 				}
 			}
 		}
@@ -3446,7 +3446,7 @@ public MenuHandle_ListLRs(Handle:hMenu, MenuAction:action, param1, param2)
 
 						if (strlen(sDescription) != 0)
 						{
-							CPrintToChat(param1, "%s %s", "plugin tag", sDescription);
+							CPrintToChat(param1, "%t %s", "plugin tag", sDescription);
 						}
 						else
 						{
@@ -3761,8 +3761,7 @@ public MenuHandle_GiveLR(Handle:hMenu, MenuAction:action, param1, param2)
 				if (KvGetString(hConfig, "Queue_Announce", sAnnounce, sizeof(sAnnounce)))
 				{
 					ReplaceString(sAnnounce, sizeof(sAnnounce), "{NAME}", sClientName, true);
-					Format(sAnnounce, sizeof(sAnnounce), "%s %s", "plugin tag", sAnnounce);
-					CPrintToChatAll(sAnnounce);
+					CPrintToChatAll("%t %s", "plugin tag", sAnnounce);
 				}
 
 				CPrintToChat(param1, "%t %t", "plugin tag", "custom last request message");
@@ -3796,7 +3795,7 @@ public MenuHandle_GiveLR(Handle:hMenu, MenuAction:action, param1, param2)
 				if (KvGetString(hConfig, "Activated", sActive, sizeof(sActive)))
 				{
 					ReplaceString(sActive, sizeof(sActive), "{NAME}", sClientName, true);
-					CPrintToChatAll("%s %s", "plugin tag", sActive);
+					CPrintToChatAll("%t %s", "plugin tag", sActive);
 				}
 
 				new String:sExecute[255];
@@ -3954,8 +3953,7 @@ public MenuHandle_GiveLR(Handle:hMenu, MenuAction:action, param1, param2)
 				{
 					GetClientName(param1, sClientName, sizeof(sClientName));
 					ReplaceString(sAnnounce, sizeof(sAnnounce), "{NAME}", sClientName, true);
-					Format(sAnnounce, sizeof(sAnnounce), "%s %s", "plugin tag", sAnnounce);
-					CPrintToChatAll(sAnnounce);
+					CPrintToChatAll("%t %s", "plugin tag", sAnnounce);
 				}
 
 				iLRPending = StringToInt(sInfo);
@@ -5323,7 +5321,7 @@ public Action:BanClientTimerFreekiller(Handle:hTimer, Handle:data)
 	if (!Client_IsIngame(client) && cv_FreekillersAction == 2)
 	{
 		BanIdentity(sAuth, cv_FreekillersBantimeDC, BANFLAG_AUTHID, cv_sBanMSGDC, "freekill_identityban", userid);
-		CPrintToChatAll("%s [%s] has been banned for disconnecting while marked for Freekilling.", sName, sAuth);
+		CPrintToChatAll("%t %t", "plugin tag", "freekiller disconnected", sName, sAuth);
 		Jail_Log("%s [%s ]has been banned via identity.", sName, sAuth);
 	}
 
