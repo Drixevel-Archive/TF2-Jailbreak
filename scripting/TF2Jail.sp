@@ -53,83 +53,218 @@
 #tryinclude <voiceannounce_ex>
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.0"
+#define PLUGIN_VERSION	"5.5.2"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
 
-//Version of Sourcemod the plugin checks for.
-#define SOURCEMOD_REQUIRED	"1.6"
+#define SOURCEMOD_REQUIRED	"1.7"
 
-new Handle:hConVars[78] = {INVALID_HANDLE, ...};
-new Handle:hTextNodes[4] = {INVALID_HANDLE, ...};
-new Handle:hEngineConVars[3] = {INVALID_HANDLE, ...};
+//Handle Arrays
+Handle hConVars[78] = {INVALID_HANDLE, ...};
+Handle hTextNodes[4] = {INVALID_HANDLE, ...};
+Handle hEngineConVars[3] = {INVALID_HANDLE, ...};
 
-new Handle:sFW_WardenCreated, Handle:sFW_WardenRemoved, Handle:sFW_OnLastRequestExecute, Handle:sFW_OnFreedayGiven, Handle:sFW_OnFreedayRemoved, Handle:sFW_OnFreekillerGiven, Handle:sFW_OnFreekillerRemoved, Handle:sFW_OnRebelGiven, Handle:sFW_OnRebelRemoved;
-new Handle:hRolePref_Blue, Handle:hRolePref_Warden, Handle:hLastRequestUses, Handle:hWardenSkinClasses, Handle:hWardenSkins;
+//Plugin Forward Handles
+Handle sFW_WardenCreated;
+Handle sFW_WardenRemoved;
+Handle sFW_OnLastRequestExecute;
+Handle sFW_OnFreedayGiven;
+Handle sFW_OnFreedayRemoved;
+Handle sFW_OnFreekillerGiven;
+Handle sFW_OnFreekillerRemoved;
+Handle sFW_OnRebelGiven;
+Handle sFW_OnRebelRemoved;
 
-new Handle:hParticle_Wardens[MAXPLAYERS + 1], Handle:hParticle_Freedays[MAXPLAYERS + 1], Handle:hParticle_Rebels[MAXPLAYERS + 1], Handle:hParticle_Freekillers[MAXPLAYERS + 1];
+//Other Handles
+Handle hRolePref_Blue;
+Handle hRolePref_Warden;
+Handle hLastRequestUses;
+Handle hWardenSkinClasses;
+Handle hWardenSkins;
 
-new Handle:hTimer_Advertisement, Handle:hTimer_FreekillingData, Handle:hTimer_OpenCells,
-Handle:hTimer_FriendlyFireEnable, Handle:hTimer_WardenLock, Handle:hTimer_RoundTimer, Handle:hTimer_RebelTimers[MAXPLAYERS + 1];
+//Particle Handles
+Handle hParticle_Wardens[MAXPLAYERS + 1];
+Handle hParticle_Freedays[MAXPLAYERS + 1];
+Handle hParticle_Rebels[MAXPLAYERS + 1];
+Handle hParticle_Freekillers[MAXPLAYERS + 1];
 
-new Handle:hWardenMenu, Handle:hListLRsMenu;
+//Timer Handles
+Handle hTimer_Advertisement;
+Handle hTimer_FreekillingData;
+Handle hTimer_OpenCells;
+Handle hTimer_FriendlyFireEnable;
+Handle hTimer_WardenLock;
+Handle hTimer_RoundTimer;
+Handle hTimer_RebelTimers[MAXPLAYERS + 1];
 
-new bool:cv_Enabled , bool:cv_Advertise , bool:cv_Cvars , cv_Logging, bool:cv_Balance, Float:cv_BalanceRatio,
-bool:cv_RedMelee, bool:cv_Warden, bool:cv_WardenAuto, bool:cv_WardenModels, bool:cv_WardenForceClass,
-bool:cv_WardenFF, bool:cv_WardenCC, bool:cv_WardenRequest, cv_WardenLimit, bool:cv_DoorControl, Float:cv_DoorOpenTimer,
-cv_RedMute, Float:cv_RedMuteTime, cv_BlueMute, bool:cv_DeadMute, bool:cv_MicCheck, bool:cv_MicCheckType, bool:cv_Rebels,
-Float:cv_RebelsTime, cv_Criticals, cv_Criticalstype, bool:cv_WVotesStatus, Float:cv_WVotesNeeded, cv_WVotesMinPlayers, cv_WVotesPostAction,
-cv_WVotesPassedLimit, bool:cv_Freekillers, Float:cv_FreekillersTime, cv_FreekillersKills, Float:cv_FreekillersWave, cv_FreekillersAction, String:cv_sBanMSG[255],
-String:cv_sBanMSGDC[255], cv_FreekillersBantime, cv_FreekillersBantimeDC, bool:cv_LRSEnabled, bool:cv_LRSAutomatic, bool:cv_LRSLockWarden,
-cv_FreedayLimit, bool:cv_1stDayFreeday, bool:cv_DemoCharge, bool:cv_DoubleJump, bool:cv_Airblast, bool:cv_RendererParticles,
-bool:cv_RendererColors, String:cv_sDefaultColor[24], cv_WardenVoice, bool:cv_WardenWearables, bool:cv_FreedayTeleports, cv_WardenStabProtection,
-bool:cv_KillPointServerCommand, bool:cv_RemoveFreedayOnLR, bool:cv_RemoveFreedayOnLastGuard, bool:cv_PrefStatus, cv_WardenTimer, bool:cv_AdminFlags,
-bool:cv_PrefBlue, bool:cv_PrefWarden, bool:cv_ConsoleSpew, bool:cv_PrefForce, bool:cv_FFButton, String:cv_sWeaponConfig[255], cv_KillFeeds, bool:cv_WardenDeathCrits,
-bool:cv_RoundTimerStatus, cv_RoundTime, cv_RoundTime_Freeday, bool:cv_RoundTime_Center, String:cv_sRoundTimer_Execute[64], String:cv_sDefaultWardenModel[64],
-bool:cv_WardenModelMenu;
+//Menu Handles
+Handle hWardenMenu;
+Handle hListLRsMenu;
+Handle hWardenModelsMenu;
+
+//ConVar Global Variables
+bool cv_Enabled;
+bool cv_Advertise;
+bool cv_Cvars;
+int cv_Logging;
+bool cv_Balance;
+float cv_BalanceRatio;
+bool cv_RedMelee;
+bool cv_Warden;
+bool cv_WardenAuto;
+bool cv_WardenModels;
+bool cv_WardenForceClass;
+bool cv_WardenFF;
+bool cv_WardenCC;
+bool cv_WardenRequest;
+int cv_WardenLimit;
+bool cv_DoorControl;
+float cv_DoorOpenTimer;
+int cv_RedMute;
+float cv_RedMuteTime;
+int cv_BlueMute;
+bool cv_DeadMute;
+bool cv_MicCheck;
+bool cv_MicCheckType;
+bool cv_Rebels;
+float cv_RebelsTime;
+int cv_Criticals;
+int cv_Criticalstype;
+bool cv_WVotesStatus;
+float cv_WVotesNeeded;
+int cv_WVotesMinPlayers;
+int cv_WVotesPostAction;
+int cv_WVotesPassedLimit;
+bool cv_Freekillers;
+float cv_FreekillersTime;
+int cv_FreekillersKills;
+float cv_FreekillersWave;
+int cv_FreekillersAction;
+char cv_sBanMSG[255];
+char cv_sBanMSGDC[255];
+int cv_FreekillersBantime;
+int cv_FreekillersBantimeDC;
+bool cv_LRSEnabled;
+bool cv_LRSAutomatic;
+bool cv_LRSLockWarden;
+int cv_FreedayLimit;
+bool cv_1stDayFreeday;
+bool cv_DemoCharge;
+bool cv_DoubleJump;
+bool cv_Airblast;
+bool cv_RendererParticles;
+bool cv_RendererColors;
+char cv_sDefaultColor[24];
+int cv_WardenVoice;
+bool cv_WardenWearables;
+bool cv_FreedayTeleports;
+int cv_WardenStabProtection;
+bool cv_KillPointServerCommand;
+bool cv_RemoveFreedayOnLR;
+bool cv_RemoveFreedayOnLastGuard;
+bool cv_PrefStatus;
+int cv_WardenTimer;
+bool cv_AdminFlags;
+bool cv_PrefBlue;
+bool cv_PrefWarden;
+bool cv_ConsoleSpew;
+bool cv_PrefForce;
+bool cv_FFButton;
+char cv_sWeaponConfig[255];
+int cv_KillFeeds;
+bool cv_WardenDeathCrits;
+bool cv_RoundTimerStatus;
+int cv_RoundTime;
+int cv_RoundTime_Freeday;
+bool cv_RoundTime_Center;
+char cv_sRoundTimer_Execute[64];
+char cv_sDefaultWardenModel[64];
+bool cv_WardenModelMenu;
 
 //External Extensions/Plugin Booleans
-new bool:eSourcebans, bool:eSourceComms, bool:eSteamWorks, bool:eTF2Attributes, bool:eVoiceannounce_ex, bool:eTF2WeaponRestrictions;
+bool eSourcebans;
+bool eSourceComms;
+bool eSteamWorks;
+bool eTF2Attributes;
+bool eVoiceannounce_ex;
+bool eTF2WeaponRestrictions;
 
-new bool:bIsMapCompatible = false, bool:bCellsOpened = false, bool:b1stRoundFreeday = false, bool:bVoidFreeKills = false,
-bool:bIsLRInUse = false, bool:bIsWardenLocked = false, bool:bOneGuardLeft = false, bool:bActiveRound = false,
-bool:bFreedayTeleportSet = false, bool:bLRConfigActive = true, bool:bLockWardenLR = false, bool:bDisableCriticles = false,
-bool:bLateLoad = false, bool:bAdminLockWarden = false, bool:bAdminLockedLR = false, bool:bDifferentWepRestrict = false;
+//Plugin Global Booleans
+bool bIsMapCompatible;
+bool bCellsOpened;
+bool b1stRoundFreeday;
+bool bVoidFreeKills;
+bool bIsLRInUse;
+bool bIsWardenLocked;
+bool bOneGuardLeft;
+bool bActiveRound;
+bool bFreedayTeleportSet;
+bool bLRConfigActive = true;
+bool bLockWardenLR;
+bool bDisableCriticles;
+bool bLateLoad;
+bool bAdminLockWarden;
+bool bAdminLockedLR;
+bool bDifferentWepRestrict;
 
-new bool:bBlockedDoubleJump[MAXPLAYERS + 1], bool:bDisabledAirblast[MAXPLAYERS + 1], bool:bIsMuted[MAXPLAYERS + 1],
-bool:bIsRebel[MAXPLAYERS + 1], bool:bIsQueuedFreeday[MAXPLAYERS + 1], bool:bIsFreeday[MAXPLAYERS + 1], bool:bIsFreekiller[MAXPLAYERS + 1],
-bool:bHasTalked[MAXPLAYERS + 1], bool:bLockedFromWarden[MAXPLAYERS + 1], bool:bRolePreference_Blue[MAXPLAYERS + 1], bool:bRolePreference_Warden[MAXPLAYERS + 1],
-bool:bHasModel[MAXPLAYERS + 1], bool:bVoted[MAXPLAYERS + 1] = {false, ...};
+//Global Boolean Player Arrays
+bool bBlockedDoubleJump[MAXPLAYERS + 1];
+bool bDisabledAirblast[MAXPLAYERS + 1];
+bool bIsMuted[MAXPLAYERS + 1];
+bool bIsRebel[MAXPLAYERS + 1];
+bool bIsQueuedFreeday[MAXPLAYERS + 1];
+bool bIsFreeday[MAXPLAYERS + 1];
+bool bIsFreekiller[MAXPLAYERS + 1];
+bool bHasTalked[MAXPLAYERS + 1];
+bool bLockedFromWarden[MAXPLAYERS + 1];
+bool bRolePreference_Blue[MAXPLAYERS + 1];
+bool bRolePreference_Warden[MAXPLAYERS + 1];
+bool bHasModel[MAXPLAYERS + 1];
+bool bVoted[MAXPLAYERS + 1] = {false, ...};
 
-new iWarden = -1, iCustom = -1, iLRPending = -1,
-iLRCurrent = -1, iVoters = 0, iVotes = 0,
-iVotesNeeded = 0, iWardenLimit = 0, iFreedayLimit = 0,
-Float:iFreedayPosition[3], iRoundTime;
+//Global Integer Player Arrays
+int iFirstKill[MAXPLAYERS + 1];
+int iKillcount[MAXPLAYERS + 1];
+int iHasBeenWarden[MAXPLAYERS + 1];
 
-new iFirstKill[MAXPLAYERS + 1], iKillcount[MAXPLAYERS + 1], iHasBeenWarden[MAXPLAYERS + 1];
+//Global Integers/Variables
+int iWarden = -1;
+int iCustom = -1;
+int iLRPending = -1;
+int iLRCurrent = -1;
+int iVoters = 0;
+int iVotes = 0;
+int iVotesNeeded = 0;
+int iWardenLimit = 0;
+int iFreedayLimit = 0;
+int iRoundTime;
+float fFreedayPosition[3];
 
-new String:sCellNames[32], String:sCellOpener[32], String:sFFButton[32], String:sDoorsList[][] = {"func_door", "func_door_rotating", "func_movelinear"},
-String:sLRConfig[PLATFORM_MAX_PATH], String:sCustomLR[32];
+//Global String/Char Variables
+char sCellNames[32];
+char sCellOpener[32];
+char sFFButton[32];
+char sDoorsList[][] = {"func_door", "func_door_rotating", "func_movelinear"};
+char sLRConfig[PLATFORM_MAX_PATH];
+char sCustomLR[32];
 
 //Role Renderers Globals
-new a_iDefaultColors[4];
+int a_iDefaultColors[4];
 
-new a_iWardenColors[4];
-new String:sWardenParticle[64];
+int a_iWardenColors[4];
+char sWardenParticle[64];
 
-new a_iFreedaysColors[4];
-new String:sFreedaysParticle[64];
+int a_iFreedaysColors[4];
+char sFreedaysParticle[64];
 
-new a_iRebellersColors[4];
-new String:sRebellersParticle[64];
+int a_iRebellersColors[4];
+char sRebellersParticle[64];
 
-new a_iFreekillersColors[4];
-new String:sFreekillersParticle[64];
+int a_iFreekillersColors[4];
+char sFreekillersParticle[64];
 
-//Warden Model Menu
-new Handle:hWardenModelsMenu;
-
+//Enum Structs
 enum eWardenMenu
 {
 	Open = 0,
@@ -159,6 +294,7 @@ enum eTextNodeParams
 	Float:fFadeOut,
 };
 
+//Enum Globals
 new eWardenMenu:EnumWardenMenu;
 new EnumTNPS[4][eTextNodeParams];
 
@@ -172,7 +308,7 @@ public Plugin:myinfo =
 	url = PLUGIN_CONTACT
 };
 
-public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:sError[], err_max)
+public APLRes:AskPluginLoad2(Handle myself, bool late, char[] sError, err_max)
 {
 	//TF2 only... wonder why.
 	if (GetEngineVersion() != Engine_TF2)
@@ -181,7 +317,6 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:sError[], err_max)
 		return APLRes_Failure;
 	}
 	
-	//Sourcemod Compatibility Check
 	new String:sVersion[32];
 	GetConVarString(FindConVar("sourcemod_version"), sVersion, sizeof(sVersion));
 	
@@ -474,7 +609,7 @@ public OnLibraryRemoved(const String:sName[])
 	eTF2WeaponRestrictions = StrEqual(sName, "tf2weaponrestrictions", false);
 }
 
-public OnPluginPauseChange(bool:pause)
+public OnPluginPauseChange(bool pause)
 {
 	if (eSteamWorks)
 	{
@@ -641,17 +776,17 @@ public SteamWorks_SteamServersConnected()
 	}
 }
 
-public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue[])
+public HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 {
 	if (StrEqual(sOldValue, sNewValue, true)) return;
 
 	new iNewValue = StringToInt(sNewValue);
 
-	if (cvar == hConVars[0])
+	if (hCvar == hConVars[0])
 	{
 		SetConVarString(hConVars[0], PLUGIN_VERSION);
 	}
-	else if (cvar == hConVars[1])
+	else if (hCvar == hConVars[1])
 	{
 		cv_Enabled = bool:iNewValue;
 		switch (iNewValue)
@@ -694,7 +829,7 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 			}
 		}
 	}
-	else if (cvar == hConVars[2])
+	else if (hCvar == hConVars[2])
 	{
 		cv_Advertise = bool:iNewValue;
 		ClearTimer(hTimer_Advertisement);
@@ -703,24 +838,24 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 			StartAdvertisement();
 		}
 	}
-	else if (cvar == hConVars[3])
+	else if (hCvar == hConVars[3])
 	{
 		cv_Cvars = bool:iNewValue;
 		ConvarsSet(cv_Cvars ? true : false);
 	}
-	else if (cvar == hConVars[4])
+	else if (hCvar == hConVars[4])
 	{
 		cv_Logging = iNewValue;
 	}
-	else if (cvar == hConVars[5])
+	else if (hCvar == hConVars[5])
 	{
 		cv_Balance = bool:iNewValue;
 	}
-	else if (cvar == hConVars[6])
+	else if (hCvar == hConVars[6])
 	{
 		cv_BalanceRatio = StringToFloat(sNewValue);
 	}
-	else if (cvar == hConVars[7])
+	else if (hCvar == hConVars[7])
 	{
 		cv_RedMelee = bool:iNewValue;
 		for (new i = 1; i <= MaxClients; i++)
@@ -734,7 +869,7 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 			}
 		}
 	}
-	else if (cvar == hConVars[8])
+	else if (hCvar == hConVars[8])
 	{
 		cv_Warden = bool:iNewValue;
 		if (!cv_Warden && WardenExists())
@@ -742,11 +877,11 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 			WardenUnset(iWarden);
 		}
 	}
-	else if (cvar == hConVars[9])
+	else if (hCvar == hConVars[9])
 	{
 		cv_WardenAuto = bool:iNewValue;
 	}
-	else if (cvar == hConVars[10])
+	else if (hCvar == hConVars[10])
 	{
 		cv_WardenModels = bool:iNewValue;
 		switch (cv_WardenModels)
@@ -767,35 +902,35 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 				}
 		}
 	}
-	else if (cvar == hConVars[11])
+	else if (hCvar == hConVars[11])
 	{
 		cv_WardenForceClass = bool:iNewValue;
 	}
-	else if (cvar == hConVars[12])
+	else if (hCvar == hConVars[12])
 	{
 		cv_WardenFF = bool:iNewValue;
 	}
-	else if (cvar == hConVars[13])
+	else if (hCvar == hConVars[13])
 	{
 		cv_WardenCC = bool:iNewValue;
 	}
-	else if (cvar == hConVars[14])
+	else if (hCvar == hConVars[14])
 	{
 		cv_WardenRequest = bool:iNewValue;
 	}
-	else if (cvar == hConVars[15])
+	else if (hCvar == hConVars[15])
 	{
 		cv_WardenLimit = iNewValue;
 	}
-	else if (cvar == hConVars[16])
+	else if (hCvar == hConVars[16])
 	{
 		cv_DoorControl = bool:iNewValue;
 	}
-	else if (cvar == hConVars[17])
+	else if (hCvar == hConVars[17])
 	{
 		cv_DoorOpenTimer = StringToFloat(sNewValue);
 	}
-	else if (cvar == hConVars[18])
+	else if (hCvar == hConVars[18])
 	{
 		cv_RedMute = iNewValue;
 
@@ -815,11 +950,11 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 			}
 		}
 	}
-	else if (cvar == hConVars[19])
+	else if (hCvar == hConVars[19])
 	{
 		cv_RedMuteTime = StringToFloat(sNewValue);
 	}
-	else if (cvar == hConVars[20])
+	else if (hCvar == hConVars[20])
 	{
 		cv_BlueMute = iNewValue;
 
@@ -839,19 +974,19 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 			}
 		}
 	}
-	else if (cvar == hConVars[21])
+	else if (hCvar == hConVars[21])
 	{
 		cv_DeadMute = bool:iNewValue;
 	}
-	else if (cvar == hConVars[22])
+	else if (hCvar == hConVars[22])
 	{
 		cv_MicCheck = bool:iNewValue;
 	}
-	else if (cvar == hConVars[23])
+	else if (hCvar == hConVars[23])
 	{
 		cv_MicCheckType = bool:iNewValue;
 	}
-	else if (cvar == hConVars[24])
+	else if (hCvar == hConVars[24])
 	{
 		cv_Rebels = bool:iNewValue;
 		if (iNewValue == 0)
@@ -865,215 +1000,215 @@ public HandleCvars(Handle:cvar, const String:sOldValue[], const String:sNewValue
 			}
 		}
 	}
-	else if (cvar == hConVars[25])
+	else if (hCvar == hConVars[25])
 	{
 		cv_RebelsTime = StringToFloat(sNewValue);
 	}
-	else if (cvar == hConVars[26])
+	else if (hCvar == hConVars[26])
 	{
 		cv_Criticals = iNewValue;
 	}
-	else if (cvar == hConVars[27])
+	else if (hCvar == hConVars[27])
 	{
 		cv_Criticalstype = iNewValue;
 	}
-	else if (cvar == hConVars[28])
+	else if (hCvar == hConVars[28])
 	{
 		cv_WVotesStatus = bool:iNewValue;
 	}
-	else if (cvar == hConVars[29])
+	else if (hCvar == hConVars[29])
 	{
 		cv_WVotesNeeded = StringToFloat(sNewValue);
 	}
-	else if (cvar == hConVars[30])
+	else if (hCvar == hConVars[30])
 	{
 		cv_WVotesMinPlayers = iNewValue;
 	}
-	else if (cvar == hConVars[31])
+	else if (hCvar == hConVars[31])
 	{
 		cv_WVotesPostAction = iNewValue;
 	}
-	else if (cvar == hConVars[32])
+	else if (hCvar == hConVars[32])
 	{
 		cv_WVotesPassedLimit = iNewValue;
 	}
-	else if (cvar == hConVars[33])
+	else if (hCvar == hConVars[33])
 	{
 		cv_Freekillers = bool:iNewValue;
 	}
-	else if (cvar == hConVars[34])
+	else if (hCvar == hConVars[34])
 	{
 		cv_FreekillersTime = StringToFloat(sNewValue);
 	}
-	else if (cvar == hConVars[35])
+	else if (hCvar == hConVars[35])
 	{
 		cv_FreekillersKills = iNewValue;
 	}
-	else if (cvar == hConVars[36])
+	else if (hCvar == hConVars[36])
 	{
 		cv_FreekillersWave = StringToFloat(sNewValue);
 	}
-	else if (cvar == hConVars[37])
+	else if (hCvar == hConVars[37])
 	{
 		cv_FreekillersAction = iNewValue;
 	}
-	else if (cvar == hConVars[38])
+	else if (hCvar == hConVars[38])
 	{
-		GetConVarString(hConVars[38], cv_sBanMSG, sizeof(cv_sBanMSG));
+		strcopy(cv_sBanMSG, sizeof(cv_sBanMSG), sNewValue);
 	}
-	else if (cvar == hConVars[39])
+	else if (hCvar == hConVars[39])
 	{
-		GetConVarString(hConVars[39], cv_sBanMSGDC, sizeof(cv_sBanMSGDC));
+		strcopy(cv_sBanMSGDC, sizeof(cv_sBanMSGDC), sNewValue);
 	}
-	else if (cvar == hConVars[40])
+	else if (hCvar == hConVars[40])
 	{
 		cv_FreekillersBantime = iNewValue;
 	}
-	else if (cvar == hConVars[41])
+	else if (hCvar == hConVars[41])
 	{
 		cv_FreekillersBantimeDC = iNewValue;
 	}
-	else if (cvar == hConVars[42])
+	else if (hCvar == hConVars[42])
 	{
 		cv_LRSEnabled = bool:iNewValue;
 	}
-	else if (cvar == hConVars[43])
+	else if (hCvar == hConVars[43])
 	{
 		cv_LRSAutomatic = bool:iNewValue;
 	}
-	else if (cvar == hConVars[44])
+	else if (hCvar == hConVars[44])
 	{
 		cv_LRSLockWarden = bool:iNewValue;
 	}
-	else if (cvar == hConVars[45])
+	else if (hCvar == hConVars[45])
 	{
 		cv_FreedayLimit = iNewValue;
 	}
-	else if (cvar == hConVars[46])
+	else if (hCvar == hConVars[46])
 	{
 		cv_1stDayFreeday = bool:iNewValue;
 	}
-	else if (cvar == hConVars[47])
+	else if (hCvar == hConVars[47])
 	{
 		cv_DemoCharge = bool:iNewValue;
 	}
-	else if (cvar == hConVars[48])
+	else if (hCvar == hConVars[48])
 	{
 		cv_DoubleJump = bool:iNewValue;
 	}
-	else if (cvar == hConVars[49])
+	else if (hCvar == hConVars[49])
 	{
 		cv_Airblast = bool:iNewValue;
 	}
-	else if (cvar == hConVars[50])
+	else if (hCvar == hConVars[50])
 	{
 		cv_RendererParticles = bool:iNewValue;
 	}
-	else if (cvar == hConVars[51])
+	else if (hCvar == hConVars[51])
 	{
 		cv_RendererColors = bool:iNewValue;
 	}
-	else if (cvar == hConVars[52])
+	else if (hCvar == hConVars[52])
 	{
-		GetConVarString(hConVars[52], cv_sDefaultColor, sizeof(cv_sDefaultColor));
+		strcopy(cv_sDefaultColor, sizeof(cv_sDefaultColor), sNewValue);
 	}
-	else if (cvar == hConVars[53])
+	else if (hCvar == hConVars[53])
 	{
 		cv_WardenVoice = iNewValue;
 	}
-	else if (cvar == hConVars[54])
+	else if (hCvar == hConVars[54])
 	{
 		cv_WardenWearables = bool:iNewValue;
 	}
-	else if (cvar == hConVars[55])
+	else if (hCvar == hConVars[55])
 	{
 		cv_FreedayTeleports = bool:iNewValue;
 	}
-	else if (cvar == hConVars[56])
+	else if (hCvar == hConVars[56])
 	{
 		cv_WardenStabProtection = bool:iNewValue;
 	}
-	else if (cvar == hConVars[57])
+	else if (hCvar == hConVars[57])
 	{
 		cv_KillPointServerCommand = bool:iNewValue;
 	}
-	else if (cvar == hConVars[58])
+	else if (hCvar == hConVars[58])
 	{
 		cv_RemoveFreedayOnLR = bool:iNewValue;
 	}
-	else if (cvar == hConVars[59])
+	else if (hCvar == hConVars[59])
 	{
 		cv_RemoveFreedayOnLastGuard = bool:iNewValue;
 	}
-	else if (cvar == hConVars[60])
+	else if (hCvar == hConVars[60])
 	{
 		cv_PrefStatus = bool:iNewValue;
 	}
-	else if (cvar == hConVars[61])
+	else if (hCvar == hConVars[61])
 	{
 		cv_WardenTimer = iNewValue;
 	}
-	else if (cvar == hConVars[62])
+	else if (hCvar == hConVars[62])
 	{
 		cv_AdminFlags = bool:iNewValue;
 	}
-	else if (cvar == hConVars[63])
+	else if (hCvar == hConVars[63])
 	{
 		cv_PrefBlue = bool:iNewValue;
 	}
-	else if (cvar == hConVars[64])
+	else if (hCvar == hConVars[64])
 	{
 		cv_PrefWarden = bool:iNewValue;
 	}
-	else if (cvar == hConVars[65])
+	else if (hCvar == hConVars[65])
 	{
 		cv_ConsoleSpew = bool:iNewValue;
 	}
-	else if (cvar == hConVars[66])
+	else if (hCvar == hConVars[66])
 	{
 		cv_PrefForce = bool:iNewValue;
 	}
-	else if (cvar == hConVars[67])
+	else if (hCvar == hConVars[67])
 	{
 		cv_FFButton = bool:iNewValue;
 	}
-	else if (cvar == hConVars[68])
+	else if (hCvar == hConVars[68])
 	{
-		GetConVarString(hConVars[68], cv_sWeaponConfig, sizeof(cv_sWeaponConfig));
+		strcopy(cv_sWeaponConfig, sizeof(cv_sWeaponConfig), sNewValue);
 	}
-	else if (cvar == hConVars[69])
+	else if (hCvar == hConVars[69])
 	{
 		cv_KillFeeds = iNewValue;
 	}
-	else if (cvar == hConVars[70])
+	else if (hCvar == hConVars[70])
 	{
 		cv_WardenDeathCrits = bool:iNewValue;
 	}
-	else if (cvar == hConVars[71])
+	else if (hCvar == hConVars[71])
 	{
 		cv_RoundTimerStatus = bool:iNewValue;
 	}
-	else if (cvar == hConVars[72])
+	else if (hCvar == hConVars[72])
 	{
 		cv_RoundTime = iNewValue;
 	}
-	else if (cvar == hConVars[73])
+	else if (hCvar == hConVars[73])
 	{
 		cv_RoundTime_Freeday = iNewValue;
 	}
-	else if (cvar == hConVars[74])
+	else if (hCvar == hConVars[74])
 	{
 		cv_RoundTime_Center = bool:iNewValue;
 	}
-	else if (cvar == hConVars[75])
+	else if (hCvar == hConVars[75])
 	{
-		GetConVarString(hConVars[75], cv_sRoundTimer_Execute, sizeof(cv_sRoundTimer_Execute));
+		strcopy(cv_sRoundTimer_Execute, sizeof(cv_sRoundTimer_Execute), sNewValue);
 	}
-	else if (cvar == hConVars[76])
+	else if (hCvar == hConVars[76])
 	{
-		GetConVarString(hConVars[76], cv_sDefaultWardenModel, sizeof(cv_sDefaultWardenModel));
+		strcopy(cv_sDefaultWardenModel, sizeof(cv_sDefaultWardenModel), sNewValue);
 	}
-	else if (cvar == hConVars[77])
+	else if (hCvar == hConVars[77])
 	{
 		cv_WardenModelMenu = bool:iNewValue;
 	}
@@ -1162,7 +1297,7 @@ public OnMapEnd()
 	hTimer_WardenLock = INVALID_HANDLE;
 }
 
-public OnClientConnected(client)
+public OnClientConnected(int client)
 {
 	if (!cv_Enabled) return;
 
@@ -1172,7 +1307,7 @@ public OnClientConnected(client)
 	bIsMuted[client] = false;
 }
 
-public OnClientCookiesCached(client)
+public OnClientCookiesCached(int client)
 {
 	if (!cv_Enabled) return;
 
@@ -1199,7 +1334,7 @@ public OnClientCookiesCached(client)
 	}
 }
 
-public OnClientPutInServer(client)
+public OnClientPutInServer(int client)
 {
 	if (!cv_Enabled) return;
 
@@ -1210,7 +1345,7 @@ public OnClientPutInServer(client)
 	MutePlayer(client);
 }
 
-public Action:OnTakeDamage(client, &attacker, &inflictor, &Float:damage, &damagetype, &weapon, Float:damageForce[3], Float:damagePosition[3])
+public Action:OnTakeDamage(int client, &attacker, &inflictor, &Float:damage, &damagetype, &weapon, Float:damageForce[3], Float:damagePosition[3])
 {
 	if (!cv_Enabled) return Plugin_Continue;
 
@@ -1272,7 +1407,7 @@ public Action:OnTakeDamage(client, &attacker, &inflictor, &Float:damage, &damage
 	return Plugin_Continue;
 }
 
-public OnClientDisconnect(client)
+public OnClientDisconnect(int client)
 {
 	if (!cv_Enabled || !Client_IsIngame(client)) return;
 
@@ -1310,11 +1445,11 @@ public OnClientDisconnect(client)
 	iFirstKill[client] = 0;
 }
 
-public OnPlayerSpawn(Handle:event, const String:sName[], bool:dontBroadcast)
+public OnPlayerSpawn(Handle hEvent, char[] sName, bool bBroadcast)
 {
 	if (!cv_Enabled) return;
 
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new client = GetClientOfUserId(GetEventInt(hEvent, "userid"));
 	if (!Client_IsIngame(client)) return;
 	
 	new TFClassType:class = TF2_GetPlayerClass(client);
@@ -1387,12 +1522,12 @@ public OnPlayerSpawn(Handle:event, const String:sName[], bool:dontBroadcast)
 	}
 }
 
-public OnPlayerHurt(Handle:event, const String:sName[], bool:dontBroadcast)
+public OnPlayerHurt(Handle hEvent, char[] sName, bool bBroadcast)
 {
 	if (!cv_Enabled) return;
 
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+	new client = GetClientOfUserId(GetEventInt(hEvent, "userid"));
+	new attacker = GetClientOfUserId(GetEventInt(hEvent, "attacker"));
 
 	if (!Client_IsIngame(client) || !Client_IsIngame(attacker) || attacker == client) return;
 
@@ -1410,11 +1545,11 @@ public OnPlayerHurt(Handle:event, const String:sName[], bool:dontBroadcast)
 	}
 }
 
-public Action:OnChangeClass(Handle:event, const String:sName[], bool:dontBroadcast)
+public Action:OnChangeClass(Handle hEvent, char[] sName, bool bBroadcast)
 {
 	if (!cv_Enabled) return;
 
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new client = GetClientOfUserId(GetEventInt(hEvent, "userid"));
 
 	if (bIsFreeday[client])
 	{
@@ -1423,12 +1558,12 @@ public Action:OnChangeClass(Handle:event, const String:sName[], bool:dontBroadca
 	}
 }
 
-public Action:OnPlayerDeathPre(Handle:event, const String:sName[], bool:dontBroadcast)
+public Action:OnPlayerDeathPre(Handle hEvent, char[] sName, bool bBroadcast)
 {
 	if (!cv_Enabled) return;
 
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	new client_killer = GetClientOfUserId(GetEventInt(event, "attacker"));
+	new client = GetClientOfUserId(GetEventInt(hEvent, "userid"));
+	new client_killer = GetClientOfUserId(GetEventInt(hEvent, "attacker"));
 
 	if (Client_IsIngame(client) && Client_IsIngame(client_killer))
 	{
@@ -1438,27 +1573,27 @@ public Action:OnPlayerDeathPre(Handle:event, const String:sName[], bool:dontBroa
 				{
 					if (GetClientTeam(client_killer) == _:TFTeam_Red)
 					{
-						SetEventBroadcast(event, true);
+						SetEventBroadcast(hEvent, true);
 					}
 				}
 			case 2:
 				{
 					if (GetClientTeam(client_killer) == _:TFTeam_Blue)
 					{
-						SetEventBroadcast(event, true);
+						SetEventBroadcast(hEvent, true);
 					}
 				}
-			case 3: SetEventBroadcast(event, true);
+			case 3: SetEventBroadcast(hEvent, true);
 		}
 	}
 }
 
-public OnPlayerDeath(Handle:event, const String:sName[], bool:dontBroadcast)
+public OnPlayerDeath(Handle hEvent, char[] sName, bool bBroadcast)
 {
 	if (!cv_Enabled) return;
 
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	new client_killer = GetClientOfUserId(GetEventInt(event, "attacker"));
+	new client = GetClientOfUserId(GetEventInt(hEvent, "userid"));
+	new client_killer = GetClientOfUserId(GetEventInt(hEvent, "attacker"));
 
 	if (Client_IsIngame(client))
 	{
@@ -1548,7 +1683,7 @@ public OnPlayerDeath(Handle:event, const String:sName[], bool:dontBroadcast)
 	}
 }
 
-public OnRoundStart(Handle:event, const String:sName[], bool:dontBroadcast)
+public OnRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 {
 	if (!cv_Enabled) return;
 
@@ -1628,7 +1763,7 @@ public OnRoundStart(Handle:event, const String:sName[], bool:dontBroadcast)
 	bActiveRound = true;
 }
 
-public OnArenaRoundStart(Handle:event, const String:sName[], bool:dontBroadcast)
+public OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 {
 	if (!cv_Enabled) return;
 
@@ -1887,7 +2022,7 @@ public OnArenaRoundStart(Handle:event, const String:sName[], bool:dontBroadcast)
 	FindRandomWarden();
 }
 
-public OnRoundEnd(Handle:hEvent, const String:sName[], bool:bBroadcast)
+public OnRoundEnd(Handle hEvent, char[] sName, bool bBroadcast)
 {
 	if (!cv_Enabled) return;
 
@@ -1993,9 +2128,9 @@ public OnRoundEnd(Handle:hEvent, const String:sName[], bool:bBroadcast)
 	}
 }
 
-public OnRegeneration(Handle:event, const String:sName[], bool:dontBroadcast)
+public OnRegeneration(Handle hEvent, char[] sName, bool bBroadcast)
 {
-	RequestFrame(ManageWeapons, GetEventInt(event, "userid"));
+	RequestFrame(ManageWeapons, GetEventInt(hEvent, "userid"));
 }
 
 public OnEntityCreated(entity, const String:sClassName[])
@@ -3996,7 +4131,7 @@ GiveFreeday(client)
 	CPrintToChat(client, "%t %t", "plugin tag", "lr freeday message");
 	new flags = GetEntityFlags(client)|FL_NOTARGET;
 	SetEntityFlags(client, flags);
-	if (cv_FreedayTeleports && bFreedayTeleportSet) TeleportEntity(client, iFreedayPosition, NULL_VECTOR, NULL_VECTOR);
+	if (cv_FreedayTeleports && bFreedayTeleportSet) TeleportEntity(client, fFreedayPosition, NULL_VECTOR, NULL_VECTOR);
 	
 	if (cv_RendererParticles && strlen(sFreedaysParticle) != 0)
 	{
@@ -4063,9 +4198,9 @@ MarkRebel(client)
 	Call_Finish();
 }
 
-MarkFreekiller(client, bool:void = false)
+MarkFreekiller(client, bool:avoid = false)
 {
-	if (void && bVoidFreeKills)
+	if (avoid && bVoidFreeKills)
 	{
 		CPrintToChatAll("%t %t", "plugin tag", "freekiller flagged while void", client);
 		return;
@@ -4085,7 +4220,7 @@ MarkFreekiller(client, bool:void = false)
 	CPrintToChatAll("%t %t", "plugin tag", "freekiller timer start", client, RoundFloat(cv_FreekillersWave));
 
 	new String:sAuth[24];
-	GetClientAuthString(client, sAuth, sizeof(sAuth[]));
+	GetClientAuthId(client, AuthId_Engine, sAuth, sizeof(sAuth[]));
 
 	new String:sName[MAX_NAME_LENGTH];
 	GetClientName(client, sName, sizeof(sName[]));
@@ -4321,8 +4456,8 @@ ParseMapConfig()
 
 					if (bFreedayTeleportSet)
 					{
-						KvGetVector(hConfig, "Coordinates", iFreedayPosition);
-						Jail_Log("Freeday teleport coordinates set for the map '%s' - X: %d, Y: %d, Z: %d", sMapName, iFreedayPosition[0], iFreedayPosition[1], iFreedayPosition[2]);
+						KvGetVector(hConfig, "Coordinates", fFreedayPosition);
+						Jail_Log("Freeday teleport coordinates set for the map '%s' - X: %d, Y: %d, Z: %d", sMapName, fFreedayPosition[0], fFreedayPosition[1], fFreedayPosition[2]);
 					}
 
 					KvGoBack(hConfig);
@@ -4397,19 +4532,19 @@ ParseLastRequestConfig(bool:DefaultValue = false)
 {
 	new Handle:hConfig = CreateKeyValues("TF2Jail_LastRequests");
 
-	new int = 0;
+	new iSize = 0;
 	if (FileToKeyValues(hConfig, sLRConfig))
 	{
 		if (KvGotoFirstSubKey(hConfig, false))
 		{
 			do {
-				int++;
+				iSize++;
 
 			} while (KvGotoNextKey(hConfig, false));
 		}
 	}
 
-	ResizeArray(hLastRequestUses, int);
+	ResizeArray(hLastRequestUses, iSize);
 
 	if (DefaultValue)
 	{
