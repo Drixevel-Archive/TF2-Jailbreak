@@ -53,10 +53,13 @@
 #tryinclude <voiceannounce_ex>
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.0 dev"
+#define PLUGIN_VERSION	"5.5.0"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
+
+//Version of Sourcemod the plugin checks for.
+#define SOURCEMOD_REQUIRED	"1.6"
 
 new Handle:hConVars[78] = {INVALID_HANDLE, ...};
 new Handle:hTextNodes[4] = {INVALID_HANDLE, ...};
@@ -175,6 +178,16 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:sError[], err_max)
 	if (GetEngineVersion() != Engine_TF2)
 	{
 		Format(sError, err_max, "This plug-in only works for Team Fortress 2.");
+		return APLRes_Failure;
+	}
+	
+	//Sourcemod Compatibility Check
+	new String:sVersion[32];
+	GetConVarString(FindConVar("sourcemod_version"), sVersion, sizeof(sVersion));
+	
+	if (StrContains(sVersion, SOURCEMOD_REQUIRED) == -1)
+	{
+		Format(sError, err_max, "This plugin requires Sourcemod %s+ [Current Version: %s]", SOURCEMOD_REQUIRED, sVersion);
 		return APLRes_Failure;
 	}
 	
@@ -4240,7 +4253,7 @@ ParseConfigs()
 	ParseNodeConfig();
 	ParseLastRequestConfig(true);
 	ParseRoleRenderersConfig();
-	ParseWardenModelsConfig();
+	ParseWardenModelsConfig(true);
 }
 
 ParseMapConfig()
@@ -4451,7 +4464,11 @@ ParseWardenModelsConfig(bool:MenuOnly = false)
 		ClearTrie(hWardenSkins);
 	}
 	
-	if (hWardenModelsMenu != INVALID_HANDLE)
+	if (MenuOnly && hWardenModelsMenu == INVALID_HANDLE)
+	{
+		return;
+	}
+	else if (hWardenModelsMenu != INVALID_HANDLE)
 	{
 		RemoveAllMenuItems(hWardenModelsMenu);
 	}
