@@ -989,6 +989,12 @@
 		"en"		"{darkkhaki} {1} [{2}] has been banned for disconnecting while marked for Freekilling."
 	}
 	
+	"finding random warden"
+	{
+		"#format"	"{1:d}"
+		"en"		"{darkkhaki} Finding a random Warden in {1} seconds..."
+	}
+	
 	//MENU TITLES
 	
 	"warden commands"
