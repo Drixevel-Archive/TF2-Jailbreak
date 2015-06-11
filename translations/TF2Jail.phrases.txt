@@ -626,13 +626,13 @@
 	"collision enabled"
 	{
 		"#format"	"{1:N}"
-		"en"		"{darkkhaki} Warden {green}{1} {darkkhaki}has enabled Friendly Fire!"
+		"en"		"{darkkhaki} Warden {green}{1} {darkkhaki}has enabled collision!"
 	}
 	
 	"collision disabled"
 	{
 		"#format"	"{1:N}"
-		"en"		"{darkkhaki} Warden {green}{1} {darkkhaki}has disabled Friendly Fire!"
+		"en"		"{darkkhaki} Warden {green}{1} {darkkhaki}has disabled collision!"
 	}
 	
 	"collision request"
