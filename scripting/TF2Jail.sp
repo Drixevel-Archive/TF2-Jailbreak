@@ -1674,6 +1674,7 @@ public OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 			{
 				break;
 			}
+			
 			if (Client_IsIngame(i) && GetClientTeam(i) == _:TFTeam_Blue)
 			{
 				if (cv_PrefStatus && bRolePreference_Blue[i])
@@ -1686,10 +1687,10 @@ public OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 
 				CPrintToChat(i, "%t %t", "plugin tag", "moved for balance");
 				Jail_Log("%N has been moved to prisoners team for balance.", i);
+				
+				RequestFrame(ManageWeapons, GetClientUserId(i));
 			}
 		}
-		
-		RequestFrame(ManageWeapons, GetEventInt(hEvent, "userid"));
 	}
 	
 	if (bIsMapCompatible && cv_DoorOpenTimer != 0.0)
