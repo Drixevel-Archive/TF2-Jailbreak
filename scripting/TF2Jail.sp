@@ -53,7 +53,7 @@
 #tryinclude <voiceannounce_ex>
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.4"
+#define PLUGIN_VERSION	"5.5.4a"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -1651,17 +1651,6 @@ public OnRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 	{
 		WeaponRestrictions_SetConfig(cv_sWeaponConfig);
 		bDifferentWepRestrict = false;
-	}
-	
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (!Client_IsIngame(i))continue;
-		
-		switch (GetClientTeam(i))
-		{
-			case TFTeam_Red:MutePlayer(i);
-			case TFTeam_Blue:UnmutePlayer(i);
-		}
 	}
 	
 	iWarden = -1;
