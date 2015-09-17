@@ -20,7 +20,7 @@ enum eDoorsMode
  *
  * @return		True on success, false on failure.
  **/
-native TF2Jail_WardenActive();
+native bool TF2Jail_WardenActive();
 
 /**
  * Returns if client is Warden.
@@ -28,7 +28,7 @@ native TF2Jail_WardenActive();
  * @param client		Client is Warden.
  * @return		True on success, false on failure.
  **/
-native TF2Jail_IsWarden(client);
+native bool TF2Jail_IsWarden(int client);
 
 /**
  * Sets a client to Warden.
@@ -36,7 +36,7 @@ native TF2Jail_IsWarden(client);
  * @param client		Client to become Warden.
  * @noreturn
  **/
-native TF2Jail_WardenSet(client);
+native void TF2Jail_WardenSet(int client);
 
 /**
  * Remove the Warden if there is one.
@@ -44,7 +44,7 @@ native TF2Jail_WardenSet(client);
  * @param client		Client to remove Warden.
  * @noreturn
  **/
-native TF2Jail_WardenUnset(client);
+native void TF2Jail_WardenUnset(int client);
 
 /**
  * Returns if the client is a Freeday.
@@ -52,7 +52,7 @@ native TF2Jail_WardenUnset(client);
  * @param client		Client is Freeday.
  * @return		True on success, false on failure.
  **/
-native TF2Jail_IsFreeday(client);
+native bool TF2Jail_IsFreeday(int client);
 
 /**
  * Sets a client to Freeday.
@@ -60,7 +60,7 @@ native TF2Jail_IsFreeday(client);
  * @param client		Client to give Freeday.
  * @noreturn
  **/
-native TF2Jail_GiveFreeday(client);
+native void TF2Jail_GiveFreeday(int client);
 
 /**
  * Removes a client's Freeday.
@@ -68,7 +68,7 @@ native TF2Jail_GiveFreeday(client);
  * @param client		Client to remove Freeday from.
  * @noreturn
  **/
-native TF2Jail_RemoveFreeday(client);
+native void TF2Jail_RemoveFreeday(int client);
 
 /**
  * Returns if the client is a Rebel.
@@ -76,7 +76,7 @@ native TF2Jail_RemoveFreeday(client);
  * @param client		Client is Rebel.
  * @return		True on success, false on failure.
  **/
-native TF2Jail_IsRebel(client);
+native bool TF2Jail_IsRebel(int client);
 
 /**
  * Marks a client as a Rebel.
@@ -84,7 +84,7 @@ native TF2Jail_IsRebel(client);
  * @param client		Client to mark Rebel.
  * @noreturn
  **/
-native TF2Jail_MarkRebel(client);
+native void TF2Jail_MarkRebel(int client);
 
 /**
  * Returns if the cilent is a Freekiller.
@@ -92,7 +92,7 @@ native TF2Jail_MarkRebel(client);
  * @param client		Client is Freekiller.
  * @return		True on success, false on failure.
  **/
-native TF2Jail_IsFreekiller(client);
+native bool TF2Jail_IsFreekiller(int client);
 
 /**
  * Marks the client as a Freekiller.
@@ -100,7 +100,7 @@ native TF2Jail_IsFreekiller(client);
  * @param client		Client to mark Freekiller.
  * @noreturn
  **/
-native TF2Jail_MarkFreekiller(client);
+native void TF2Jail_MarkFreekiller(int client);
 
 /**
  * Strip clients to melee while using TF2Jail Rules. (Keep Weapons, ammo = 0)
@@ -108,7 +108,7 @@ native TF2Jail_MarkFreekiller(client);
  * @param client		Client to Strip to melee.
  * @noreturn
  **/
-native TF2Jail_StripToMelee(client);
+native void TF2Jail_StripToMelee(int client);
 
 /**
  * Strip client to melee entirely using TF2Jail rules.
@@ -116,21 +116,21 @@ native TF2Jail_StripToMelee(client);
  * @param client		Client to Strip entirely.
  * @noreturn
  **/
-native TF2Jail_StripAllWeapons(client);
+native void TF2Jail_StripAllWeapons(int client);
 
 /**
  * Lock warden from being allowed.
  *
  * @noreturn
  **/
-native TF2Jail_LockWarden();
+native void TF2Jail_LockWarden();
 
 /**
  * Unlock warden from being allowed.
  *
  * @noreturn
  **/
-native TF2Jail_UnlockWarden();
+native void TF2Jail_UnlockWarden();
 
 /**
  * Log using TF2Jail's logging system/rules.
@@ -139,14 +139,14 @@ native TF2Jail_UnlockWarden();
  * @param ...			Formatting parameters.
  * @noreturn
  **/
-native TF2Jail_Log(const String:log[], any:...);
+native void TF2Jail_Log(const char[] log, any ...);
 
 /**
  * Returns if the current round is a Last Request day.
  *
  * @return		True on success, false on failure.
  **/
-native TF2Jail_IsLRRound();
+native bool TF2Jail_IsLRRound();
 
 /**
  * Returns if the current round is a Last Request day.
@@ -154,7 +154,7 @@ native TF2Jail_IsLRRound();
  * @param Status		Cell to execute. (OPEN, CLOSE, LOCK, UNLOCK) (If doors are locked, they must be unlocked to open)
  * @return		True on success, false on incompatible map.
  **/
-native TF2Jail_ManageCells(eDoorsMode:Status);
+native bool TF2Jail_ManageCells(eDoorsMode Status);
 
 //Forwards
 /**
@@ -163,7 +163,7 @@ native TF2Jail_ManageCells(eDoorsMode:Status);
  * @param client		Client Index
  * @noreturn
  **/
-forward TF2Jail_OnWardenCreated(client);
+forward void TF2Jail_OnWardenCreated(int client);
 
 #pragma deprecated Use TF2Jail_OnWardenCreated(client) instead.
 forward Warden_OnWardenCreated(client);
@@ -174,7 +174,7 @@ forward Warden_OnWardenCreated(client);
  * @param client		Client Index
  * @noreturn
  **/
-forward TF2Jail_OnWardenRemoved(client);
+forward void TF2Jail_OnWardenRemoved(int client);
 
 #pragma deprecated Use TF2Jail_OnWardenRemoved(client) instead.
 forward Warden_OnWardenRemoved(client);
@@ -185,7 +185,7 @@ forward Warden_OnWardenRemoved(client);
  * @param Handler		String or text called by the Handler in the Last Request configuration file. (Use this to differentiate your custom LRs)
  * @noreturn
  **/
- forward TF2Jail_OnLastRequestExecute(const String:Handler[]);
+ forward void TF2Jail_OnLastRequestExecute(const char[] Handler);
  
  /**
  * Called when a client is given Freeday. (post)
@@ -193,7 +193,7 @@ forward Warden_OnWardenRemoved(client);
  * @param client		Client Index
  * @noreturn
  **/
-forward TF2Jail_OnFreedayGiven(client);
+forward void TF2Jail_OnFreedayGiven(int client);
 
  /**
  * Called when a client has been removed from Freeday. (post)
@@ -201,7 +201,7 @@ forward TF2Jail_OnFreedayGiven(client);
  * @param client		Client Index
  * @noreturn
  **/
-forward TF2Jail_OnFreedayRemoved(client);
+forward void TF2Jail_OnFreedayRemoved(int client);
 
  /**
  * Called when a client has marked as a Freekiller. (post)
@@ -209,7 +209,7 @@ forward TF2Jail_OnFreedayRemoved(client);
  * @param client		Client Index
  * @noreturn
  **/
-forward TF2Jail_OnFreekillerGiven(client);
+forward void TF2Jail_OnFreekillerGiven(int client);
 
  /**
  * Called when a client has been cleared from Freekiller. (post)
@@ -217,7 +217,7 @@ forward TF2Jail_OnFreekillerGiven(client);
  * @param client		Client Index
  * @noreturn
  **/
-forward TF2Jail_OnFreekillerRemoved(client);
+forward void TF2Jail_OnFreekillerRemoved(int client);
 
  /**
  * Called when a client has marked as a Rebel. (post)
@@ -225,7 +225,7 @@ forward TF2Jail_OnFreekillerRemoved(client);
  * @param client		Client Index
  * @noreturn
  **/
-forward TF2Jail_OnRebelGiven(client);
+forward void TF2Jail_OnRebelGiven(int client);
 
  /**
  * Called when a client has been cleared from Rebel. (post)
@@ -233,18 +233,7 @@ forward TF2Jail_OnRebelGiven(client);
  * @param client		Client Index
  * @noreturn
  **/
-forward TF2Jail_OnRebelRemoved(client);
-
-public SharedPlugin:__pl_tf2jail = 
-{
-	name = "tf2jail",
-	file = "TF2Jail.smx",
-#if defined REQUIRE_PLUGIN
-	required = 1,
-#else
-	required = 0,
-#endif
-};
+forward void TF2Jail_OnRebelRemoved(int client);
 
 #if !defined REQUIRE_PLUGIN
 public __pl_tf2jail_SetNTVOptional()
@@ -268,3 +257,14 @@ public __pl_tf2jail_SetNTVOptional()
 	MarkNativeAsOptional("TF2Jail_ManageCells");
 }
 #endif
+
+public SharedPlugin __pl_tf2jail = 
+{
+	name = "tf2jail",
+	file = "TF2Jail.smx",
+#if defined REQUIRE_PLUGIN
+	required = 1,
+#else
+	required = 0,
+#endif
+};
