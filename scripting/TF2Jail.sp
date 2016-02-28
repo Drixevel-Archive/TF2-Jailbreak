@@ -22,27 +22,22 @@
 	**
 */
 
-#pragma semicolon 1
-
 //Required Includes
 #include <sourcemod>
+#include <sdkhooks>
 #include <adminmenu>
 #include <tf2_stocks>
 #include <morecolors>
 #include <smlib>
-#include <autoexecconfig>
 
 //TF2Jail Include
 #include <tf2jail>
 
-//Required Extensions
-#tryinclude <sdkhooks>
-
-//Non-Required Extensions
+//Extensions
 #undef REQUIRE_EXTENSIONS
 #tryinclude <SteamWorks>
 
-//Non-Required Plugins
+//Plugins
 #undef REQUIRE_PLUGIN
 #tryinclude <tf2-weapon-restrictions>
 #tryinclude <tf2attributes>
@@ -53,10 +48,11 @@
 #tryinclude <voiceannounce_ex>
 
 //New Syntax
+#pragma semicolon 1
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.5"
+#define PLUGIN_VERSION	"5.5.7"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -241,92 +237,89 @@ public void OnPluginStart()
 	LoadTranslations("common.phrases");
 	LoadTranslations("TF2Jail.phrases");
 	
-	//Set the config file before handling it.
-	AutoExecConfig_SetFile("TF2Jail");
-	
 	//ConVars
-	hConVars[0] = AutoExecConfig_CreateConVar("tf2jail_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_PLUGIN | FCVAR_SPONLY | FCVAR_DONTRECORD);
-	hConVars[1] = AutoExecConfig_CreateConVar("sm_tf2jail_enable", "1", "Status of the plugin: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[2] = AutoExecConfig_CreateConVar("sm_tf2jail_advertisement", "1", "Display plugin creator advertisement: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[3] = AutoExecConfig_CreateConVar("sm_tf2jail_set_variables", "1", "Set default cvars: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[4] = AutoExecConfig_CreateConVar("sm_tf2jail_logging", "2", "Status and the type of logging: (0 = disabled, 1 = regular logging, 2 = logging to TF2Jail logs.)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
-	hConVars[5] = AutoExecConfig_CreateConVar("sm_tf2jail_auto_balance", "1", "Should the plugin autobalance teams: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[6] = AutoExecConfig_CreateConVar("sm_tf2jail_balance_ratio", "0.5", "Ratio for autobalance: (Example: 0.5 = 2:4)", FCVAR_PLUGIN, true, 0.1, true, 1.0);
-	hConVars[7] = AutoExecConfig_CreateConVar("sm_tf2jail_melee", "1", "Strip Red Team of weapons: (1 = strip weapons, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[8] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_enable", "1", "Allow Wardens: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[9] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_auto", "1", "Automatically assign a random Wardens on round start: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[10] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_models", "1", "Enable custom models for Warden: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[11] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_forceclass", "1", "Force Wardens to be the class assigned to the models: (1 = yes, 0 = no)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[12] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_friendlyfire", "1", "Allow Wardens to manage friendly fire: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[13] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_collision", "1", "Allow Wardens to manage collision: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[14] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_request", "0", "Require admin acceptance for cvar changes: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[15] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_limit", "3", "Number of allowed Wardens per user per map: (0.0 = unlimited)", FCVAR_PLUGIN, true, 0.0);
-	hConVars[16] = AutoExecConfig_CreateConVar("sm_tf2jail_door_controls", "1", "Allow Wardens and Admins door control: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[17] = AutoExecConfig_CreateConVar("sm_tf2jail_cell_timer", "60", "Time after Arena round start to open doors: (1.0 - 60.0) (0.0 = off)", FCVAR_PLUGIN, true, 0.0, true, 60.0);
-	hConVars[18] = AutoExecConfig_CreateConVar("sm_tf2jail_mute_red", "2", "Mute Red team: (2 = mute prisoners alive and all dead, 1 = mute prisoners on round start based on redmute_time, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
-	hConVars[19] = AutoExecConfig_CreateConVar("sm_tf2jail_mute_red_time", "15", "Mute time for redmute: (1.0 - 60.0)", FCVAR_PLUGIN, true, 1.0, true, 60.0);
-	hConVars[20] = AutoExecConfig_CreateConVar("sm_tf2jail_mute_blue", "2", "Mute Blue players: (2 = always except Wardens, 1 = while Wardens is active, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
-	hConVars[21] = AutoExecConfig_CreateConVar("sm_tf2jail_mute_dead", "1", "Mute Dead players: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[22] = AutoExecConfig_CreateConVar("sm_tf2jail_microphonecheck_enable", "1", "Check blue clients for microphone: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[23] = AutoExecConfig_CreateConVar("sm_tf2jail_microphonecheck_type", "1", "Block blue team or Wardens if no microphone: (1 = Blue, 0 = Wardens only)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[24] = AutoExecConfig_CreateConVar("sm_tf2jail_rebelling_enable", "1", "Enable the Rebel system: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[25] = AutoExecConfig_CreateConVar("sm_tf2jail_rebelling_time", "30.0", "Rebel timer: (1.0 - 60.0, 0 = always)", FCVAR_PLUGIN, true, 1.0, true, 60.0);
-	hConVars[26] = AutoExecConfig_CreateConVar("sm_tf2jail_criticals", "1", "Which team gets crits: (0 = off, 1 = blue, 2 = red, 3 = both)", FCVAR_PLUGIN, true, 0.0, true, 3.0);
-	hConVars[27] = AutoExecConfig_CreateConVar("sm_tf2jail_criticals_type", "2", "Type of crits given: (1 = mini, 2 = full)", FCVAR_PLUGIN, true, 1.0, true, 2.0);
-	hConVars[28] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_veto_status", "1", "Status to allow votes to fire wardens: (1 = on, 0 = off)", _, true, 0.0, true, 1.0);
-	hConVars[29] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_veto_votesneeded", "0.60", "Percentage of players required for fire Wardens vote: (default 0.60 - 60%) (0.05 - 1.00)", 0, true, 0.05, true, 1.00);
-	hConVars[30] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_veto_minplayers", "0", "Minimum amount of players required for fire Wardens vote: (0 - MaxPlayers)", 0, true, 0.0, true, float(MAXPLAYERS));
-	hConVars[31] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_veto_postaction", "0", "Fire Wardens instantly on vote success or next round: (0 = instant, 1 = Next round)", _, true, 0.0, true, 1.0);
-	hConVars[32] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_veto_passlimit", "3", "Limit to Wardens fired by players via votes: (1 - 10, 0 = unlimited)", FCVAR_PLUGIN, true, 0.0, true, 10.0);
-	hConVars[33] = AutoExecConfig_CreateConVar("sm_tf2jail_freekilling_enable", "1", "Enable the Freekill system: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[34] = AutoExecConfig_CreateConVar("sm_tf2jail_freekilling_seconds", "6.0", "Time in seconds minimum for freekill flag on mark: (1.0 - 60.0)", FCVAR_PLUGIN, true, 1.0, true, 60.0);
-	hConVars[35] = AutoExecConfig_CreateConVar("sm_tf2jail_freekilling_kills", "6", "Number of kills required to flag for freekilling: (1.0 - MaxPlayers)", FCVAR_PLUGIN, true, 1.0, true, float(MAXPLAYERS));
-	hConVars[36] = AutoExecConfig_CreateConVar("sm_tf2jail_freekilling_wave", "60.0", "Time in seconds until client is banned for being marked: (1.0 Minimum)", FCVAR_PLUGIN, true, 1.0);
-	hConVars[37] = AutoExecConfig_CreateConVar("sm_tf2jail_freekilling_action", "2", "Action towards marked freekiller: (2 = Ban client based on cvars, 1 = Slay the client, 0 = remove mark on timer)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
-	hConVars[38] = AutoExecConfig_CreateConVar("sm_tf2jail_freekilling_ban_reason", "You have been banned for freekilling.", "Message to give the client if they're marked as a freekiller and banned.", FCVAR_PLUGIN);
-	hConVars[39] = AutoExecConfig_CreateConVar("sm_tf2jail_freekilling_ban_reason_dc", "You have been banned for freekilling and disconnecting.", "Message to give the client if they're marked as a freekiller/disconnected and banned.", FCVAR_PLUGIN);
-	hConVars[40] = AutoExecConfig_CreateConVar("sm_tf2jail_freekilling_duration", "60", "Time banned after timer ends: (0 = permanent)", FCVAR_PLUGIN, true, 0.0);
-	hConVars[41] = AutoExecConfig_CreateConVar("sm_tf2jail_freekilling_duration_dc", "120", "Time banned if disconnected after timer ends: (0 = permanent)", FCVAR_PLUGIN, true, 0.0);
-	hConVars[42] = AutoExecConfig_CreateConVar("sm_tf2jail_lastrequest_enable", "1", "Status of the LR System: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[43] = AutoExecConfig_CreateConVar("sm_tf2jail_lastrequest_automatic", "1", "Automatically grant last request to last prisoner alive: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[44] = AutoExecConfig_CreateConVar("sm_tf2jail_lastrequest_lock_warden", "1", "Lock Wardens during last request rounds: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[45] = AutoExecConfig_CreateConVar("sm_tf2jail_freeday_limit", "3", "Max number of freedays for the lr: (1.0 - 16.0)", FCVAR_PLUGIN, true, 1.0, true, 16.0);
-	hConVars[46] = AutoExecConfig_CreateConVar("sm_tf2jail_1stdayfreeday", "1", "Status of the 1st day freeday: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[47] = AutoExecConfig_CreateConVar("sm_tf2jail_democharge", "1", "Stop the Demoman class from charging with shields: (1 = yes, 0 = no)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[48] = AutoExecConfig_CreateConVar("sm_tf2jail_doublejump", "1", "Stop the Scout class from double jumping: (1 = yes, 0 = no)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[49] = AutoExecConfig_CreateConVar("sm_tf2jail_airblast", "1", "Stop the Pyro class from air blasting: (1 = yes, 0 = no)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[50] = AutoExecConfig_CreateConVar("sm_tf2jail_renderer_particles", "1", "Status for particles to render from config: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[51] = AutoExecConfig_CreateConVar("sm_tf2jail_renderer_colors", "1", "Status for colors to render from config: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[52] = AutoExecConfig_CreateConVar("sm_tf2jail_renderer_default_color", "256, 256, 256, 256", "Default color to set clients to if one isn't present: (Default: 256, 256, 256, 256)", FCVAR_PLUGIN);
-	hConVars[53] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_voice", "1", "Voice management for Wardens: (0 = disabled, 1 = unmute, 2 = warning)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
-	hConVars[54] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_wearables", "1", "Strip Wardens wearables: (1 = enable, 0 = disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[55] = AutoExecConfig_CreateConVar("sm_tf2jail_freeday_teleport", "1", "Status of teleporting: (1 = enable, 0 = disable) (Disables all functionality regardless of configs)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[56] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_stabprotection", "0", "Give Wardens backstab protection: (2 = Always, 1 = Once, 0 = Disabled)", FCVAR_PLUGIN, true, 0.0, true, 2.0);
-	hConVars[57] = AutoExecConfig_CreateConVar("sm_tf2jail_point_servercommand", "1", "Kill 'point_servercommand' entities: (1 = Kill on Spawn, 0 = Disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[58] = AutoExecConfig_CreateConVar("sm_tf2jail_freeday_removeonlr", "1", "Remove Freedays on Last Request: (1 = enable, 0 = disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[59] = AutoExecConfig_CreateConVar("sm_tf2jail_freeday_removeonlastguard", "1", "Remove Freedays on Last Guard: (1 = enable, 0 = disable)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[60] = AutoExecConfig_CreateConVar("sm_tf2jail_preference_enable", "0", "Allow clients to choose their preferred teams/roles: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[61] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_timer", "20", "Time in seconds after Warden is unset or lost to lock Warden: (0 = Disabled, NON-FLOAT VALUE)", FCVAR_PLUGIN);
-	hConVars[62] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_flags", "0", "Lock Warden to a command access flag: (1 = enable, 0 = disable) (Command Access: TF2Jail_WardenOverride)", FCVAR_PLUGIN);
-	hConVars[63] = AutoExecConfig_CreateConVar("sm_tf2jail_preference_blue", "0", "Enable the preference for Blue if preferences are enabled: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[64] = AutoExecConfig_CreateConVar("sm_tf2jail_preference_warden", "0", "Enable the preference for Blue if preferences are enabled: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[65] = AutoExecConfig_CreateConVar("sm_tf2jail_console_prints_status", "1", "Enable console messages and information: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[66] = AutoExecConfig_CreateConVar("sm_tf2jail_preference_force", "1", "Force admin commands to set players to roles regardless of preference: (1 = Force, 0 = Respect)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[67] = AutoExecConfig_CreateConVar("sm_tf2jail_friendlyfire_button", "1", "Status for Friendly Fire button if exists: (1 = Locked, 0 = Unlocked)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[68] = AutoExecConfig_CreateConVar("sm_tf2jail_weaponconfig", "Jailbreak", "Name of the config for Weapon Blocker: (Default: Jailbreak) (If you compiled plugin without plugin, disregard)", FCVAR_PLUGIN);
-	hConVars[69] = AutoExecConfig_CreateConVar("sm_tf2jail_disable_killfeeds", "0", "Disable kill feeds status: (0 = None, 1 = Red, 2 = Blue, 3 = All)", FCVAR_PLUGIN, true, 0.0, true, 3.0);
-	hConVars[70] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_death_crits", "1", "Disable critical hits on Warden death: (0 = Disabled, 1 = Enabled)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[71] = AutoExecConfig_CreateConVar("sm_tf2jail_roundtimer_status", "1", "Status of the round timer: (0 = Disabled, 1 = Enabled)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[72] = AutoExecConfig_CreateConVar("sm_tf2jail_roundtimer_time", "600", "Amount of time normally on the timer: (0.0 = disabled)", FCVAR_PLUGIN, true, 0.0);
-	hConVars[73] = AutoExecConfig_CreateConVar("sm_tf2jail_roundtimer_time_freeday", "300", "Amount of time on 1st day freeday: (0.0 = disabled)", FCVAR_PLUGIN, true, 0.0);
-	hConVars[74] = AutoExecConfig_CreateConVar("sm_tf2jail_roundtimer_center", "0", "Show center text for round timer: (0 = Disabled, 1 = Enabled)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[75] = AutoExecConfig_CreateConVar("sm_tf2jail_roundtimer_execute", "sm_slay @red", "Commands to execute to server on timer end: (Maximum Characters: 64)", FCVAR_PLUGIN);
-	hConVars[76] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_defaultmodel", "Warden V2", "Default model by name to set Wardens to: (Maximum Characters: 64)", FCVAR_PLUGIN);
-	hConVars[77] = AutoExecConfig_CreateConVar("sm_tf2jail_warden_models_menu", "1", "Status for the Warden models menu: (1 = Enabled, 0 = Disabled)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	hConVars[78] = AutoExecConfig_CreateConVar("sm_tf2jail_random_warden_timer", "5", "Seconds after the round starts to choose a warden: (0 = instant, default: 5)", FCVAR_PLUGIN, true, 0.0);
+	hConVars[0] = CreateConVar("tf2jail_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_SPONLY | FCVAR_DONTRECORD);
+	hConVars[1] = CreateConVar("sm_tf2jail_enable", "1", "Status of the plugin: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[2] = CreateConVar("sm_tf2jail_advertisement", "1", "Display plugin creator advertisement: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[3] = CreateConVar("sm_tf2jail_set_variables", "1", "Set default cvars: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[4] = CreateConVar("sm_tf2jail_logging", "2", "Status and the type of logging: (0 = disabled, 1 = regular logging, 2 = logging to TF2Jail logs.)", FCVAR_NOTIFY, true, 0.0, true, 2.0);
+	hConVars[5] = CreateConVar("sm_tf2jail_auto_balance", "1", "Should the plugin autobalance teams: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[6] = CreateConVar("sm_tf2jail_balance_ratio", "0.5", "Ratio for autobalance: (Example: 0.5 = 2:4)", FCVAR_NOTIFY, true, 0.1, true, 1.0);
+	hConVars[7] = CreateConVar("sm_tf2jail_melee", "1", "Strip Red Team of weapons: (1 = strip weapons, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[8] = CreateConVar("sm_tf2jail_warden_enable", "1", "Allow Wardens: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[9] = CreateConVar("sm_tf2jail_warden_auto", "1", "Automatically assign a random Wardens on round start: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[10] = CreateConVar("sm_tf2jail_warden_models", "1", "Enable custom models for Warden: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[11] = CreateConVar("sm_tf2jail_warden_forceclass", "1", "Force Wardens to be the class assigned to the models: (1 = yes, 0 = no)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[12] = CreateConVar("sm_tf2jail_warden_friendlyfire", "1", "Allow Wardens to manage friendly fire: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[13] = CreateConVar("sm_tf2jail_warden_collision", "1", "Allow Wardens to manage collision: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[14] = CreateConVar("sm_tf2jail_warden_request", "0", "Require admin acceptance for cvar changes: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[15] = CreateConVar("sm_tf2jail_warden_limit", "3", "Number of allowed Wardens per user per map: (0.0 = unlimited)", FCVAR_NOTIFY, true, 0.0);
+	hConVars[16] = CreateConVar("sm_tf2jail_door_controls", "1", "Allow Wardens and Admins door control: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[17] = CreateConVar("sm_tf2jail_cell_timer", "60", "Time after Arena round start to open doors: (1.0 - 60.0) (0.0 = off)", FCVAR_NOTIFY, true, 0.0, true, 60.0);
+	hConVars[18] = CreateConVar("sm_tf2jail_mute_red", "2", "Mute Red team: (2 = mute prisoners alive and all dead, 1 = mute prisoners on round start based on redmute_time, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 2.0);
+	hConVars[19] = CreateConVar("sm_tf2jail_mute_red_time", "15", "Mute time for redmute: (1.0 - 60.0)", FCVAR_NOTIFY, true, 1.0, true, 60.0);
+	hConVars[20] = CreateConVar("sm_tf2jail_mute_blue", "2", "Mute Blue players: (2 = always except Wardens, 1 = while Wardens is active, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 2.0);
+	hConVars[21] = CreateConVar("sm_tf2jail_mute_dead", "1", "Mute Dead players: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[22] = CreateConVar("sm_tf2jail_microphonecheck_enable", "1", "Check blue clients for microphone: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[23] = CreateConVar("sm_tf2jail_microphonecheck_type", "1", "Block blue team or Wardens if no microphone: (1 = Blue, 0 = Wardens only)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[24] = CreateConVar("sm_tf2jail_rebelling_enable", "1", "Enable the Rebel system: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[25] = CreateConVar("sm_tf2jail_rebelling_time", "30.0", "Rebel timer: (1.0 - 60.0, 0 = always)", FCVAR_NOTIFY, true, 1.0, true, 60.0);
+	hConVars[26] = CreateConVar("sm_tf2jail_criticals", "1", "Which team gets crits: (0 = off, 1 = blue, 2 = red, 3 = both)", FCVAR_NOTIFY, true, 0.0, true, 3.0);
+	hConVars[27] = CreateConVar("sm_tf2jail_criticals_type", "2", "Type of crits given: (1 = mini, 2 = full)", FCVAR_NOTIFY, true, 1.0, true, 2.0);
+	hConVars[28] = CreateConVar("sm_tf2jail_warden_veto_status", "1", "Status to allow votes to fire wardens: (1 = on, 0 = off)", _, true, 0.0, true, 1.0);
+	hConVars[29] = CreateConVar("sm_tf2jail_warden_veto_votesneeded", "0.60", "Percentage of players required for fire Wardens vote: (default 0.60 - 60%) (0.05 - 1.00)", 0, true, 0.05, true, 1.00);
+	hConVars[30] = CreateConVar("sm_tf2jail_warden_veto_minplayers", "0", "Minimum amount of players required for fire Wardens vote: (0 - MaxPlayers)", 0, true, 0.0, true, float(MAXPLAYERS));
+	hConVars[31] = CreateConVar("sm_tf2jail_warden_veto_postaction", "0", "Fire Wardens instantly on vote success or next round: (0 = instant, 1 = Next round)", _, true, 0.0, true, 1.0);
+	hConVars[32] = CreateConVar("sm_tf2jail_warden_veto_passlimit", "3", "Limit to Wardens fired by players via votes: (1 - 10, 0 = unlimited)", FCVAR_NOTIFY, true, 0.0, true, 10.0);
+	hConVars[33] = CreateConVar("sm_tf2jail_freekilling_enable", "1", "Enable the Freekill system: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[34] = CreateConVar("sm_tf2jail_freekilling_seconds", "6.0", "Time in seconds minimum for freekill flag on mark: (1.0 - 60.0)", FCVAR_NOTIFY, true, 1.0, true, 60.0);
+	hConVars[35] = CreateConVar("sm_tf2jail_freekilling_kills", "6", "Number of kills required to flag for freekilling: (1.0 - MaxPlayers)", FCVAR_NOTIFY, true, 1.0, true, float(MAXPLAYERS));
+	hConVars[36] = CreateConVar("sm_tf2jail_freekilling_wave", "60.0", "Time in seconds until client is banned for being marked: (1.0 Minimum)", FCVAR_NOTIFY, true, 1.0);
+	hConVars[37] = CreateConVar("sm_tf2jail_freekilling_action", "2", "Action towards marked freekiller: (2 = Ban client based on cvars, 1 = Slay the client, 0 = remove mark on timer)", FCVAR_NOTIFY, true, 0.0, true, 2.0);
+	hConVars[38] = CreateConVar("sm_tf2jail_freekilling_ban_reason", "You have been banned for freekilling.", "Message to give the client if they're marked as a freekiller and banned.", FCVAR_NOTIFY);
+	hConVars[39] = CreateConVar("sm_tf2jail_freekilling_ban_reason_dc", "You have been banned for freekilling and disconnecting.", "Message to give the client if they're marked as a freekiller/disconnected and banned.", FCVAR_NOTIFY);
+	hConVars[40] = CreateConVar("sm_tf2jail_freekilling_duration", "60", "Time banned after timer ends: (0 = permanent)", FCVAR_NOTIFY, true, 0.0);
+	hConVars[41] = CreateConVar("sm_tf2jail_freekilling_duration_dc", "120", "Time banned if disconnected after timer ends: (0 = permanent)", FCVAR_NOTIFY, true, 0.0);
+	hConVars[42] = CreateConVar("sm_tf2jail_lastrequest_enable", "1", "Status of the LR System: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[43] = CreateConVar("sm_tf2jail_lastrequest_automatic", "1", "Automatically grant last request to last prisoner alive: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[44] = CreateConVar("sm_tf2jail_lastrequest_lock_warden", "1", "Lock Wardens during last request rounds: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[45] = CreateConVar("sm_tf2jail_freeday_limit", "3", "Max number of freedays for the lr: (1.0 - 16.0)", FCVAR_NOTIFY, true, 1.0, true, 16.0);
+	hConVars[46] = CreateConVar("sm_tf2jail_1stdayfreeday", "1", "Status of the 1st day freeday: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[47] = CreateConVar("sm_tf2jail_democharge", "1", "Stop the Demoman class from charging with shields: (1 = yes, 0 = no)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[48] = CreateConVar("sm_tf2jail_doublejump", "1", "Stop the Scout class from double jumping: (1 = yes, 0 = no)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[49] = CreateConVar("sm_tf2jail_airblast", "1", "Stop the Pyro class from air blasting: (1 = yes, 0 = no)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[50] = CreateConVar("sm_tf2jail_renderer_particles", "1", "Status for particles to render from config: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[51] = CreateConVar("sm_tf2jail_renderer_colors", "1", "Status for colors to render from config: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[52] = CreateConVar("sm_tf2jail_renderer_default_color", "256, 256, 256, 256", "Default color to set clients to if one isn't present: (Default: 256, 256, 256, 256)", FCVAR_NOTIFY);
+	hConVars[53] = CreateConVar("sm_tf2jail_warden_voice", "1", "Voice management for Wardens: (0 = disabled, 1 = unmute, 2 = warning)", FCVAR_NOTIFY, true, 0.0, true, 2.0);
+	hConVars[54] = CreateConVar("sm_tf2jail_warden_wearables", "1", "Strip Wardens wearables: (1 = enable, 0 = disable)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[55] = CreateConVar("sm_tf2jail_freeday_teleport", "1", "Status of teleporting: (1 = enable, 0 = disable) (Disables all functionality regardless of configs)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[56] = CreateConVar("sm_tf2jail_warden_stabprotection", "0", "Give Wardens backstab protection: (2 = Always, 1 = Once, 0 = Disabled)", FCVAR_NOTIFY, true, 0.0, true, 2.0);
+	hConVars[57] = CreateConVar("sm_tf2jail_point_servercommand", "1", "Kill 'point_servercommand' entities: (1 = Kill on Spawn, 0 = Disable)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[58] = CreateConVar("sm_tf2jail_freeday_removeonlr", "1", "Remove Freedays on Last Request: (1 = enable, 0 = disable)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[59] = CreateConVar("sm_tf2jail_freeday_removeonlastguard", "1", "Remove Freedays on Last Guard: (1 = enable, 0 = disable)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[60] = CreateConVar("sm_tf2jail_preference_enable", "0", "Allow clients to choose their preferred teams/roles: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[61] = CreateConVar("sm_tf2jail_warden_timer", "20", "Time in seconds after Warden is unset or lost to lock Warden: (0 = Disabled, NON-FLOAT VALUE)", FCVAR_NOTIFY);
+	hConVars[62] = CreateConVar("sm_tf2jail_warden_flags", "0", "Lock Warden to a command access flag: (1 = enable, 0 = disable) (Command Access: TF2Jail_WardenOverride)", FCVAR_NOTIFY);
+	hConVars[63] = CreateConVar("sm_tf2jail_preference_blue", "0", "Enable the preference for Blue if preferences are enabled: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[64] = CreateConVar("sm_tf2jail_preference_warden", "0", "Enable the preference for Blue if preferences are enabled: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[65] = CreateConVar("sm_tf2jail_console_prints_status", "1", "Enable console messages and information: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[66] = CreateConVar("sm_tf2jail_preference_force", "1", "Force admin commands to set players to roles regardless of preference: (1 = Force, 0 = Respect)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[67] = CreateConVar("sm_tf2jail_friendlyfire_button", "1", "Status for Friendly Fire button if exists: (1 = Locked, 0 = Unlocked)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[68] = CreateConVar("sm_tf2jail_weaponconfig", "Jailbreak", "Name of the config for Weapon Blocker: (Default: Jailbreak) (If you compiled plugin without plugin, disregard)", FCVAR_NOTIFY);
+	hConVars[69] = CreateConVar("sm_tf2jail_disable_killfeeds", "0", "Disable kill feeds status: (0 = None, 1 = Red, 2 = Blue, 3 = All)", FCVAR_NOTIFY, true, 0.0, true, 3.0);
+	hConVars[70] = CreateConVar("sm_tf2jail_warden_death_crits", "1", "Disable critical hits on Warden death: (0 = Disabled, 1 = Enabled)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[71] = CreateConVar("sm_tf2jail_roundtimer_status", "1", "Status of the round timer: (0 = Disabled, 1 = Enabled)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[72] = CreateConVar("sm_tf2jail_roundtimer_time", "600", "Amount of time normally on the timer: (0.0 = disabled)", FCVAR_NOTIFY, true, 0.0);
+	hConVars[73] = CreateConVar("sm_tf2jail_roundtimer_time_freeday", "300", "Amount of time on 1st day freeday: (0.0 = disabled)", FCVAR_NOTIFY, true, 0.0);
+	hConVars[74] = CreateConVar("sm_tf2jail_roundtimer_center", "0", "Show center text for round timer: (0 = Disabled, 1 = Enabled)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[75] = CreateConVar("sm_tf2jail_roundtimer_execute", "sm_slay @red", "Commands to execute to server on timer end: (Maximum Characters: 64)", FCVAR_NOTIFY);
+	hConVars[76] = CreateConVar("sm_tf2jail_warden_defaultmodel", "Warden V2", "Default model by name to set Wardens to: (Maximum Characters: 64)", FCVAR_NOTIFY);
+	hConVars[77] = CreateConVar("sm_tf2jail_warden_models_menu", "1", "Status for the Warden models menu: (1 = Enabled, 0 = Disabled)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[78] = CreateConVar("sm_tf2jail_random_warden_timer", "5", "Seconds after the round starts to choose a warden: (0 = instant, default: 5)", FCVAR_NOTIFY, true, 0.0);
 	
 	//Execute the file after we create & set the ConVars.
-	AutoExecConfig_ExecuteFile();
+	AutoExecConfig();
 	
 	//Hook all ConVars up and check for changes.
 	for (int i = 0; i < sizeof(hConVars); i++)
@@ -433,9 +426,6 @@ public void OnPluginStart()
 	hLastRequestUses = CreateArray();
 	hWardenSkinClasses = CreateTrie();
 	hWardenSkins = CreateTrie();
-	
-	//Clean our configuration file of anything missing. (Should be done at the end of OnPluginStart I read somewhere)
-	AutoExecConfig_CleanFile();
 }
 
 public void OnAllPluginsLoaded()
@@ -647,6 +637,7 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	
 	int iNewValue = StringToInt(sNewValue);
+	bool bNewValue = view_as<bool>(iNewValue);
 	
 	if (hCvar == hConVars[0])
 	{
@@ -654,7 +645,7 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[1])
 	{
-		cv_Enabled = view_as<bool>iNewValue;
+		cv_Enabled = bNewValue;
 		
 		switch (iNewValue)
 		{
@@ -700,7 +691,7 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[2])
 	{
-		cv_Advertise = view_as<bool>iNewValue;
+		cv_Advertise = bNewValue;
 		
 		ClearTimer(hTimer_Advertisement);
 		
@@ -711,7 +702,7 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[3])
 	{
-		cv_Cvars = view_as<bool>iNewValue;
+		cv_Cvars = bNewValue;
 		
 		ConvarsSet(cv_Cvars);
 	}
@@ -721,7 +712,7 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[5])
 	{
-		cv_Balance = view_as<bool>iNewValue;
+		cv_Balance = bNewValue;
 	}
 	else if (hCvar == hConVars[6])
 	{
@@ -729,11 +720,11 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[7])
 	{
-		cv_RedMelee = view_as<bool>iNewValue;
+		cv_RedMelee = bNewValue;
 		
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (Client_IsIngame(i) && IsPlayerAlive(i) && GetClientTeam(i) != view_as<int>TFTeam_Red)
+			if (Client_IsIngame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
 			{
 				switch (cv_RedMelee)
 				{
@@ -745,7 +736,7 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[8])
 	{
-		cv_Warden = view_as<bool>iNewValue;
+		cv_Warden = bNewValue;
 		
 		if (!cv_Warden && WardenExists())
 		{
@@ -754,11 +745,11 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[9])
 	{
-		cv_WardenAuto = view_as<bool>iNewValue;
+		cv_WardenAuto = bNewValue;
 	}
 	else if (hCvar == hConVars[10])
 	{
-		cv_WardenModels = view_as<bool>iNewValue;
+		cv_WardenModels = bNewValue;
 		
 		if (WardenExists())
 		{
@@ -771,19 +762,19 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[11])
 	{
-		cv_WardenForceClass = view_as<bool>iNewValue;
+		cv_WardenForceClass = bNewValue;
 	}
 	else if (hCvar == hConVars[12])
 	{
-		cv_WardenFF = view_as<bool>iNewValue;
+		cv_WardenFF = bNewValue;
 	}
 	else if (hCvar == hConVars[13])
 	{
-		cv_WardenCC = view_as<bool>iNewValue;
+		cv_WardenCC = bNewValue;
 	}
 	else if (hCvar == hConVars[14])
 	{
-		cv_WardenRequest = view_as<bool>iNewValue;
+		cv_WardenRequest = bNewValue;
 	}
 	else if (hCvar == hConVars[15])
 	{
@@ -791,7 +782,7 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[16])
 	{
-		cv_DoorControl = view_as<bool>iNewValue;
+		cv_DoorControl = bNewValue;
 	}
 	else if (hCvar == hConVars[17])
 	{
@@ -803,7 +794,7 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 		
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (Client_IsIngame(i) && IsPlayerAlive(i) && GetClientTeam(i) == view_as<int>TFTeam_Red)
+			if (Client_IsIngame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
 			{
 				switch (iNewValue)
 				{
@@ -824,7 +815,7 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 		
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (Client_IsIngame(i) && IsPlayerAlive(i) && GetClientTeam(i) == view_as<int>TFTeam_Blue)
+			if (Client_IsIngame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Blue)
 			{
 				switch (iNewValue)
 				{
@@ -837,19 +828,19 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[21])
 	{
-		cv_DeadMute = view_as<bool>iNewValue;
+		cv_DeadMute = bNewValue;
 	}
 	else if (hCvar == hConVars[22])
 	{
-		cv_MicCheck = view_as<bool>iNewValue;
+		cv_MicCheck = bNewValue;
 	}
 	else if (hCvar == hConVars[23])
 	{
-		cv_MicCheckType = view_as<bool>iNewValue;
+		cv_MicCheckType = bNewValue;
 	}
 	else if (hCvar == hConVars[24])
 	{
-		cv_Rebels = view_as<bool>iNewValue;
+		cv_Rebels = bNewValue;
 		
 		if (!cv_Rebels)
 		{
@@ -876,7 +867,7 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[28])
 	{
-		cv_WVotesStatus = view_as<bool>iNewValue;
+		cv_WVotesStatus = bNewValue;
 	}
 	else if (hCvar == hConVars[29])
 	{
@@ -896,7 +887,7 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[33])
 	{
-		cv_Freekillers = view_as<bool>iNewValue;
+		cv_Freekillers = bNewValue;
 	}
 	else if (hCvar == hConVars[34])
 	{
@@ -932,15 +923,15 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[42])
 	{
-		cv_LRSEnabled = view_as<bool>iNewValue;
+		cv_LRSEnabled = bNewValue;
 	}
 	else if (hCvar == hConVars[43])
 	{
-		cv_LRSAutomatic = view_as<bool>iNewValue;
+		cv_LRSAutomatic = bNewValue;
 	}
 	else if (hCvar == hConVars[44])
 	{
-		cv_LRSLockWarden = view_as<bool>iNewValue;
+		cv_LRSLockWarden = bNewValue;
 	}
 	else if (hCvar == hConVars[45])
 	{
@@ -948,27 +939,27 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[46])
 	{
-		cv_1stDayFreeday = view_as<bool>iNewValue;
+		cv_1stDayFreeday = bNewValue;
 	}
 	else if (hCvar == hConVars[47])
 	{
-		cv_DemoCharge = view_as<bool>iNewValue;
+		cv_DemoCharge = bNewValue;
 	}
 	else if (hCvar == hConVars[48])
 	{
-		cv_DoubleJump = view_as<bool>iNewValue;
+		cv_DoubleJump = bNewValue;
 	}
 	else if (hCvar == hConVars[49])
 	{
-		cv_Airblast = view_as<bool>iNewValue;
+		cv_Airblast = bNewValue;
 	}
 	else if (hCvar == hConVars[50])
 	{
-		cv_RendererParticles = view_as<bool>iNewValue;
+		cv_RendererParticles = bNewValue;
 	}
 	else if (hCvar == hConVars[51])
 	{
-		cv_RendererColors = view_as<bool>iNewValue;
+		cv_RendererColors = bNewValue;
 	}
 	else if (hCvar == hConVars[52])
 	{
@@ -980,11 +971,11 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[54])
 	{
-		cv_WardenWearables = view_as<bool>iNewValue;
+		cv_WardenWearables = bNewValue;
 	}
 	else if (hCvar == hConVars[55])
 	{
-		cv_FreedayTeleports = view_as<bool>iNewValue;
+		cv_FreedayTeleports = bNewValue;
 	}
 	else if (hCvar == hConVars[56])
 	{
@@ -992,19 +983,19 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[57])
 	{
-		cv_KillPointServerCommand = view_as<bool>iNewValue;
+		cv_KillPointServerCommand = bNewValue;
 	}
 	else if (hCvar == hConVars[58])
 	{
-		cv_RemoveFreedayOnLR = view_as<bool>iNewValue;
+		cv_RemoveFreedayOnLR = bNewValue;
 	}
 	else if (hCvar == hConVars[59])
 	{
-		cv_RemoveFreedayOnLastGuard = view_as<bool>iNewValue;
+		cv_RemoveFreedayOnLastGuard = bNewValue;
 	}
 	else if (hCvar == hConVars[60])
 	{
-		cv_PrefStatus = view_as<bool>iNewValue;
+		cv_PrefStatus = bNewValue;
 	}
 	else if (hCvar == hConVars[61])
 	{
@@ -1012,27 +1003,27 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[62])
 	{
-		cv_AdminFlags = view_as<bool>iNewValue;
+		cv_AdminFlags = bNewValue;
 	}
 	else if (hCvar == hConVars[63])
 	{
-		cv_PrefBlue = view_as<bool>iNewValue;
+		cv_PrefBlue = bNewValue;
 	}
 	else if (hCvar == hConVars[64])
 	{
-		cv_PrefWarden = view_as<bool>iNewValue;
+		cv_PrefWarden = bNewValue;
 	}
 	else if (hCvar == hConVars[65])
 	{
-		cv_ConsoleSpew = view_as<bool>iNewValue;
+		cv_ConsoleSpew = bNewValue;
 	}
 	else if (hCvar == hConVars[66])
 	{
-		cv_PrefForce = view_as<bool>iNewValue;
+		cv_PrefForce = bNewValue;
 	}
 	else if (hCvar == hConVars[67])
 	{
-		cv_FFButton = view_as<bool>iNewValue;
+		cv_FFButton = bNewValue;
 	}
 	else if (hCvar == hConVars[68])
 	{
@@ -1044,11 +1035,11 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[70])
 	{
-		cv_WardenDeathCrits = view_as<bool>iNewValue;
+		cv_WardenDeathCrits = bNewValue;
 	}
 	else if (hCvar == hConVars[71])
 	{
-		cv_RoundTimerStatus = view_as<bool>iNewValue;
+		cv_RoundTimerStatus = bNewValue;
 	}
 	else if (hCvar == hConVars[72])
 	{
@@ -1060,7 +1051,7 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[74])
 	{
-		cv_RoundTime_Center = view_as<bool>iNewValue;
+		cv_RoundTime_Center = bNewValue;
 	}
 	else if (hCvar == hConVars[75])
 	{
@@ -1072,11 +1063,11 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	}
 	else if (hCvar == hConVars[77])
 	{
-		cv_WardenModelMenu = view_as<bool>iNewValue;
+		cv_WardenModelMenu = bNewValue;
 	}
 	else if (hCvar == hConVars[78])
 	{
-		cv_RandomWardenTimer = view_as<bool>iNewValue;
+		cv_RandomWardenTimer = bNewValue;
 	}
 }
 
@@ -1240,7 +1231,7 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 	
 	if (!bDisableCriticles && (cv_WardenDeathCrits && !bIsWardenLocked))
 	{
-		switch (GetClientTeam(attacker))
+		switch (TF2_GetClientTeam(attacker))
 		{
 			case TFTeam_Red:
 			{
@@ -1357,7 +1348,7 @@ public void OnPlayerSpawn(Handle hEvent, char[] sName, bool bBroadcast)
 	TFClassType class = TF2_GetPlayerClass(client);
 	bIsRebel[client] = false;
 	
-	switch (GetClientTeam(client))
+	switch (TF2_GetClientTeam(client))
 	{
 		case TFTeam_Red:
 		{
@@ -1414,7 +1405,7 @@ public void OnPlayerSpawn(Handle hEvent, char[] sName, bool bBroadcast)
 				{
 					if (!bHasTalked[client] && !IsVIP(client))
 					{
-						ChangeClientTeam(client, view_as<int>TFTeam_Red);
+						TF2_ChangeClientTeam(client, TFTeam_Red);
 						CPrintToChat(client, "%t %t", "plugin tag", "microphone unverified");
 					}
 				}
@@ -1448,7 +1439,7 @@ public void OnPlayerHurt(Handle hEvent, char[] sName, bool bBroadcast)
 	
 	if (cv_Rebels)
 	{
-		if (GetClientTeam(attacker) == view_as<int>TFTeam_Red && GetClientTeam(client) == view_as<int>TFTeam_Blue && !bIsRebel[attacker])
+		if (TF2_GetClientTeam(attacker) == TFTeam_Red && TF2_GetClientTeam(client) == TFTeam_Blue && !bIsRebel[attacker])
 		{
 			MarkRebel(attacker);
 		}
@@ -1481,14 +1472,14 @@ public Action OnPlayerDeathPre(Handle hEvent, char[] sName, bool bBroadcast)
 		{
 			case 1:
 			{
-				if (GetClientTeam(client_killer) == view_as<int>TFTeam_Red)
+				if (TF2_GetClientTeam(client_killer) == TFTeam_Red)
 				{
 					SetEventBroadcast(hEvent, true);
 				}
 			}
 			case 2:
 			{
-				if (GetClientTeam(client_killer) == view_as<int>TFTeam_Blue)
+				if (TF2_GetClientTeam(client_killer) == TFTeam_Blue)
 				{
 					SetEventBroadcast(hEvent, true);
 				}
@@ -1538,7 +1529,7 @@ public void OnPlayerDeath(Handle hEvent, char[] sName, bool bBroadcast)
 		
 		if (cv_Freekillers && Client_IsIngame(client_killer) && client != client_killer)
 		{
-			if (GetClientTeam(client_killer) == view_as<int>TFTeam_Blue)
+			if (TF2_GetClientTeam(client_killer) == TFTeam_Blue)
 			{
 				if ((iFirstKill[client_killer] + cv_FreekillersTime) >= GetTime())
 				{
@@ -1558,11 +1549,11 @@ public void OnPlayerDeath(Handle hEvent, char[] sName, bool bBroadcast)
 	
 	if (cv_LRSAutomatic && bLRConfigActive)
 	{
-		if (Team_GetClientCount(view_as<int>TFTeam_Red, CLIENTFILTER_ALIVE) == 1)
+		if (TF2_GetTeamClientCount(TFTeam_Red) == 1)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
-				if (Client_IsIngame(i) && IsPlayerAlive(i) && GetClientTeam(i) == view_as<int>TFTeam_Red)
+				if (Client_IsIngame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
 				{
 					LastRequestStart(i, i);
 					Jail_Log("%N has received last request for being the last prisoner alive.", i);
@@ -1571,7 +1562,7 @@ public void OnPlayerDeath(Handle hEvent, char[] sName, bool bBroadcast)
 		}
 	}
 	
-	if (Team_GetClientCount(view_as<int>TFTeam_Blue, CLIENTFILTER_ALIVE) == 1)
+	if (TF2_GetTeamClientCount(TFTeam_Blue) == 1)
 	{
 		if (cv_RemoveFreedayOnLastGuard)
 		{
@@ -1613,16 +1604,16 @@ public void OnRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 		if (strlen(sCellOpener) != 0)
 		{
 			int CellHandler = Entity_FindByName(sCellOpener, "func_button");
-			if (Entity_IsValid(CellHandler))
+			if (IsValidEntity(CellHandler))
 			{
 				if (cv_DoorControl)
 				{
-					Entity_Lock(CellHandler);
+					SetEntProp(CellHandler, Prop_Data, "m_bLocked", 1, 1);
 					Jail_Log("Door Controls: Disabled - Cell Opener is locked.");
 				}
 				else
 				{
-					Entity_UnLock(CellHandler);
+					SetEntProp(CellHandler, Prop_Data, "m_bLocked", 0, 1);
 					Jail_Log("Door Controls: Enabled - Cell Opener is unlocked.");
 				}
 			}
@@ -1635,16 +1626,16 @@ public void OnRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 		if (strlen(sFFButton) != 0)
 		{
 			int FFButton = Entity_FindByName(sFFButton, "func_button");
-			if (Entity_IsValid(FFButton))
+			if (IsValidEntity(FFButton))
 			{
 				if (cv_FFButton)
 				{
-					Entity_Lock(FFButton);
+					SetEntProp(FFButton, Prop_Data, "m_bLocked", 1, 1);
 					Jail_Log("FF Button: Disabled.");
 				}
 				else
 				{
-					Entity_UnLock(FFButton);
+					SetEntProp(FFButton, Prop_Data, "m_bLocked", 0, 1);
 					Jail_Log("FF Button: Enabled.");
 				}
 			}
@@ -1684,7 +1675,7 @@ public void OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 	{
 		if (Client_IsIngame(i) && bIsFreeday[i] && !IsPlayerAlive(i))
 		{
-			ChangeClientTeam(i, view_as<int>TFTeam_Red);
+			TF2_ChangeClientTeam(i, TFTeam_Red);
 			TF2_RespawnPlayer(i);
 		}
 	}
@@ -1696,21 +1687,21 @@ public void OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 		{
 			if (!Client_IsIngame(i))continue;
 			
-			Ratio = float(GetTeamClientCount(view_as<int>TFTeam_Blue)) / float(GetTeamClientCount(view_as<int>TFTeam_Red));
+			Ratio = float(TF2_GetTeamClientCount(TFTeam_Blue)) / float(TF2_GetTeamClientCount(TFTeam_Red));
 			
 			if (Ratio <= cv_BalanceRatio || GetClientCount(true) < 3)
 			{
 				break;
 			}
 			
-			if (Client_IsIngame(i) && GetClientTeam(i) == view_as<int>TFTeam_Blue)
+			if (Client_IsIngame(i) && TF2_GetClientTeam(i) == TFTeam_Blue)
 			{
 				if (cv_PrefStatus && bRolePreference_Blue[i])
 				{
 					continue;
 				}
 				
-				ChangeClientTeam(i, view_as<int>TFTeam_Red);
+				TF2_ChangeClientTeam(i, TFTeam_Red);
 				TF2_RespawnPlayer(i);
 				
 				CPrintToChat(i, "%t %t", "plugin tag", "moved for balance");
@@ -1842,7 +1833,7 @@ public void OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 					{
 						if (Client_IsIngame(i) && IsPlayerAlive(i))
 						{
-							switch (GetClientTeam(i))
+							switch (TF2_GetClientTeam(i))
 							{
 								case TFTeam_Red:
 								{
@@ -2175,7 +2166,7 @@ public Action Command_BecomeWarden(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	if (GetClientTeam(client) != view_as<int>TFTeam_Blue)
+	if (TF2_GetClientTeam(client) != TFTeam_Blue)
 	{
 		CPrintToChat(client, "%t %t", "plugin tag", "guards only");
 		return Plugin_Handled;
@@ -2475,7 +2466,7 @@ public Action Command_GiveLastRequest(int client, int args)
 	char sUserID[12]; char sDisplay[MAX_NAME_LENGTH + 12];
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (Client_IsIngame(i) && IsPlayerAlive(i) && GetClientTeam(i) == view_as<int>TFTeam_Red)
+		if (Client_IsIngame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
 		{
 			IntToString(GetClientUserId(i), sUserID, sizeof(sUserID));
 			Format(sDisplay, sizeof(sDisplay), "%L", i);
@@ -2884,7 +2875,7 @@ public Action AdminForceWarden(int client, int args)
 			return Plugin_Handled;
 		}
 		
-		if (Team_GetClientCount(view_as<int>TFTeam_Blue, CLIENTFILTER_ALIVE) < 2)
+		if (TF2_GetTeamClientCount(TFTeam_Blue) < 2)
 		{
 			WardenSet(target);
 			CShowActivity2(client, sTag, "%t", "Admin Force Warden", target);
@@ -3024,13 +3015,13 @@ public Action AdminMapCompatibilityCheck(int client, int args)
 	if (strlen(sCellNames) != 0)
 	{
 		int cell_door = Entity_FindByName(sCellNames, "func_door");
-		CReplyToCommand(client, "%t %t", "plugin tag", Entity_IsValid(cell_door) ? "Map Compatibility Cell Doors Detected" : "Map Compatibility Cell Doors Undetected");
+		CReplyToCommand(client, "%t %t", "plugin tag", IsValidEntity(cell_door) ? "Map Compatibility Cell Doors Detected" : "Map Compatibility Cell Doors Undetected");
 	}
 	
 	if (strlen(sCellOpener) != 0)
 	{
 		int open_cells = Entity_FindByName(sCellOpener, "func_button");
-		CReplyToCommand(client, "%t %t", "plugin tag", Entity_IsValid(open_cells) ? "Map Compatibility Cell Opener Detected" : "Map Compatibility Cell Opener Undetected");
+		CReplyToCommand(client, "%t %t", "plugin tag", IsValidEntity(open_cells) ? "Map Compatibility Cell Opener Detected" : "Map Compatibility Cell Opener Undetected");
 	}
 	
 	char sTag[64];
@@ -3520,7 +3511,7 @@ public int MenuHandle_ForceLR(Handle hMenu, MenuAction action, int param1, int p
 				return;
 			}
 			
-			if (GetClientTeam(target) != view_as<int>TFTeam_Red)
+			if (TF2_GetClientTeam(target) != TFTeam_Red)
 			{
 				CPrintToChat(param1, "%t %t", "plugin tag", "prisoners only");
 				return;
@@ -3912,7 +3903,7 @@ public int MenuHandle_GiveLR(Handle hMenu, MenuAction action, int param1, int pa
 			bool ActiveRound = false;
 			if (KvJumpToKey(hConfig, "Parameters"))
 			{
-				ActiveRound = view_as<bool>KvGetNum(hConfig, "ActiveRound", 0);
+				ActiveRound = view_as<bool>(KvGetNum(hConfig, "ActiveRound", 0));
 				KvGoBack(hConfig);
 			}
 			
@@ -4012,7 +4003,7 @@ public int MenuHandle_GiveLR(Handle hMenu, MenuAction action, int param1, int pa
 						{
 							if (Client_IsIngame(i) && IsPlayerAlive(i))
 							{
-								switch (GetClientTeam(i))
+								switch (TF2_GetClientTeam(i))
 								{
 									case TFTeam_Red:
 									{
@@ -4426,7 +4417,7 @@ void ParseMapConfig()
 			if (strlen(CellNames) != 0)
 			{
 				int iCelldoors = Entity_FindByName(CellNames, "func_door");
-				if (Entity_IsValid(iCelldoors))
+				if (IsValidEntity(iCelldoors))
 				{
 					sCellNames = CellNames;
 					bIsMapCompatible = true;
@@ -4445,7 +4436,7 @@ void ParseMapConfig()
 			if (strlen(CellsButton) != 0)
 			{
 				int iCellOpener = Entity_FindByName(CellsButton, "func_button");
-				if (Entity_IsValid(iCellOpener))
+				if (IsValidEntity(iCellOpener))
 				{
 					sCellOpener = CellsButton;
 				}
@@ -4455,7 +4446,7 @@ void ParseMapConfig()
 			if (strlen(FFButton) != 0)
 			{
 				int iFFButton = Entity_FindByName(FFButton, "func_button");
-				if (Entity_IsValid(iFFButton))
+				if (IsValidEntity(iFFButton))
 				{
 					sCellOpener = FFButton;
 				}
@@ -4465,7 +4456,7 @@ void ParseMapConfig()
 			{
 				if (KvJumpToKey(hConfig, "Teleport"))
 				{
-					bFreedayTeleportSet = view_as<bool>KvGetNum(hConfig, "Status", 1);
+					bFreedayTeleportSet = view_as<bool>(KvGetNum(hConfig, "Status", 1));
 					
 					if (bFreedayTeleportSet)
 					{
@@ -4823,7 +4814,7 @@ void EmptyWeaponSlots(int client)
 		
 		int weapon = GetEntDataEnt2(client, offset);
 		
-		if (!Weapon_IsValid(weapon) || i == TFWeaponSlot_Melee)
+		if (!IsValidEntity(weapon) || i == TFWeaponSlot_Melee)
 		{
 			continue;
 		}
@@ -4850,7 +4841,7 @@ void EmptyWeaponSlots(int client)
 	CPrintToChat(client, "%t %t", "plugin tag", "stripped weapons and ammo");
 }
 
-void Jail_Log(const char[] sFormat, any ...)
+void Jail_Log(const char[] sFormat, any...)
 {
 	//Format what we need based on the extra data passed through the parameters.
 	char sLog[1024];
@@ -5195,7 +5186,7 @@ void TF2_SwitchtoSlot(int client, int slot)
 
 void WardenSet(int client)
 {
-	if (WardenExists())
+	if (WardenExists() || !bActiveRound)
 	{
 		return;
 	}
@@ -5209,72 +5200,74 @@ void WardenSet(int client)
 		case 1:SetClientListeningFlags(client, VOICE_NORMAL);
 	}
 	
-	if (bActiveRound && cv_BlueMute == 1)
+	if (cv_BlueMute == 1)
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (!Client_IsIngame(i) || GetClientTeam(i) != view_as<int>TFTeam_Blue)continue;
-			MutePlayer(i);
-		}
-		
-		if (cv_WardenForceClass)
-		{
-			char sClass[PLATFORM_MAX_PATH];
-			if (GetTrieString(hWardenSkinClasses, cv_sDefaultWardenModel, sClass, sizeof(sClass)))
+			if (Client_IsIngame(i) && TF2_GetClientTeam(i) == TFTeam_Blue)
 			{
-				TFClassType iClass = TF2_GetClass(sClass);
-				
-				int Health = GetClientHealth(client);
-				
-				TF2_SetPlayerClass(client, iClass);
-				TF2_RegeneratePlayer(client);
-				
-				if (Health < GetClientHealth(client))
-				{
-					SetEntityHealth(client, Health);
-				}
-				
-				TF2_SwitchtoSlot(client, TFWeaponSlot_Primary);
+				MutePlayer(i);
 			}
 		}
-		
-		if (cv_WardenModels)
+	}
+	
+	if (cv_WardenForceClass)
+	{
+		char sClass[PLATFORM_MAX_PATH];
+		if (GetTrieString(hWardenSkinClasses, cv_sDefaultWardenModel, sClass, sizeof(sClass)))
 		{
-			SetWardenModel(client, cv_sDefaultWardenModel);
-		}
-		
-		if (cv_RendererParticles && strlen(sWardenParticle) != 0)
-		{
-			if (hParticle_Wardens[client] != null)
+			TFClassType iClass = TF2_GetClass(sClass);
+			
+			int Health = GetClientHealth(client);
+			
+			TF2_SetPlayerClass(client, iClass);
+			TF2_RegeneratePlayer(client);
+			
+			if (Health < GetClientHealth(client))
 			{
-				CloseHandle(hParticle_Wardens[client]);
-				hParticle_Wardens[client] = null;
+				SetEntityHealth(client, Health);
 			}
 			
-			hParticle_Wardens[client] = CreateParticle(sWardenParticle, 999999.0, client, ATTACH_NORMAL);
+			TF2_SwitchtoSlot(client, TFWeaponSlot_Primary);
+		}
+	}
+	
+	if (cv_WardenModels)
+	{
+		SetWardenModel(client, cv_sDefaultWardenModel);
+	}
+	
+	if (cv_RendererParticles && strlen(sWardenParticle) != 0)
+	{
+		if (hParticle_Wardens[client] != null)
+		{
+			CloseHandle(hParticle_Wardens[client]);
+			hParticle_Wardens[client] = null;
 		}
 		
-		if (cv_RendererColors)SetEntityRenderColor(client, a_iWardenColors[0], a_iWardenColors[1], a_iWardenColors[2], a_iWardenColors[3]);
-		
-		char sWarden[256];
-		Format(sWarden, sizeof(sWarden), "%t", "warden current node", iWarden);
-		SetTextNode(hTextNodes[2], sWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
-		
-		ClearTimer(hTimer_WardenLock);
-		
-		ResetVotes();
-		WardenMenu(client);
-		
-		Call_StartForward(sFW_WardenCreated);
-		Call_PushCell(client);
-		Call_Finish();
-		
-		CPrintToChatAll("%t %t", "plugin tag", "warden new", client);
-		CPrintToChat(client, "%t %t", "plugin tag", "warden message");
+		hParticle_Wardens[client] = CreateParticle(sWardenParticle, 999999.0, client, ATTACH_NORMAL);
 	}
+	
+	if (cv_RendererColors)SetEntityRenderColor(client, a_iWardenColors[0], a_iWardenColors[1], a_iWardenColors[2], a_iWardenColors[3]);
+	
+	char sWarden[256];
+	Format(sWarden, sizeof(sWarden), "%t", "warden current node", iWarden);
+	SetTextNode(hTextNodes[2], sWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
+	
+	ClearTimer(hTimer_WardenLock);
+	
+	ResetVotes();
+	WardenMenu(client);
+	
+	Call_StartForward(sFW_WardenCreated);
+	Call_PushCell(client);
+	Call_Finish();
+	
+	CPrintToChatAll("%t %t", "plugin tag", "warden new", client);
+	CPrintToChat(client, "%t %t", "plugin tag", "warden message");
 }
 
-void SetWardenModel(int client, const char[]sModel)
+void SetWardenModel(int client, const char[] sModel)
 {
 	if (!IsWarden(client))
 	{
@@ -5290,7 +5283,7 @@ void SetWardenModel(int client, const char[]sModel)
 
 void WardenUnset(int client)
 {
-	if (!IsWarden(client))
+	if (!IsWarden(client) || !IsPlayerAlive(client))
 	{
 		return;
 	}
@@ -5308,8 +5301,10 @@ void WardenUnset(int client)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
-				if (!Client_IsIngame(i) || GetClientTeam(i) != view_as<int>TFTeam_Blue)continue;
-				UnmutePlayer(i);
+				if (Client_IsIngame(i) && TF2_GetClientTeam(i) == TFTeam_Blue)
+				{
+					UnmutePlayer(i);
+				}
 			}
 		}
 		
@@ -5325,7 +5320,10 @@ void WardenUnset(int client)
 		hParticle_Wardens[client] = null;
 	}
 	
-	if (cv_RendererColors)SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
+	if (cv_RendererColors)
+	{
+		SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
+	}
 	
 	EnumWardenMenu = Open;
 	
@@ -5427,7 +5425,7 @@ void FindWardenRandom(int client)
 	{
 		if (cv_PrefStatus)
 		{
-			if (Team_GetClientCount(view_as<int>TFTeam_Blue, CLIENTFILTER_ALIVE) == 1)
+			if (TF2_GetTeamClientCount(TFTeam_Blue) == 1)
 			{
 				WardenSet(Random);
 				CShowActivity2(client, sTag, "%t", "Admin Force Warden Random", Random);
@@ -5453,6 +5451,21 @@ void FindWardenRandom(int client)
 		CShowActivity2(client, sTag, "%t", "Admin Force Warden Random", Random);
 		Jail_Log("%N has given %N Warden by Force.", client, Random);
 	}
+}
+
+int TF2_GetTeamClientCount(TFTeam team)
+{
+	int value = 0;
+	
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == team)
+		{
+			value++;
+		}
+	}
+	
+	return value;
 }
 
 /* Timers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -5490,7 +5503,7 @@ public Action UnmuteReds(Handle hTimer)
 {
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (Client_IsIngame(i) && IsPlayerAlive(i) && GetClientTeam(i) == view_as<int>TFTeam_Red)
+		if (Client_IsIngame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
 		{
 			UnmutePlayer(i);
 		}
@@ -5602,7 +5615,7 @@ public Action RemoveRebel(Handle hTimer, any data)
 	int client = GetClientOfUserId(data);
 	hTimer_RebelTimers[client] = null;
 	
-	if (Client_IsIngame(client) && GetClientTeam(client) != 1 && IsPlayerAlive(client))
+	if (Client_IsIngame(client) && TF2_GetClientTeam(client) > TFTeam_Spectator && IsPlayerAlive(client))
 	{
 		bIsRebel[client] = false;
 		CPrintToChat(client, "%t %t", "plugin tag", "rebel timer end");
@@ -5650,7 +5663,7 @@ public Action FindRandomWardenTimer(Handle hTimer)
 public void ManageWeapons(any data)
 {
 	int client = GetClientOfUserId(data);
-	if (cv_Enabled && cv_RedMelee && Client_IsIngame(client) && GetClientTeam(client) == view_as<int>TFTeam_Red)
+	if (cv_Enabled && cv_RedMelee && Client_IsIngame(client) && TF2_GetClientTeam(client) == TFTeam_Red)
 	{
 		EmptyWeaponSlots(client);
 	}
