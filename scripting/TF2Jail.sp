@@ -52,7 +52,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.7c"
+#define PLUGIN_VERSION	"5.5.7d"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -5022,7 +5022,7 @@ void Jail_Log(bool bDebug, const char[] sFormat, any...)
 			char sPath[PLATFORM_MAX_PATH]; char sPathFinal[PLATFORM_MAX_PATH];
 			Format(sPath, sizeof(sPath), "logs/TF2Jail_%s.log", sDate);
 			BuildPath(Path_SM, sPathFinal, sizeof(sPathFinal), sPath);
-			LogToFileEx(sPathFinal, "%s%s", bDebug ? "[DEBUG]" : "", sFormat);
+			LogToFileEx(sPathFinal, "%s%s", bDebug ? "[DEBUG]" : "", sLog);
 		}
 	}
 	
