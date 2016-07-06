@@ -52,7 +52,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.7d"
+#define PLUGIN_VERSION	"5.5.7e"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -767,7 +767,7 @@ public void OnConfigsExecuted()
 		}
 		
 		//Plugin is loaded! :) YAY!
-		Jail_Log(false, "%s Jailbreak has successfully loaded.", "plugin tag");
+		Jail_Log(false, "Jailbreak has successfully loaded.");
 	}
 }
 
@@ -5365,11 +5365,16 @@ void WardenSet(int client)
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (Client_IsIngame(i) && TF2_GetClientTeam(i) == TFTeam_Blue)
+			if (Client_IsIngame(i) && TF2_GetClientTeam(i) == TFTeam_Blue && i != client)
 			{
 				MutePlayer(i);
 			}
 		}
+	}
+
+	if (AlreadyMuted(client))
+	{
+		UnmutePlayer(client);
 	}
 	
 	if (cv_WardenForceClass)
