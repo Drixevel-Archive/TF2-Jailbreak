@@ -52,12 +52,12 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.7a"
+#define PLUGIN_VERSION	"5.5.7b"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
 
-#define SOURCEMOD_REQUIRED	"1.7"
+#define SOURCEMOD_REQUIRED	"1.8"
 
 //Handle Arrays
 Handle hConVars[80];
