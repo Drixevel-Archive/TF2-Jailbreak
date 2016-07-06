@@ -52,7 +52,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.7e"
+#define PLUGIN_VERSION	"5.5.7f"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -1510,7 +1510,7 @@ public void OnPlayerSpawn(Handle hEvent, char[] sName, bool bBroadcast)
 				{
 					if (cv_DoubleJump)
 					{
-						AddAttribute(client, "no double jump", 1.0);
+						AddAttribute2(client, 49, 1.0);
 						bBlockedDoubleJump[client] = true;
 					}
 				}
@@ -1669,7 +1669,7 @@ public void OnPlayerDeath(Handle hEvent, char[] sName, bool bBroadcast)
 		
 		if (bBlockedDoubleJump[client])
 		{
-			RemoveAttribute(client, "no double jump");
+			RemoveAttribute2(client, 49);
 			bBlockedDoubleJump[client] = false;
 		}
 		
@@ -2098,16 +2098,16 @@ public void OnRoundEnd(Handle hEvent, char[] sName, bool bBroadcast)
 				RemoveFreeday(i);
 			}
 			
-			if (bBlockedDoubleJump[i])
-			{
-				RemoveAttribute(i, "no double jump");
-				bBlockedDoubleJump[i] = false;
-			}
-			
 			if (bDisabledAirblast[i])
 			{
 				RemoveAttribute(i, "airblast disabled");
 				bDisabledAirblast[i] = false;
+			}
+
+			if (bBlockedDoubleJump[i])
+			{
+				RemoveAttribute2(i, 49);
+				bBlockedDoubleJump[i] = false;
 			}
 			
 			if (bHasModel[i])
@@ -5191,11 +5191,27 @@ void AddAttribute(int client, char[] sAttribute, float value)
 	}
 }
 
+void AddAttribute2(int client, int iAttribute, float value)
+{
+	if (eTF2Attributes && Client_IsIngame(client))
+	{
+		TF2Attrib_SetByDefIndex(client, iAttribute, value);
+	}
+}
+
 void RemoveAttribute(int client, char[] sAttribute)
 {
 	if (eTF2Attributes && Client_IsIngame(client))
 	{
 		TF2Attrib_RemoveByName(client, sAttribute);
+	}
+}
+
+void RemoveAttribute2(int client, int iAttribute)
+{
+	if (eTF2Attributes && Client_IsIngame(client))
+	{
+		TF2Attrib_RemoveByDefIndex(client, iAttribute);
 	}
 }
 
