@@ -52,7 +52,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.7"
+#define PLUGIN_VERSION	"5.5.7a"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -60,60 +60,207 @@
 #define SOURCEMOD_REQUIRED	"1.7"
 
 //Handle Arrays
-Handle hConVars[79] =  { null, ... }; Handle hTextNodes[4] =  { null, ... }; Handle hEngineConVars[3] =  { null, ... };
+Handle hConVars[80];
+Handle hTextNodes[4];
+Handle hEngineConVars[3];
 
 //Plugin Forward Handles
-Handle sFW_WardenCreated; Handle sFW_WardenRemoved; Handle sFW_OnLastRequestExecute; Handle sFW_OnFreedayGiven; Handle sFW_OnFreedayRemoved; Handle sFW_OnFreekillerGiven; Handle sFW_OnFreekillerRemoved; Handle sFW_OnRebelGiven; Handle sFW_OnRebelRemoved;
+Handle sFW_WardenCreated;
+Handle sFW_WardenRemoved;
+Handle sFW_OnLastRequestExecute;
+Handle sFW_OnFreedayGiven;
+Handle sFW_OnFreedayRemoved;
+Handle sFW_OnFreekillerGiven;
+Handle sFW_OnFreekillerRemoved;
+Handle sFW_OnRebelGiven;
+Handle sFW_OnRebelRemoved;
 
 //Other Handles
-Handle hRolePref_Blue; Handle hRolePref_Warden; Handle hLastRequestUses; Handle hWardenSkinClasses; Handle hWardenSkins;
+Handle hRolePref_Blue;
+Handle hRolePref_Warden;
+Handle hLastRequestUses;
+Handle hWardenSkinClasses;
+Handle hWardenSkins;
 
 //Particle Handles
-Handle hParticle_Wardens[MAXPLAYERS + 1]; Handle hParticle_Freedays[MAXPLAYERS + 1]; Handle hParticle_Rebels[MAXPLAYERS + 1]; Handle hParticle_Freekillers[MAXPLAYERS + 1];
+Handle hParticle_Wardens[MAXPLAYERS + 1];
+Handle hParticle_Freedays[MAXPLAYERS + 1];
+Handle hParticle_Rebels[MAXPLAYERS + 1];
+Handle hParticle_Freekillers[MAXPLAYERS + 1];
 
 //Timer Handles
-Handle hTimer_Advertisement; Handle hTimer_FreekillingData; Handle hTimer_OpenCells; Handle hTimer_FriendlyFireEnable; Handle hTimer_WardenLock; Handle hTimer_RoundTimer; Handle hTimer_RebelTimers[MAXPLAYERS + 1];
+Handle hTimer_Advertisement;
+Handle hTimer_FreekillingData;
+Handle hTimer_OpenCells;
+Handle hTimer_FriendlyFireEnable;
+Handle hTimer_WardenLock;
+Handle hTimer_RoundTimer;
+Handle hTimer_RebelTimers[MAXPLAYERS + 1];
 
 //Menu Handles
-Handle hWardenMenu; Handle hListLRsMenu; Handle hWardenModelsMenu;
+Handle hWardenMenu;
+Handle hListLRsMenu;
+Handle hWardenModelsMenu;
 
 //ConVar Global Variables
-bool cv_Enabled; bool cv_Advertise; bool cv_Cvars; int cv_Logging; bool cv_Balance; float cv_BalanceRatio; bool cv_RedMelee; bool cv_Warden; bool cv_WardenAuto; bool cv_WardenModels;
-bool cv_WardenForceClass; bool cv_WardenFF; bool cv_WardenCC; bool cv_WardenRequest; int cv_WardenLimit; bool cv_DoorControl; float cv_DoorOpenTimer; int cv_RedMute; float cv_RedMuteTime; int cv_BlueMute;
-bool cv_DeadMute; bool cv_MicCheck; bool cv_MicCheckType; bool cv_Rebels; float cv_RebelsTime; int cv_Criticals; int cv_Criticalstype; bool cv_WVotesStatus; float cv_WVotesNeeded; int cv_WVotesMinPlayers;
-int cv_WVotesPostAction; int cv_WVotesPassedLimit; bool cv_Freekillers; float cv_FreekillersTime; int cv_FreekillersKills; float cv_FreekillersWave; int cv_FreekillersAction; char cv_sBanMSG[256]; char cv_sBanMSGDC[256]; int cv_FreekillersBantime;
-int cv_FreekillersBantimeDC; bool cv_LRSEnabled; bool cv_LRSAutomatic; bool cv_LRSLockWarden; int cv_FreedayLimit; bool cv_1stDayFreeday; bool cv_DemoCharge; bool cv_DoubleJump; bool cv_Airblast; bool cv_RendererParticles;
-bool cv_RendererColors; char cv_sDefaultColor[24]; int cv_WardenVoice; bool cv_WardenWearables; bool cv_FreedayTeleports; int cv_WardenStabProtection; bool cv_KillPointServerCommand; bool cv_RemoveFreedayOnLR; bool cv_RemoveFreedayOnLastGuard; bool cv_PrefStatus;
-int cv_WardenTimer; bool cv_AdminFlags; bool cv_PrefBlue; bool cv_PrefWarden; bool cv_ConsoleSpew; bool cv_PrefForce; bool cv_FFButton; char cv_sWeaponConfig[256]; int cv_KillFeeds; bool cv_WardenDeathCrits;
-bool cv_RoundTimerStatus; int cv_RoundTime; int cv_RoundTime_Freeday; bool cv_RoundTime_Center; char cv_sRoundTimer_Execute[64]; char cv_sDefaultWardenModel[64]; bool cv_WardenModelMenu; int cv_RandomWardenTimer;
+bool cv_Enabled;
+bool cv_Advertise;
+bool cv_Cvars;
+int cv_Logging;
+bool cv_Balance;
+float cv_BalanceRatio;
+bool cv_RedMelee;
+bool cv_Warden;
+bool cv_WardenAuto;
+bool cv_WardenModels;
+bool cv_WardenForceClass;
+bool cv_WardenFF;
+bool cv_WardenCC;
+bool cv_WardenRequest;
+int cv_WardenLimit;
+bool cv_DoorControl;
+float cv_DoorOpenTimer;
+int cv_RedMute;
+float cv_RedMuteTime;
+int cv_BlueMute;
+bool cv_DeadMute;
+bool cv_MicCheck;
+bool cv_MicCheckType;
+bool cv_Rebels;
+float cv_RebelsTime;
+int cv_Criticals;
+int cv_Criticalstype;
+bool cv_WVotesStatus;
+float cv_WVotesNeeded;
+int cv_WVotesMinPlayers;
+int cv_WVotesPostAction;
+int cv_WVotesPassedLimit;
+bool cv_Freekillers;
+float cv_FreekillersTime;
+int cv_FreekillersKills;
+float cv_FreekillersWave;
+int cv_FreekillersAction;
+char cv_sBanMSG[256];
+char cv_sBanMSGDC[256];
+int cv_FreekillersBantime;
+int cv_FreekillersBantimeDC;
+bool cv_LRSEnabled;
+bool cv_LRSAutomatic;
+bool cv_LRSLockWarden;
+int cv_FreedayLimit;
+bool cv_1stDayFreeday;
+bool cv_DemoCharge;
+bool cv_DoubleJump;
+bool cv_Airblast;
+bool cv_RendererParticles;
+bool cv_RendererColors;
+char cv_sDefaultColor[24];
+int cv_WardenVoice;
+bool cv_WardenWearables;
+bool cv_FreedayTeleports;
+int cv_WardenStabProtection;
+bool cv_KillPointServerCommand;
+bool cv_RemoveFreedayOnLR;
+bool cv_RemoveFreedayOnLastGuard;
+bool cv_PrefStatus;
+int cv_WardenTimer;
+bool cv_AdminFlags;
+bool cv_PrefBlue;
+bool cv_PrefWarden;
+bool cv_ConsoleSpew;
+bool cv_PrefForce;
+bool cv_FFButton;
+char cv_sWeaponConfig[256];
+int cv_KillFeeds;
+bool cv_WardenDeathCrits;
+bool cv_RoundTimerStatus;
+int cv_RoundTime;
+int cv_RoundTime_Freeday;
+bool cv_RoundTime_Center;
+char cv_sRoundTimer_Execute[64];
+char cv_sDefaultWardenModel[64];
+bool cv_WardenModelMenu;
+int cv_RandomWardenTimer;
+bool cv_bDebugs;
 
 //External Extensions/Plugin Booleans
-bool eSourcebans; bool eSourceComms; bool eSteamWorks; bool eTF2Attributes; bool eVoiceannounce_ex; bool eTF2WeaponRestrictions;
+bool eSourcebans;
+bool eSourceComms;
+bool eSteamWorks;
+bool eTF2Attributes;
+bool eVoiceannounce_ex;
+bool eTF2WeaponRestrictions;
 
 //Plugin Global Booleans
-bool bIsMapCompatible; bool bCellsOpened; bool b1stRoundFreeday; bool bVoidFreeKills; bool bIsLRInUse; bool bIsWardenLocked; bool bOneGuardLeft; bool bActiveRound; bool bFreedayTeleportSet; bool bLRConfigActive = true;
-bool bLockWardenLR; bool bDisableCriticles; bool bLateLoad; bool bAdminLockWarden; bool bAdminLockedLR; bool bDifferentWepRestrict; bool bWardenBackstabbed;
+bool bIsMapCompatible;
+bool bCellsOpened;
+bool b1stRoundFreeday;
+bool bVoidFreeKills;
+bool bIsLRInUse;
+bool bIsWardenLocked;
+bool bOneGuardLeft;
+bool bActiveRound;
+bool bFreedayTeleportSet;
+bool bLRConfigActive = true;
+bool bLockWardenLR;
+bool bDisableCriticles;
+bool bLateLoad;
+bool bAdminLockWarden;
+bool bAdminLockedLR;
+bool bDifferentWepRestrict;
+bool bWardenBackstabbed;
 
 //Global Boolean Player Arrays
-bool bBlockedDoubleJump[MAXPLAYERS + 1]; bool bDisabledAirblast[MAXPLAYERS + 1]; bool bIsMuted[MAXPLAYERS + 1]; bool bIsRebel[MAXPLAYERS + 1]; bool bIsQueuedFreeday[MAXPLAYERS + 1]; bool bIsFreeday[MAXPLAYERS + 1]; bool bIsFreekiller[MAXPLAYERS + 1]; bool bHasTalked[MAXPLAYERS + 1]; bool bLockedFromWarden[MAXPLAYERS + 1]; bool bRolePreference_Blue[MAXPLAYERS + 1];
-bool bRolePreference_Warden[MAXPLAYERS + 1]; bool bHasModel[MAXPLAYERS + 1]; bool bVoted[MAXPLAYERS + 1] =  { false, ... };
+bool bBlockedDoubleJump[MAXPLAYERS + 1];
+bool bDisabledAirblast[MAXPLAYERS + 1];
+bool bIsMuted[MAXPLAYERS + 1];
+bool bIsRebel[MAXPLAYERS + 1];
+bool bIsQueuedFreeday[MAXPLAYERS + 1];
+bool bIsFreeday[MAXPLAYERS + 1];
+bool bIsFreekiller[MAXPLAYERS + 1];
+bool bHasTalked[MAXPLAYERS + 1];
+bool bLockedFromWarden[MAXPLAYERS + 1];
+bool bRolePreference_Blue[MAXPLAYERS + 1];
+bool bRolePreference_Warden[MAXPLAYERS + 1];
+bool bHasModel[MAXPLAYERS + 1];
+bool bVoted[MAXPLAYERS + 1] =  { false, ... };
 
 //Global Integer Player Arrays
-int iFirstKill[MAXPLAYERS + 1]; int iKillcount[MAXPLAYERS + 1]; int iHasBeenWarden[MAXPLAYERS + 1];
+int iFirstKill[MAXPLAYERS + 1];
+int iKillcount[MAXPLAYERS + 1]; 
+int iHasBeenWarden[MAXPLAYERS + 1];
 
 //Global Integers/Variables
-int iWarden = -1; int iCustom = -1; int iLRPending = -1; int iLRCurrent = -1; int iVoters = 0; int iVotes = 0; int iVotesNeeded = 0; int iWardenLimit = 0; int iFreedayLimit = 0; int iRoundTime;
+int iWarden = -1;
+int iCustom = -1;
+int iLRPending = -1;
+int iLRCurrent = -1;
+int iVoters = 0;
+int iVotes = 0;
+int iVotesNeeded = 0;
+int iWardenLimit = 0;
+int iFreedayLimit = 0;
+int iRoundTime;
 float fFreedayPosition[3];
 
 //Global String/Char Variables
-char sCellNames[32]; char sCellOpener[32]; char sFFButton[32]; char sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear" }; char sLRConfig[PLATFORM_MAX_PATH]; char sCustomLR[32];
+char sCellNames[32];
+char sCellOpener[32];
+char sFFButton[32];
+char sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear" };
+char sLRConfig[PLATFORM_MAX_PATH];
+char sCustomLR[32];
 
 //Role Renderers Globals
 int a_iDefaultColors[4];
-int a_iWardenColors[4]; char sWardenParticle[64];
-int a_iFreedaysColors[4]; char sFreedaysParticle[64];
-int a_iRebellersColors[4]; char sRebellersParticle[64];
-int a_iFreekillersColors[4]; char sFreekillersParticle[64];
+int a_iWardenColors[4];
+char sWardenParticle[64];
+int a_iFreedaysColors[4];
+char sFreedaysParticle[64];
+int a_iRebellersColors[4];
+char sRebellersParticle[64];
+int a_iFreekillersColors[4];
+char sFreekillersParticle[64];
 
 //Enum Structs
 enum eWardenMenu
@@ -231,7 +378,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnPluginStart()
 {
 	//Verbose that the plugin is loading...
-	Jail_Log("%s Jailbreak is now loading...", "plugin tag");
+	Jail_Log(false, "%s Jailbreak is now loading...", "plugin tag");
 	
 	//Load translation files, double check that they exist first and if not, SetFailState and log it to TF2Jail logs.
 	LoadTranslations("common.phrases");
@@ -317,6 +464,7 @@ public void OnPluginStart()
 	hConVars[76] = CreateConVar("sm_tf2jail_warden_defaultmodel", "Warden V2", "Default model by name to set Wardens to: (Maximum Characters: 64)", FCVAR_NOTIFY);
 	hConVars[77] = CreateConVar("sm_tf2jail_warden_models_menu", "1", "Status for the Warden models menu: (1 = Enabled, 0 = Disabled)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	hConVars[78] = CreateConVar("sm_tf2jail_random_warden_timer", "5", "Seconds after the round starts to choose a warden: (0 = instant, default: 5)", FCVAR_NOTIFY, true, 0.0);
+	hConVars[79] = CreateConVar("sm_tf2jail_debug_logs", "1", "Status for debugging logs.\n (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0);
 	
 	//Execute the file after we create & set the ConVars.
 	AutoExecConfig();
@@ -566,6 +714,7 @@ public void OnConfigsExecuted()
 	GetConVarString(hConVars[76], cv_sDefaultWardenModel, sizeof(cv_sDefaultWardenModel));
 	cv_WardenModelMenu = GetConVarBool(hConVars[77]);
 	cv_RandomWardenTimer = GetConVarInt(hConVars[78]);
+	cv_bDebugs = GetConVarBool(hConVars[79]);
 	
 	if (cv_Enabled)
 	{
@@ -618,7 +767,7 @@ public void OnConfigsExecuted()
 		}
 		
 		//Plugin is loaded! :) YAY!
-		Jail_Log("%s Jailbreak has successfully loaded.", "plugin tag");
+		Jail_Log(false, "%s Jailbreak has successfully loaded.", "plugin tag");
 	}
 }
 
@@ -1069,6 +1218,10 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	{
 		cv_RandomWardenTimer = bNewValue;
 	}
+	else if (hCvar == hConVars[79])
+	{
+		cv_bDebugs = bNewValue;
+	}
 }
 
 public void TF2WeaponRestrictions_RestrictionChanged(const char[] sRestriction)
@@ -1137,6 +1290,11 @@ public void OnMapEnd()
 					{
 						ClearSyncHud(i, hTextNodes[x]);
 					}
+				}
+
+				if (bIsMuted[i])
+				{
+					UnmuteClient(i);
 				}
 			}
 			
@@ -1331,13 +1489,7 @@ public void OnClientDisconnect(int client)
 	iKillcount[client] = 0;
 	iFirstKill[client] = 0;
 }
-/******************************************/
-/******************************************/
-/******************************************/
-/******************************************/
-/******************************************/
-/******************************************/
-//Syntax Update
+
 public void OnPlayerSpawn(Handle hEvent, char[] sName, bool bBroadcast)
 {
 	if (!cv_Enabled)return;
@@ -1501,7 +1653,7 @@ public void OnPlayerDeath(Handle hEvent, char[] sName, bool bBroadcast)
 		if (bIsFreeday[client])
 		{
 			RemoveFreeday(client);
-			Jail_Log("%N was an active freeday on round.", client);
+			Jail_Log(false, "%N was an active freeday on round.", client);
 		}
 		
 		if (cv_DeadMute)
@@ -1556,7 +1708,7 @@ public void OnPlayerDeath(Handle hEvent, char[] sName, bool bBroadcast)
 				if (Client_IsIngame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
 				{
 					LastRequestStart(i, i);
-					Jail_Log("%N has received last request for being the last prisoner alive.", i);
+					Jail_Log(false, "%N has received last request for being the last prisoner alive.", i);
 				}
 			}
 		}
@@ -1596,7 +1748,7 @@ public void OnRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 		char s1stDay[256];
 		Format(s1stDay, sizeof(s1stDay), "%t", "1st day freeday node");
 		SetTextNode(hTextNodes[0], s1stDay, EnumTNPS[0][fCoord_X], EnumTNPS[0][fCoord_Y], EnumTNPS[0][fHoldTime], EnumTNPS[0][iRed], EnumTNPS[0][iGreen], EnumTNPS[0][iBlue], EnumTNPS[0][iAlpha], EnumTNPS[0][iEffect], EnumTNPS[0][fFXTime], EnumTNPS[0][fFadeIn], EnumTNPS[0][fFadeOut]);
-		Jail_Log("1st day freeday has been activated.");
+		Jail_Log(false, "1st day freeday has been activated.");
 	}
 	
 	if (bIsMapCompatible)
@@ -1609,17 +1761,17 @@ public void OnRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 				if (cv_DoorControl)
 				{
 					SetEntProp(CellHandler, Prop_Data, "m_bLocked", 1, 1);
-					Jail_Log("Door Controls: Disabled - Cell Opener is locked.");
+					Jail_Log(false, "Door Controls: Disabled - Cell Opener is locked.");
 				}
 				else
 				{
 					SetEntProp(CellHandler, Prop_Data, "m_bLocked", 0, 1);
-					Jail_Log("Door Controls: Enabled - Cell Opener is unlocked.");
+					Jail_Log(false, "Door Controls: Enabled - Cell Opener is unlocked.");
 				}
 			}
 			else
 			{
-				Jail_Log("[ERROR] Entity name not found for Cell Door Opener! Please verify integrity of the config and the map.");
+				Jail_Log(false, "[ERROR] Entity name not found for Cell Door Opener! Please verify integrity of the config and the map.");
 			}
 		}
 		
@@ -1631,12 +1783,12 @@ public void OnRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 				if (cv_FFButton)
 				{
 					SetEntProp(FFButton, Prop_Data, "m_bLocked", 1, 1);
-					Jail_Log("FF Button: Disabled.");
+					Jail_Log(false, "FF Button: Disabled.");
 				}
 				else
 				{
 					SetEntProp(FFButton, Prop_Data, "m_bLocked", 0, 1);
-					Jail_Log("FF Button: Enabled.");
+					Jail_Log(false, "FF Button: Enabled.");
 				}
 			}
 		}
@@ -1705,7 +1857,7 @@ public void OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 				TF2_RespawnPlayer(i);
 				
 				CPrintToChat(i, "%t %t", "plugin tag", "moved for balance");
-				Jail_Log("%N has been moved to prisoners team for balance.", i);
+				Jail_Log(false, "%N has been moved to prisoners team for balance.", i);
 				
 				RequestFrame(ManageWeapons, GetClientUserId(i));
 			}
@@ -1717,7 +1869,7 @@ public void OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 		int autoopen = RoundFloat(cv_DoorOpenTimer);
 		hTimer_OpenCells = CreateTimer(cv_DoorOpenTimer, Open_Doors, _, TIMER_FLAG_NO_MAPCHANGE);
 		CPrintToChatAll("%t %t", "plugin tag", "cell doors open start", autoopen);
-		Jail_Log("Cell doors are being auto opened via automatic timer.");
+		Jail_Log(false, "Cell doors are being auto opened via automatic timer.");
 		bCellsOpened = true;
 	}
 	
@@ -1726,19 +1878,19 @@ public void OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 		case 2:
 		{
 			CPrintToChatAll("%t %t", "plugin tag", "red team muted");
-			Jail_Log("Red team has been muted permanently this round.");
+			Jail_Log(false, "Red team has been muted permanently this round.");
 		}
 		case 1:
 		{
 			int time = RoundFloat(cv_RedMuteTime);
 			CPrintToChatAll("%t %t", "plugin tag", "red team muted temporarily", time);
 			CreateTimer(cv_RedMuteTime, UnmuteReds, _, TIMER_FLAG_NO_MAPCHANGE);
-			Jail_Log("Red team has been temporarily muted and will wait %s seconds to be unmuted.", time);
+			Jail_Log(false, "Red team has been temporarily muted and will wait %s seconds to be unmuted.", time);
 		}
 		case 0:
 		{
 			CPrintToChatAll("%t %t", "plugin tag", "red mute system disabled");
-			Jail_Log("Mute system has been disabled this round, nobody has been muted.");
+			Jail_Log(false, "Mute system has been disabled this round, nobody has been muted.");
 		}
 	}
 	
@@ -1872,7 +2024,7 @@ public void OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 						}
 						else
 						{
-							Jail_Log("[ERROR] Timer is set to a value below 0.1! Timer could not be created.");
+							Jail_Log(false, "[ERROR] Timer is set to a value below 0.1! Timer could not be created.");
 						}
 					}
 					
@@ -1906,7 +2058,7 @@ public void OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 		}
 		else
 		{
-			Jail_Log("Error starting Last Request number %i, couldn't be found in configuration file.", iLRCurrent);
+			Jail_Log(false, "Error starting Last Request number %i, couldn't be found in configuration file.", iLRCurrent);
 		}
 		CloseHandle(hConfig);
 	}
@@ -2018,7 +2170,7 @@ public void OnRoundEnd(Handle hEvent, char[] sName, bool bBroadcast)
 		}
 		else
 		{
-			Jail_Log("Error ending Last Request number %i, couldn't be found in configuration file.", iLRCurrent);
+			Jail_Log(false, "Error ending Last Request number %i, couldn't be found in configuration file.", iLRCurrent);
 		}
 		CloseHandle(hConfig);
 	}
@@ -2057,7 +2209,7 @@ public void OnClientSayCommand_Post(int client, const char[] sCommand, const cha
 	{
 		strcopy(sCustomLR, sizeof(sCustomLR), sArgs);
 		CPrintToChat(client, "%t %t", "plugin tag", "last request custom set", sCustomLR);
-		Jail_Log("Custom LR set to %s by client %N.", sCustomLR, client);
+		Jail_Log(false, "Custom LR set to %s by client %N.", sCustomLR, client);
 		iCustom = -1;
 	}
 }
@@ -2283,7 +2435,7 @@ public Action Command_OpenCells(int client, int args)
 	}
 	
 	DoorHandler(OPEN);
-	Jail_Log("%N has opened the cell doors using door controls as Warden.", client);
+	Jail_Log(false, "%N has opened the cell doors using door controls as Warden.", client);
 	
 	return Plugin_Handled;
 }
@@ -2317,7 +2469,7 @@ public Action Command_CloseCells(int client, int args)
 	}
 	
 	DoorHandler(CLOSE);
-	Jail_Log("%N has closed the cell doors using door controls as Warden.", client);
+	Jail_Log(false, "%N has closed the cell doors using door controls as Warden.", client);
 	
 	return Plugin_Handled;
 }
@@ -2357,13 +2509,13 @@ public Action Command_EnableFriendlyFire(int client, int args)
 		{
 			SetConVarBool(hEngineConVars[0], false);
 			CPrintToChatAll("%t %t", "plugin tag", "friendlyfire disabled", iWarden);
-			Jail_Log("%N has disabled friendly fire as Warden.", iWarden);
+			Jail_Log(false, "%N has disabled friendly fire as Warden.", iWarden);
 		}
 		case false:
 		{
 			SetConVarBool(hEngineConVars[0], true);
 			CPrintToChatAll("%t %t", "plugin tag", "friendlyfire enabled", iWarden);
-			Jail_Log("%N has enabled friendly fire as Warden.", iWarden);
+			Jail_Log(false, "%N has enabled friendly fire as Warden.", iWarden);
 		}
 	}
 	
@@ -2405,13 +2557,13 @@ public Action Command_EnableCollisions(int client, int args)
 		{
 			SetConVarBool(hEngineConVars[1], false);
 			CPrintToChatAll("%t %t", "plugin tag", "collision disabled", iWarden);
-			Jail_Log("%N has disabled collision as Warden.", iWarden);
+			Jail_Log(false, "%N has disabled collision as Warden.", iWarden);
 		}
 		case false:
 		{
 			SetConVarBool(hEngineConVars[1], true);
 			CPrintToChatAll("%t %t", "plugin tag", "collision enabled", iWarden);
-			Jail_Log("%N has enabled collision as Warden.", iWarden);
+			Jail_Log(false, "%N has enabled collision as Warden.", iWarden);
 		}
 	}
 	
@@ -2476,7 +2628,7 @@ public Action Command_GiveLastRequest(int client, int args)
 	
 	DisplayMenu(hMenu, client, MENU_TIME_FOREVER);
 	
-	Jail_Log("%N is giving someone a last request...", client);
+	Jail_Log(false, "%N is giving someone a last request...", client);
 	
 	return Plugin_Handled;
 }
@@ -2514,7 +2666,7 @@ public Action Command_RemoveLastRequest(int client, int args)
 	bIsLRInUse = false;
 	iLRPending = -1;
 	CReplyToCommand(client, "%t %t", "plugin tag", "warden removed lr");
-	Jail_Log("%N has cleared all last requests currently queued.", client);
+	Jail_Log(false, "%N has cleared all last requests currently queued.", client);
 	
 	return Plugin_Handled;
 }
@@ -2644,7 +2796,7 @@ public Action AdminRemoveWarden(int client, int args)
 	Format(sTag, sizeof(sTag), "%t", "plugin tag");
 	CShowActivity2(client, sTag, "%t", "Admin Remove Warden", client, iWarden);
 	
-	Jail_Log("%N has removed %N's Warden status with admin.", client, iWarden);
+	Jail_Log(false, "%N has removed %N's Warden status with admin.", client, iWarden);
 	WardenUnset(iWarden);
 	
 	return Plugin_Handled;
@@ -2680,7 +2832,7 @@ public Action AdminPardonFreekiller(int client, int args)
 		}
 		
 		ClearFreekiller(target);
-		Jail_Log("%N has cleared %N as a Freekiller.", target, client);
+		Jail_Log(false, "%N has cleared %N as a Freekiller.", target, client);
 	}
 	
 	PardonFreekillersMenu(client);
@@ -2702,7 +2854,7 @@ public Action AdminPardonAllFreekillers(int client, int args)
 		if (Client_IsIngame(i) && bIsFreekiller[i])
 		{
 			ClearFreekiller(i);
-			Jail_Log("%N has cleared %N as a Freekiller.", i, client);
+			Jail_Log(false, "%N has cleared %N as a Freekiller.", i, client);
 		}
 	}
 	
@@ -2754,7 +2906,7 @@ public Action AdminDenyLR(int client, int args)
 	Format(sTag, sizeof(sTag), "%t", "plugin tag");
 	CShowActivity2(client, sTag, "%t", "Admin Deny Last Request");
 	
-	Jail_Log("%N has denied all currently queued last requests and reset the last request system.", client);
+	Jail_Log(false, "%N has denied all currently queued last requests and reset the last request system.", client);
 	
 	return Plugin_Handled;
 }
@@ -2775,7 +2927,7 @@ public Action AdminOpenCells(int client, int args)
 	Format(sTag, sizeof(sTag), "%t", "plugin tag");
 	CShowActivity2(client, sTag, "%t", "Admin Open Cells");
 	
-	Jail_Log("%N has opened the cells using admin.", client);
+	Jail_Log(false, "%N has opened the cells using admin.", client);
 	
 	return Plugin_Handled;
 }
@@ -2796,7 +2948,7 @@ public Action AdminCloseCells(int client, int args)
 	Format(sTag, sizeof(sTag), "%t", "plugin tag");
 	CShowActivity2(client, sTag, "%t", "Admin Close Cells");
 	
-	Jail_Log("%N has closed the cells using admin.", client);
+	Jail_Log(false, "%N has closed the cells using admin.", client);
 	
 	return Plugin_Handled;
 }
@@ -2817,7 +2969,7 @@ public Action AdminLockCells(int client, int args)
 	Format(sTag, sizeof(sTag), "%t", "plugin tag");
 	CShowActivity2(client, sTag, "%t", "Admin Lock Cells");
 	
-	Jail_Log("%N has locked the cells using admin.", client);
+	Jail_Log(false, "%N has locked the cells using admin.", client);
 	
 	return Plugin_Handled;
 }
@@ -2838,7 +2990,7 @@ public Action AdminUnlockCells(int client, int args)
 	Format(sTag, sizeof(sTag), "%t", "plugin tag");
 	CShowActivity2(client, sTag, "%t", "Admin Unlock Cells");
 	
-	Jail_Log("%N has unlocked the cells using admin.", client);
+	Jail_Log(false, "%N has unlocked the cells using admin.", client);
 	
 	return Plugin_Handled;
 }
@@ -2879,7 +3031,7 @@ public Action AdminForceWarden(int client, int args)
 		{
 			WardenSet(target);
 			CShowActivity2(client, sTag, "%t", "Admin Force Warden", target);
-			Jail_Log("%N has forced a %N Warden.", client, target);
+			Jail_Log(false, "%N has forced a %N Warden.", client, target);
 			return Plugin_Handled;
 		}
 		
@@ -2889,7 +3041,7 @@ public Action AdminForceWarden(int client, int args)
 			{
 				WardenSet(target);
 				CShowActivity2(client, sTag, "%t", "Admin Force Warden", target);
-				Jail_Log("%N has forced a %N Warden.", client, target);
+				Jail_Log(false, "%N has forced a %N Warden.", client, target);
 				return Plugin_Handled;
 			}
 			
@@ -2897,19 +3049,19 @@ public Action AdminForceWarden(int client, int args)
 			{
 				WardenSet(target);
 				CShowActivity2(client, sTag, "%t", "Admin Force Warden", target);
-				Jail_Log("%N has forced a %N Warden.", client, target);
+				Jail_Log(false, "%N has forced a %N Warden.", client, target);
 			}
 			else
 			{
 				CReplyToCommand(client, "%t %t", "plugin tag", "Admin Force Warden Not Preferred", target);
-				Jail_Log("%N has their preference set to prisoner only, finding another client...", target);
+				Jail_Log(false, "%N has their preference set to prisoner only, finding another client...", target);
 			}
 			return Plugin_Handled;
 		}
 		
 		WardenSet(target);
 		CShowActivity2(client, sTag, "%t", "Admin Force Warden", target);
-		Jail_Log("%N has forced a %N Warden.", client, target);
+		Jail_Log(false, "%N has forced a %N Warden.", client, target);
 		
 		return Plugin_Handled;
 	}
@@ -2946,14 +3098,14 @@ public Action AdminForceLR(int client, int args)
 		
 		CShowActivity2(client, sTag, "%t", "Admin Force Last Request", target);
 		LastRequestStart(target, client, false, true);
-		Jail_Log("%N has gave %N a Last Request by admin.", client, target);
+		Jail_Log(false, "%N has gave %N a Last Request by admin.", client, target);
 		
 		return Plugin_Handled;
 	}
 	
 	CShowActivity2(client, sTag, "%t", "Admin Force Last Request Self");
 	LastRequestStart(client, client, true, true);
-	Jail_Log("%N has given his/herself last request using admin.", client);
+	Jail_Log(false, "%N has given his/herself last request using admin.", client);
 	
 	return Plugin_Handled;
 }
@@ -3003,7 +3155,7 @@ public Action AdminResetPlugin(int client, int args)
 	BuildMenus();
 	
 	CReplyToCommand(client, "%t %t", "plugin tag", "Admin Reset Plugin");
-	Jail_Log("%N has reset the plugin of all its bools, integers and floats.", client);
+	Jail_Log(false, "%N has reset the plugin of all its bools, integers and floats.", client);
 	
 	return Plugin_Handled;
 }
@@ -3028,7 +3180,7 @@ public Action AdminMapCompatibilityCheck(int client, int args)
 	Format(sTag, sizeof(sTag), "%t", "plugin tag");
 	CShowActivity2(client, sTag, "%t", "Admin Scan Map Compatibility");
 	
-	Jail_Log("%N has checked the map for compatibility.", client);
+	Jail_Log(false, "%N has checked the map for compatibility.", client);
 	
 	return Plugin_Handled;
 }
@@ -3067,7 +3219,7 @@ public Action AdminGiveFreeday(int client, int args)
 		CShowActivity2(client, sTag, "%t", "Admin Give Freeday", target);
 		
 		GiveFreeday(target);
-		Jail_Log("%N has given %N a Freeday.", target, client);
+		Jail_Log(false, "%N has given %N a Freeday.", target, client);
 		
 		return Plugin_Handled;
 	}
@@ -3110,7 +3262,7 @@ public Action AdminRemoveFreeday(int client, int args)
 		CShowActivity2(client, sTag, "%t", "Admin Remove Freeday", target);
 		
 		RemoveFreeday(target);
-		Jail_Log("%N has given %N a Freeday.", target, client);
+		Jail_Log(false, "%N has given %N a Freeday.", target, client);
 		
 		return Plugin_Handled;
 	}
@@ -3134,14 +3286,14 @@ public Action AdminAcceptWardenChange(int client, int args)
 			SetConVarBool(hEngineConVars[0], true);
 			CShowActivity2(client, sTag, "%t", "Admin Accept Request FF", iWarden);
 			CPrintToChatAll("%t %t", "plugin tag", "friendlyfire enabled");
-			Jail_Log("%N has accepted %N's request to enable Friendly Fire.", client, iWarden);
+			Jail_Log(false, "%N has accepted %N's request to enable Friendly Fire.", client, iWarden);
 		}
 		case Collision:
 		{
 			SetConVarBool(hEngineConVars[1], true);
 			CShowActivity2(client, sTag, "%t", "Admin Accept Request CC", iWarden);
 			CPrintToChatAll("%t %t", "plugin tag", "collision enabled");
-			Jail_Log("%N has accepted %N's request to enable Collision.", client, iWarden);
+			Jail_Log(false, "%N has accepted %N's request to enable Collision.", client, iWarden);
 		}
 	}
 	return Plugin_Handled;
@@ -3162,14 +3314,14 @@ public Action AdminCancelWardenChange(int client, int args)
 			SetConVarBool(hEngineConVars[0], false);
 			CShowActivity2(client, sTag, "%t", "Admin Cancel Active FF");
 			CPrintToChatAll("%t %t", "plugin tag", "friendlyfire disabled");
-			Jail_Log("%N has cancelled %N's request for Friendly Fire.", client, iWarden);
+			Jail_Log(false, "%N has cancelled %N's request for Friendly Fire.", client, iWarden);
 		}
 		case Collision:
 		{
 			SetConVarBool(hEngineConVars[1], false);
 			CShowActivity2(client, sTag, "%t", "Admin Cancel Active CC");
 			CPrintToChatAll("%t %t", "plugin tag", "collision disabled");
-			Jail_Log("%N has cancelled %N's request for Collision.", client, iWarden);
+			Jail_Log(false, "%N has cancelled %N's request for Collision.", client, iWarden);
 		}
 	}
 	
@@ -3205,7 +3357,7 @@ public Action AdminLockWarden(int client, int args)
 	Format(sTag, sizeof(sTag), "%t", "plugin tag");
 	CShowActivity2(client, sTag, "%t", "Admin Lock Warden");
 	
-	Jail_Log("%N has locked Warden via administration.", client);
+	Jail_Log(false, "%N has locked Warden via administration.", client);
 	
 	return Plugin_Handled;
 }
@@ -3226,7 +3378,7 @@ public Action AdminUnlockWarden(int client, int args)
 	Format(sTag, sizeof(sTag), "%t", "plugin tag");
 	CShowActivity2(client, sTag, "%t", "Admin Unlock Warden");
 	
-	Jail_Log("%N has unlocked Warden via administration.", client);
+	Jail_Log(false, "%N has unlocked Warden via administration.", client);
 	
 	return Plugin_Handled;
 }
@@ -3269,7 +3421,7 @@ public Action AdminMarkFreekiller(int client, int args)
 	CShowActivity2(client, sTag, "%t", "Admin Mark Freekiller", target);
 	
 	MarkFreekiller(target);
-	Jail_Log("%L has marked %L as a Free Killer.", client, target);
+	Jail_Log(false, "%L has marked %L as a Free Killer.", client, target);
 	
 	return Plugin_Handled;
 }
@@ -3305,7 +3457,7 @@ void PardonFreekillersMenu(int client)
 	Format(sTag, sizeof(sTag), "%t", "plugin tag");
 	CShowActivity2(client, sTag, "%t", "Admin Pardon Freekiller Menu");
 	
-	Jail_Log("%N has pardoned someone currently marked Freekillers...", client);
+	Jail_Log(false, "%N has pardoned someone currently marked Freekillers...", client);
 }
 
 public int MenuHandle_PardonFreekillers(Handle hMenu, MenuAction action, int param1, int param2)
@@ -3326,7 +3478,7 @@ public int MenuHandle_PardonFreekillers(Handle hMenu, MenuAction action, int par
 			}
 			
 			ClearFreekiller(target);
-			Jail_Log("%N has cleared %N as a Freekiller.", target, param1);
+			Jail_Log(false, "%N has cleared %N as a Freekiller.", target, param1);
 			
 			PardonFreekillersMenu(param1);
 		}
@@ -3363,7 +3515,7 @@ void GiveFreedaysMenu(int client)
 	Format(sTag, sizeof(sTag), "%t", "plugin tag");
 	CShowActivity2(client, sTag, "%t", "Admin Give Freeday Menu");
 	
-	Jail_Log("%N is giving someone a freeday...", client);
+	Jail_Log(false, "%N is giving someone a freeday...", client);
 }
 
 public int MenuHandle_FreedayAdmins(Handle hMenu, MenuAction action, int param1, int param2)
@@ -3384,7 +3536,7 @@ public int MenuHandle_FreedayAdmins(Handle hMenu, MenuAction action, int param1,
 			}
 			
 			GiveFreeday(target);
-			Jail_Log("%N has given %N a Freeday.", target, param1);
+			Jail_Log(false, "%N has given %N a Freeday.", target, param1);
 			
 			GiveFreedaysMenu(param1);
 		}
@@ -3421,7 +3573,7 @@ void RemoveFreedaysMenu(int client)
 	Format(sTag, sizeof(sTag), "%t", "plugin tag");
 	CShowActivity2(client, sTag, "%t", "Admin Remove Freeday Menu");
 	
-	Jail_Log("%N is removing someone's freeday status...", client);
+	Jail_Log(false, "%N is removing someone's freeday status...", client);
 }
 
 public int MenuHandle_RemoveFreedays(Handle hMenu, MenuAction action, int param1, int param2)
@@ -3449,7 +3601,7 @@ public int MenuHandle_RemoveFreedays(Handle hMenu, MenuAction action, int param1
 			}
 			
 			RemoveFreeday(target);
-			Jail_Log("%N has removed %N's Freeday.", param1, target);
+			Jail_Log(false, "%N has removed %N's Freeday.", param1, target);
 			
 			RemoveFreedaysMenu(param1);
 		}
@@ -3519,7 +3671,7 @@ public int MenuHandle_ForceLR(Handle hMenu, MenuAction action, int param1, int p
 			
 			LastRequestStart(target, param1);
 			CPrintToChatAll("%t %t", "plugin tag", "last request given", iWarden, target);
-			Jail_Log("%N has given %N a Last Request as Warden.", param1, target);
+			Jail_Log(false, "%N has given %N a Last Request as Warden.", param1, target);
 		}
 		case MenuAction_End:CloseHandle(hMenu);
 	}
@@ -3853,7 +4005,7 @@ public int MenuHandle_GiveLR(Handle hMenu, MenuAction action, int param1, int pa
 			
 			if (!FileToKeyValues(hConfig, sLRConfig))
 			{
-				Jail_Log("Last requests menu seems to be empty, please verify its integrity.");
+				Jail_Log(false, "Last requests menu seems to be empty, please verify its integrity.");
 				CPrintToChatAll("%t %t", "plugin tag", "last request config invalid");
 				CloseHandle(hConfig);
 				return;
@@ -3873,7 +4025,7 @@ public int MenuHandle_GiveLR(Handle hMenu, MenuAction action, int param1, int pa
 			
 			if (!KvJumpToKey(hConfig, sInfo))
 			{
-				Jail_Log("Last request ID '%s' not found in the configuration file, please verify integrity of configuration file.", sInfo);
+				Jail_Log(false, "Last request ID '%s' not found in the configuration file, please verify integrity of configuration file.", sInfo);
 				CloseHandle(hConfig);
 				return;
 			}
@@ -4046,7 +4198,7 @@ public int MenuHandle_GiveLR(Handle hMenu, MenuAction action, int param1, int pa
 							}
 							else
 							{
-								Jail_Log("[ERROR] Timer is set to a value below 0.1! Timer could not be created.");
+								Jail_Log(false, "[ERROR] Timer is set to a value below 0.1! Timer could not be created.");
 							}
 						}
 						KvGoBack(hConfig);
@@ -4129,7 +4281,7 @@ void GiveFreeday(int client)
 	
 	bIsQueuedFreeday[client] = false;
 	bIsFreeday[client] = true;
-	Jail_Log("%N has been given a Freeday.", client);
+	Jail_Log(false, "%N has been given a Freeday.", client);
 	
 	Call_StartForward(sFW_OnFreedayGiven);
 	Call_PushCell(client);
@@ -4153,7 +4305,7 @@ void RemoveFreeday(int client)
 	
 	if (cv_RendererColors)SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
 	
-	Jail_Log("%N is no longer a Freeday.", client);
+	Jail_Log(false, "%N is no longer a Freeday.", client);
 	
 	Call_StartForward(sFW_OnFreedayRemoved);
 	Call_PushCell(client);
@@ -4184,7 +4336,7 @@ void MarkRebel(int client)
 		CPrintToChat(client, "%t %t", "plugin tag", "rebel timer start", time);
 		hTimer_RebelTimers[client] = CreateTimer(cv_RebelsTime, RemoveRebel, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	}
-	Jail_Log("%N has been marked as a Rebeller.", client);
+	Jail_Log(false, "%N has been marked as a Rebeller.", client);
 	
 	Call_StartForward(sFW_OnRebelGiven);
 	Call_PushCell(client);
@@ -4230,7 +4382,7 @@ void MarkFreekiller(int client, bool avoid = false)
 	WritePackString(pack, sAuth);
 	WritePackString(pack, sName);
 	
-	Jail_Log("%N has been marked as a Freekiller.", client);
+	Jail_Log(false, "%N has been marked as a Freekiller.", client);
 	
 	Call_StartForward(sFW_OnFreekillerGiven);
 	Call_PushCell(client);
@@ -4253,7 +4405,7 @@ void ClearFreekiller(int client)
 	
 	if (cv_RendererColors)SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
 	
-	Jail_Log("%N has been cleared as a Freekiller.", client);
+	Jail_Log(false, "%N has been cleared as a Freekiller.", client);
 	
 	Call_StartForward(sFW_OnFreekillerRemoved);
 	Call_PushCell(client);
@@ -4317,6 +4469,8 @@ void MutePlayer(int client)
 		SetClientListeningFlags(client, VOICE_MUTED);
 		bIsMuted[client] = true;
 		CPrintToChat(client, "%t %t", "plugin tag", "muted player");
+
+		Jail_Log(true, "Client '%N' is muted by the plugin.", client);
 	}
 }
 
@@ -4327,6 +4481,8 @@ void UnmutePlayer(int client)
 		UnmuteClient(client);
 		bIsMuted[client] = false;
 		CPrintToChat(client, "%t %t", "plugin tag", "unmuted player");
+
+		Jail_Log(true, "Client '%N' is unmuted by the plugin.", client);
 	}
 }
 
@@ -4405,7 +4561,7 @@ void ParseMapConfig()
 	char sMapName[128];
 	GetCurrentMap(sMapName, sizeof(sMapName));
 	
-	Jail_Log("Loading last request configuration entry for map '%s'...", sMapName);
+	Jail_Log(false, "Loading last request configuration entry for map '%s'...", sMapName);
 	
 	if (FileToKeyValues(hConfig, sConfig))
 	{
@@ -4480,7 +4636,7 @@ void ParseMapConfig()
 							KvGetVector(hConfig, "Coordinates", fFreedayPosition);
 						}
 						
-						Jail_Log("Freeday teleport coordinates set for the map '%s' - X: %d, Y: %d, Z: %d", sMapName, fFreedayPosition[0], fFreedayPosition[1], fFreedayPosition[2]);
+						Jail_Log(false, "Freeday teleport coordinates set for the map '%s' - X: %d, Y: %d, Z: %d", sMapName, fFreedayPosition[0], fFreedayPosition[1], fFreedayPosition[2]);
 					}
 					
 					KvGoBack(hConfig);
@@ -4488,31 +4644,31 @@ void ParseMapConfig()
 				else
 				{
 					bFreedayTeleportSet = false;
-					Jail_Log("Could not find subset key for 'Freeday' - 'Teleport', disabling functionality for Freeday Teleportation.");
+					Jail_Log(false, "Could not find subset key for 'Freeday' - 'Teleport', disabling functionality for Freeday Teleportation.");
 				}
 				KvGoBack(hConfig);
 			}
 			else
 			{
 				bFreedayTeleportSet = false;
-				Jail_Log("Could not find subset 'Freeday', disabling functionality for Freedays via Map.");
+				Jail_Log(false, "Could not find subset 'Freeday', disabling functionality for Freedays via Map.");
 			}
 		}
 		else
 		{
 			bIsMapCompatible = false;
 			bFreedayTeleportSet = false;
-			Jail_Log("Map '%s' is missing from configuration file, please verify integrity of your installation.", sMapName);
+			Jail_Log(false, "Map '%s' is missing from configuration file, please verify integrity of your installation.", sMapName);
 		}
 	}
 	else
 	{
 		bIsMapCompatible = false;
 		bFreedayTeleportSet = false;
-		Jail_Log("Configuration file is invalid or not found, please verify integrity of your installation.");
+		Jail_Log(false, "Configuration file is invalid or not found, please verify integrity of your installation.");
 	}
 	
-	Jail_Log("Map configuration for '%s' has been parsed and loaded.", sMapName);
+	Jail_Log(false, "Map configuration for '%s' has been parsed and loaded.", sMapName);
 	CloseHandle(hConfig);
 }
 
@@ -4545,7 +4701,7 @@ void ParseNodeConfig()
 	}
 	else
 	{
-		Jail_Log("Couldn't parse text node configuration file, please verify its integrity.");
+		Jail_Log(false, "Couldn't parse text node configuration file, please verify its integrity.");
 	}
 	
 	CloseHandle(hConfig);
@@ -4589,7 +4745,7 @@ void ParseRoleRenderersConfig()
 	
 	if (!FileToKeyValues(hConfig, sConfig))
 	{
-		Jail_Log("Couldn't parse role renderers configuration file, please verify its integrity.");
+		Jail_Log(false, "Couldn't parse role renderers configuration file, please verify its integrity.");
 		CloseHandle(hConfig);
 		return;
 	}
@@ -4651,7 +4807,7 @@ void ParseWardenModelsConfig(bool MenuOnly = false)
 			
 			if (strlen(sModel) == 0)
 			{
-				Jail_Log("ERROR: Model for '%s' not set, please add it. Skipping this model.", sName);
+				Jail_Log(false, "ERROR: Model for '%s' not set, please add it. Skipping this model.", sName);
 				continue;
 			}
 			
@@ -4672,7 +4828,7 @@ void ParseWardenModelsConfig(bool MenuOnly = false)
 				}
 				case false:
 				{
-					Jail_Log("ERROR: Main model file is missing for Warden Model '%s'. Skipping this model.", sName);
+					Jail_Log(false, "ERROR: Main model file is missing for Warden Model '%s'. Skipping this model.", sName);
 					continue;
 				}
 			}
@@ -4694,20 +4850,20 @@ void ParseWardenModelsConfig(bool MenuOnly = false)
 								PrecacheModel(sDownload);
 								AddFileToDownloadsTable(sDownload);
 							}
-							case false:Jail_Log("WARNING: File '%s' is missing for Warden Model '%s'.", sDownload, sName);
+							case false:Jail_Log(false, "WARNING: File '%s' is missing for Warden Model '%s'.", sDownload, sName);
 						}
 					} while (KvGotoNextKey(hConfig, false));
 					KvGoBack(hConfig);
 				}
 				else
 				{
-					Jail_Log("ERROR: Files subsection is empty for Warden model '%s'. Skipping this model.", sName);
+					Jail_Log(false, "ERROR: Files subsection is empty for Warden model '%s'. Skipping this model.", sName);
 					continue;
 				}
 			}
 			else
 			{
-				Jail_Log("ERROR: No files set to download for Warden model '%s'. Skipping this model.", sName);
+				Jail_Log(false, "ERROR: No files set to download for Warden model '%s'. Skipping this model.", sName);
 				continue;
 			}
 			
@@ -4841,11 +4997,16 @@ void EmptyWeaponSlots(int client)
 	CPrintToChat(client, "%t %t", "plugin tag", "stripped weapons and ammo");
 }
 
-void Jail_Log(const char[] sFormat, any...)
+void Jail_Log(bool bDebug, const char[] sFormat, any...)
 {
+	if (bDebug && !cv_bDebugs)
+	{
+		return;
+	}
+
 	//Format what we need based on the extra data passed through the parameters.
-	char sLog[1024];
-	VFormat(sLog, sizeof(sLog), sFormat, 2);
+	char sLog[2048];
+	VFormat(sLog, sizeof(sLog), sFormat, 3);
 	
 	//Remove all the color tags since we're using this for logging.
 	CRemoveTags(sLog, sizeof(sLog));
@@ -4854,7 +5015,7 @@ void Jail_Log(const char[] sFormat, any...)
 	{
 		case 1:
 		{
-			char sDate[20];
+			char sDate[32];
 			FormatTime(sDate, sizeof(sDate), "%Y-%m-%d", GetTime());
 			
 			char sPath[PLATFORM_MAX_PATH]; char sPathFinal[PLATFORM_MAX_PATH];
@@ -4962,18 +5123,18 @@ void FindRandomWarden()
 				if (bRolePreference_Warden[client])
 				{
 					WardenSet(client);
-					Jail_Log("%N has been set to Warden automatically at the start of this arena round.", client);
+					Jail_Log(false, "%N has been set to Warden automatically at the start of this arena round.", client);
 				}
 				else
 				{
-					Jail_Log("%N has preferred settings set to Prisoner only.", client);
+					Jail_Log(false, "%N has preferred settings set to Prisoner only.", client);
 					FindRandomWarden();
 				}
 			}
 			else
 			{
 				WardenSet(client);
-				Jail_Log("%N has been set to Warden automatically at the start of this arena round.", client);
+				Jail_Log(false, "%N has been set to Warden automatically at the start of this arena round.", client);
 			}
 		}
 	}
@@ -5429,19 +5590,19 @@ void FindWardenRandom(int client)
 			{
 				WardenSet(Random);
 				CShowActivity2(client, sTag, "%t", "Admin Force Warden Random", Random);
-				Jail_Log("%N has given %N Warden by Force.", client, Random);
+				Jail_Log(false, "%N has given %N Warden by Force.", client, Random);
 			}
 			
 			if (bRolePreference_Warden[Random])
 			{
 				WardenSet(Random);
 				CShowActivity2(client, sTag, "%t", "Admin Force Warden Random", Random);
-				Jail_Log("%N has given %N Warden by Force.", client, Random);
+				Jail_Log(false, "%N has given %N Warden by Force.", client, Random);
 			}
 			else
 			{
 				CPrintToChat(client, "%t %t", "plugin tag", "Admin Force Random Warden Not Preferred", Random);
-				Jail_Log("%N has their preference set to prisoner only, finding another client...", Random);
+				Jail_Log(false, "%N has their preference set to prisoner only, finding another client...", Random);
 				FindWardenRandom(client);
 			}
 			return;
@@ -5449,7 +5610,7 @@ void FindWardenRandom(int client)
 		
 		WardenSet(Random);
 		CShowActivity2(client, sTag, "%t", "Admin Force Warden Random", Random);
-		Jail_Log("%N has given %N Warden by Force.", client, Random);
+		Jail_Log(false, "%N has given %N Warden by Force.", client, Random);
 	}
 }
 
@@ -5510,7 +5671,7 @@ public Action UnmuteReds(Handle hTimer)
 	}
 	
 	CPrintToChatAll("%t %t", "plugin tag", "red team unmuted");
-	Jail_Log("All players have been unmuted.");
+	Jail_Log(false, "All players have been unmuted.");
 }
 
 public Action Open_Doors(Handle hTimer)
@@ -5523,7 +5684,7 @@ public Action Open_Doors(Handle hTimer)
 		int time = RoundFloat(cv_DoorOpenTimer);
 		CPrintToChatAll("%t %t", "plugin tag", "cell doors open end", time);
 		bCellsOpened = false;
-		Jail_Log("Doors have been automatically opened by a timer.");
+		Jail_Log(false, "Doors have been automatically opened by a timer.");
 	}
 }
 
@@ -5562,7 +5723,7 @@ public Action BanClientTimerFreekiller(Handle hTimer, Handle data)
 	{
 		BanIdentity(sAuth, cv_FreekillersBantimeDC, BANFLAG_AUTHID, cv_sBanMSGDC, "freekill_identityban", userid);
 		CPrintToChatAll("%t %t", "plugin tag", "freekiller disconnected", sName, sAuth);
-		Jail_Log("%s [%s ]has been banned via identity.", sName, sAuth);
+		Jail_Log(false, "%s [%s ]has been banned via identity.", sName, sAuth);
 	}
 	
 	switch (cv_FreekillersAction)
@@ -5574,12 +5735,12 @@ public Action BanClientTimerFreekiller(Handle hTimer, Handle data)
 				case true:
 				{
 					SBBanPlayer(0, client, cv_FreekillersBantime, "Client has been marked for Freekilling.");
-					Jail_Log("%N has been banned via Sourcebans1 for being marked as a Freekiller.", client);
+					Jail_Log(false, "%N has been banned via Sourcebans1 for being marked as a Freekiller.", client);
 				}
 				case false:
 				{
 					BanClient(client, cv_FreekillersBantime, BANFLAG_AUTO, "Client has been marked for Freekilling.", cv_sBanMSG, "freekill_liveban", userid);
-					Jail_Log("%N has been banned for being marked as a Freekiller.", client);
+					Jail_Log(false, "%N has been banned for being marked as a Freekiller.", client);
 				}
 			}
 		}
@@ -5625,7 +5786,7 @@ public Action RemoveRebel(Handle hTimer, any data)
 			hParticle_Rebels[client] = null;
 		}
 		if (cv_RendererColors)SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
-		Jail_Log("%N is no longer a Rebeller.", client);
+		Jail_Log(false, "%N is no longer a Rebeller.", client);
 	}
 	
 	Call_StartForward(sFW_OnRebelRemoved);
@@ -5916,7 +6077,7 @@ public int Native_GiveFreeday(Handle plugin, int numParams)
 	if (bIsQueuedFreeday[client])
 	{
 		bIsQueuedFreeday[client] = false;
-		Jail_Log("%N was queued as a Freeday, removed from queue to turn into a Freeday.");
+		Jail_Log(false, "%N was queued as a Freeday, removed from queue to turn into a Freeday.");
 	}
 	
 	GiveFreeday(client);
@@ -6099,7 +6260,7 @@ public int Native_LockWarden(Handle plugin, int numParams)
 	bAdminLockWarden = true;
 	CPrintToChatAll("%t %t", "plugin tag", "warden locked natives");
 	
-	Jail_Log("Natives has locked Warden.");
+	Jail_Log(false, "Natives has locked Warden.");
 }
 
 public int Native_UnlockWarden(Handle plugin, int numParams)
@@ -6117,7 +6278,7 @@ public int Native_UnlockWarden(Handle plugin, int numParams)
 	bAdminLockWarden = false;
 	CPrintToChatAll("%t %t", "plugin tag", "warden unlocked natives");
 	
-	Jail_Log("Natives has unlocked Warden.");
+	Jail_Log(false, "Natives has unlocked Warden.");
 }
 
 public int Native_Logging(Handle plugin, int numParams)
@@ -6130,7 +6291,7 @@ public int Native_Logging(Handle plugin, int numParams)
 	char sFormat[1024];
 	FormatNativeString(0, 1, 2, sizeof(sFormat), _, sFormat);
 	
-	Jail_Log(sFormat);
+	Jail_Log(false, sFormat);
 }
 
 public int Native_IsLRRound(Handle plugin, int numParams)
