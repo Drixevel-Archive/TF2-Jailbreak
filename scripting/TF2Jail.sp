@@ -52,7 +52,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.7f"
+#define PLUGIN_VERSION	"5.5.8"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -1832,7 +1832,7 @@ public void OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 		}
 	}
 	
-	if (cv_Balance)
+	if (cv_Balance && GetClientCount(true) > 2)
 	{
 		float Ratio;
 		for (int i = 1; i <= MaxClients; i++)
@@ -1841,7 +1841,7 @@ public void OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 			
 			Ratio = float(TF2_GetTeamClientCount(TFTeam_Blue)) / float(TF2_GetTeamClientCount(TFTeam_Red));
 			
-			if (Ratio <= cv_BalanceRatio || GetClientCount(true) < 3)
+			if (Ratio <= cv_BalanceRatio)
 			{
 				break;
 			}
