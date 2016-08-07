@@ -52,7 +52,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.8"
+#define PLUGIN_VERSION	"5.5.8a"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -60,7 +60,7 @@
 #define SOURCEMOD_REQUIRED	"1.8"
 
 //Handle Arrays
-Handle hConVars[80];
+ConVar hConVars[80];
 Handle hTextNodes[4];
 Handle hEngineConVars[3];
 
@@ -1380,11 +1380,13 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 	{
 		return Plugin_Continue;
 	}
+
+	bool bReturn;
 	
 	if (bIsFreeday[victim] && !IsWarden(attacker))
 	{
 		damage = 0.0;
-		return Plugin_Changed;
+		bReturn = true;
 	}
 	
 	if (!bDisableCriticles && (cv_WardenDeathCrits && !bIsWardenLocked))
@@ -1403,7 +1405,7 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 							case 2:damagetype |= DMG_CRIT;
 						}
 						
-						return Plugin_Changed;
+						bReturn = true;
 					}
 				}
 			}
@@ -1419,20 +1421,15 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 							case 2:damagetype |= DMG_CRIT;
 						}
 						
-						return Plugin_Changed;
+						bReturn = true;
 					}
 				}
 			}
 		}
 	}
 	
-	if (cv_WardenStabProtection != 0 && IsWarden(victim))
+	if (cv_WardenStabProtection != 0 && IsWarden(victim) && (cv_WardenStabProtection == 1 && !bWardenBackstabbed))
 	{
-		if (cv_WardenStabProtection == 1 && bWardenBackstabbed)
-		{
-			return Plugin_Continue;
-		}
-		
 		char sClassName[64];
 		GetEntityClassname(GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon"), sClassName, sizeof(sClassName));
 		
@@ -1441,11 +1438,11 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 			damage = 0.0;
 			bWardenBackstabbed = true;
 			
-			return Plugin_Changed;
+			bReturn = true;
 		}
 	}
 	
-	return Plugin_Continue;
+	return bReturn ? Plugin_Changed : Plugin_Continue;
 }
 
 public void OnClientDisconnect(int client)
