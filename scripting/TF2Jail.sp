@@ -52,7 +52,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.8a"
+#define PLUGIN_VERSION	"5.5.8b"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -1401,8 +1401,8 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 					{
 						switch (cv_Criticalstype)
 						{
-							case 1:damagetype |= DMG_SLOWBURN;
-							case 2:damagetype |= DMG_CRIT;
+							case 1:damagetype = damagetype | DMG_SLOWBURN;
+							case 2:damagetype = damagetype | DMG_CRIT;
 						}
 						
 						bReturn = true;
@@ -1417,8 +1417,8 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 					{
 						switch (cv_Criticalstype)
 						{
-							case 1:damagetype |= DMG_SLOWBURN;
-							case 2:damagetype |= DMG_CRIT;
+							case 1:damagetype = damagetype | DMG_SLOWBURN;
+							case 2:damagetype = damagetype | DMG_CRIT;
 						}
 						
 						bReturn = true;
