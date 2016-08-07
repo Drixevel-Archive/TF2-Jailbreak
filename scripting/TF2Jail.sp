@@ -52,7 +52,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.8d"
+#define PLUGIN_VERSION	"5.5.8e"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -1388,11 +1388,10 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 		damage = 0.0;
 		bReturn = true;
 	}
-
-	PrintToServer("---\n%N - Damagetype: %i (before)", attacker, damagetype);
 	
 	if (!bDisableCriticles && (cv_WardenDeathCrits && !bIsWardenLocked))
 	{
+		PrintToServer("Passed");
 		switch (TF2_GetClientTeam(attacker))
 		{
 			case TFTeam_Red:
@@ -1429,8 +1428,6 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 			}
 		}
 	}
-
-	PrintToServer("---\n%N - Damagetype: %i (after)", attacker, damagetype);
 	
 	if (cv_WardenStabProtection != 0 && IsWarden(victim) && (cv_WardenStabProtection == 1 && !bWardenBackstabbed))
 	{
