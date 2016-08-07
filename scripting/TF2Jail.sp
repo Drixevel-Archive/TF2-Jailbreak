@@ -52,7 +52,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.8e"
+#define PLUGIN_VERSION	"5.5.8f"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -1389,45 +1389,45 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 		bReturn = true;
 	}
 	
-	if (!bDisableCriticles && (cv_WardenDeathCrits && !bIsWardenLocked))
+	//if (!bDisableCriticles && (cv_WardenDeathCrits && !bIsWardenLocked))
+	//{
+	PrintToServer("Passed");
+	switch (TF2_GetClientTeam(attacker))
 	{
-		PrintToServer("Passed");
-		switch (TF2_GetClientTeam(attacker))
+		case TFTeam_Red:
 		{
-			case TFTeam_Red:
+			switch (cv_Criticals)
 			{
-				switch (cv_Criticals)
+				case 2, 3:
 				{
-					case 2, 3:
+					switch (cv_Criticalstype)
 					{
-						switch (cv_Criticalstype)
-						{
-							case 1:damagetype = SetBit(damagetype, DMG_SLOWBURN); //damagetype | DMG_SLOWBURN;
-							case 2:damagetype = SetBit(damagetype, DMG_CRIT); //damagetype | DMG_CRIT;
-						}
-						
-						bReturn = true;
+						case 1:damagetype = SetBit(damagetype, DMG_SLOWBURN); //damagetype | DMG_SLOWBURN;
+						case 2:damagetype = SetBit(damagetype, DMG_CRIT); //damagetype | DMG_CRIT;
 					}
+					
+					bReturn = true;
 				}
 			}
-			case TFTeam_Blue:
+		}
+		case TFTeam_Blue:
+		{
+			switch (cv_Criticals)
 			{
-				switch (cv_Criticals)
+				case 1, 3:
 				{
-					case 1, 3:
+					switch (cv_Criticalstype)
 					{
-						switch (cv_Criticalstype)
-						{
-							case 1:damagetype = SetBit(damagetype, DMG_SLOWBURN); //damagetype | DMG_SLOWBURN;
-							case 2:damagetype = SetBit(damagetype, DMG_CRIT); //damagetype | DMG_CRIT;
-						}
-						
-						bReturn = true;
+						case 1:damagetype = SetBit(damagetype, DMG_SLOWBURN); //damagetype | DMG_SLOWBURN;
+						case 2:damagetype = SetBit(damagetype, DMG_CRIT); //damagetype | DMG_CRIT;
 					}
+					
+					bReturn = true;
 				}
 			}
 		}
 	}
+	//}
 	
 	if (cv_WardenStabProtection != 0 && IsWarden(victim) && (cv_WardenStabProtection == 1 && !bWardenBackstabbed))
 	{
