@@ -52,7 +52,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.8c"
+#define PLUGIN_VERSION	"5.5.8d"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -1368,7 +1368,7 @@ public void OnClientPutInServer(int client)
 		MutePlayer(client);
 	}
 }
-
+#define SetBit(%1,%2)      (%1 |= (1<<%2))
 public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!cv_Enabled)
@@ -1403,8 +1403,8 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 					{
 						switch (cv_Criticalstype)
 						{
-							case 1:damagetype = damagetype | DMG_SLOWBURN;
-							case 2:damagetype = damagetype | DMG_CRIT;
+							case 1:damagetype = SetBit(damagetype, DMG_SLOWBURN); //damagetype | DMG_SLOWBURN;
+							case 2:damagetype = SetBit(damagetype, DMG_CRIT); //damagetype | DMG_CRIT;
 						}
 						
 						bReturn = true;
@@ -1419,8 +1419,8 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 					{
 						switch (cv_Criticalstype)
 						{
-							case 1:damagetype = damagetype | DMG_SLOWBURN;
-							case 2:damagetype = damagetype | DMG_CRIT;
+							case 1:damagetype = SetBit(damagetype, DMG_SLOWBURN); //damagetype | DMG_SLOWBURN;
+							case 2:damagetype = SetBit(damagetype, DMG_CRIT); //damagetype | DMG_CRIT;
 						}
 						
 						bReturn = true;
