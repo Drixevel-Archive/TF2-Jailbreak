@@ -52,7 +52,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.8f"
+#define PLUGIN_VERSION	"5.5.9"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -1368,7 +1368,7 @@ public void OnClientPutInServer(int client)
 		MutePlayer(client);
 	}
 }
-#define SetBit(%1,%2)      (%1 |= (1<<%2))
+
 public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!cv_Enabled)
@@ -1389,45 +1389,44 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 		bReturn = true;
 	}
 	
-	//if (!bDisableCriticles && (cv_WardenDeathCrits && !bIsWardenLocked))
-	//{
-	PrintToServer("Passed");
-	switch (TF2_GetClientTeam(attacker))
+	if (!bDisableCriticles && (cv_WardenDeathCrits && !bIsWardenLocked))
 	{
-		case TFTeam_Red:
+		switch (TF2_GetClientTeam(attacker))
 		{
-			switch (cv_Criticals)
+			case TFTeam_Red:
 			{
-				case 2, 3:
+				switch (cv_Criticals)
 				{
-					switch (cv_Criticalstype)
+					case 2, 3:
 					{
-						case 1:damagetype = SetBit(damagetype, DMG_SLOWBURN); //damagetype | DMG_SLOWBURN;
-						case 2:damagetype = SetBit(damagetype, DMG_CRIT); //damagetype | DMG_CRIT;
+						switch (cv_Criticalstype)
+						{
+							case 1:damagetype = damagetype | DMG_SLOWBURN;
+							case 2:damagetype = damagetype | DMG_CRIT;
+						}
+						
+						bReturn = true;
 					}
-					
-					bReturn = true;
 				}
 			}
-		}
-		case TFTeam_Blue:
-		{
-			switch (cv_Criticals)
+			case TFTeam_Blue:
 			{
-				case 1, 3:
+				switch (cv_Criticals)
 				{
-					switch (cv_Criticalstype)
+					case 1, 3:
 					{
-						case 1:damagetype = SetBit(damagetype, DMG_SLOWBURN); //damagetype | DMG_SLOWBURN;
-						case 2:damagetype = SetBit(damagetype, DMG_CRIT); //damagetype | DMG_CRIT;
+						switch (cv_Criticalstype)
+						{
+							case 1:damagetype = damagetype | DMG_SLOWBURN;
+							case 2:damagetype = damagetype | DMG_CRIT;
+						}
+						
+						bReturn = true;
 					}
-					
-					bReturn = true;
 				}
 			}
 		}
 	}
-	//}
 	
 	if (cv_WardenStabProtection != 0 && IsWarden(victim) && (cv_WardenStabProtection == 1 && !bWardenBackstabbed))
 	{
