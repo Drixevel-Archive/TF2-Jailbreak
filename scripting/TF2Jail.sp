@@ -4271,7 +4271,7 @@ void GiveFreeday(int client)
 			iParticle_Freedays[client] = -1;
 		}
 
-		iParticle_Freedays[client] = CreateParticle(sFreedaysParticle, 999999.0, client, ATTACH_NORMAL);
+		iParticle_Freedays[client] = CreateParticle(sFreedaysParticle, 0.0, client, ATTACH_NORMAL);
 	}
 
 	if (cv_RendererColors)SetEntityRenderColor(client, a_iFreedaysColors[0], a_iFreedaysColors[1], a_iFreedaysColors[2], a_iFreedaysColors[3]);
@@ -4321,7 +4321,7 @@ void MarkRebel(int client)
 			iParticle_Rebels[client] = -1;
 		}
 
-		iParticle_Rebels[client] = CreateParticle(sRebellersParticle, 999999.0, client, ATTACH_NORMAL);
+		iParticle_Rebels[client] = CreateParticle(sRebellersParticle, 0.0, client, ATTACH_NORMAL);
 	}
 
 	if (cv_RendererColors)SetEntityRenderColor(client, a_iRebellersColors[0], a_iRebellersColors[1], a_iRebellersColors[2], a_iRebellersColors[3]);
@@ -4358,7 +4358,7 @@ void MarkFreekiller(int client, bool avoid = false)
 			iParticle_Freekillers[client] = -1;
 		}
 
-		iParticle_Freekillers[client] = CreateParticle(sFreekillersParticle, 999999.0, client, ATTACH_NORMAL);
+		iParticle_Freekillers[client] = CreateParticle(sFreekillersParticle, 0.0, client, ATTACH_NORMAL);
 	}
 
 	if (cv_RendererColors)SetEntityRenderColor(client, a_iFreekillersColors[0], a_iFreekillersColors[1], a_iFreekillersColors[2], a_iFreekillersColors[3]);
@@ -5304,10 +5304,16 @@ int CreateParticle(char[] sType, float time, int client, eAttachedParticles atta
 			CreateTimer(time, DeleteParticle, particle, TIMER_FLAG_NO_MAPCHANGE);
 		}
 
-		Handle sPack;
-		CreateDataTimer(1.0, CheckClient, sPack, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-		WritePackCell(sPack, GetClientUserId(client));
-		WritePackCell(sPack, EntIndexToEntRef(particle));
+		Handle hPack;
+		CreateDataTimer(1.0, CheckClient, hPack, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+		WritePackCell(hPack, GetClientUserId(client));
+		WritePackCell(hPack, EntIndexToEntRef(particle));
+		WritePackString(hPack, sType);
+		WritePackFloat(hPack, time);
+		WritePackCell(hPack, attach);
+		WritePackFloat(hPack, xOffs);
+		WritePackFloat(hPack, yOffs);
+		WritePackFloat(hPack, zOffs);
 
 		return particle;
 	}
@@ -5321,9 +5327,9 @@ int CreateParticle(char[] sType, float time, int client, eAttachedParticles atta
 
 public Action DeleteParticle(Handle timer, any data)
 {
-	if (IsValidEdict(data))
+	if (IsValidEntity(data))
 	{
-		RemoveEdict(data);
+		AcceptEntityInput(data, "Kill");
 	}
 }
 
@@ -5334,6 +5340,15 @@ public Action CheckClient(Handle timer, Handle hPack)
 	int client = GetClientOfUserId(ReadPackCell(hPack));
 	int entity = EntRefToEntIndex(ReadPackCell(hPack));
 
+	char sType[64];
+	ReadPackString(hPack, sType, sizeof(sType));
+
+	float time = ReadPackFloat(hPack);
+	eAttachedParticles attach = view_as<eAttachedParticles>(ReadPackCell(hPack));
+	float xOffs = ReadPackFloat(hPack);
+	float yOffs = ReadPackFloat(hPack);
+	float zOffs = ReadPackFloat(hPack);
+
 	if (!cv_RendererParticles || !Client_IsIngame(client) || !IsPlayerAlive(client))
 	{
 		if (!IsValidEntity(entity))
@@ -5343,6 +5358,49 @@ public Action CheckClient(Handle timer, Handle hPack)
 
 		AcceptEntityInput(entity, "Kill");
 		return Plugin_Stop;
+	}
+	else
+	{
+		if (StrEqual(sType, sWardenParticle))
+		{
+			if (iParticle_Wardens[client] != -1 && IsValidEntity(iParticle_Wardens[client]))
+			{
+				AcceptEntityInput(iParticle_Wardens[client], "Kill");
+				iParticle_Wardens[client] = -1;
+			}
+
+			iParticle_Wardens[client] = CreateParticle(sType, time, client, attach, xOffs, yOffs, zOffs);
+		}
+		else if (StrEqual(sType, sFreedaysParticle))
+		{
+			if (iParticle_Freedays[client] != -1 && IsValidEntity(iParticle_Freedays[client]))
+			{
+				AcceptEntityInput(iParticle_Freedays[client], "Kill");
+				iParticle_Freedays[client] = -1;
+			}
+
+			iParticle_Freedays[client] = CreateParticle(sType, time, client, attach, xOffs, yOffs, zOffs);
+		}
+		else if (StrEqual(sType, sRebellersParticle))
+		{
+			if (iParticle_Rebels[client] != -1 && IsValidEntity(iParticle_Rebels[client]))
+			{
+				AcceptEntityInput(iParticle_Rebels[client], "Kill");
+				iParticle_Rebels[client] = -1;
+			}
+
+			iParticle_Rebels[client] = CreateParticle(sType, time, client, attach, xOffs, yOffs, zOffs);
+		}
+		else if (StrEqual(sType, sFreekillersParticle))
+		{
+			if (iParticle_Freekillers[client] != -1 && IsValidEntity(iParticle_Freekillers[client]))
+			{
+				AcceptEntityInput(iParticle_Freekillers[client], "Kill");
+				iParticle_Freekillers[client] = -1;
+			}
+
+			iParticle_Freekillers[client] = CreateParticle(sType, time, client, attach, xOffs, yOffs, zOffs);
+		}
 	}
 
 	return Plugin_Continue;
@@ -5428,7 +5486,7 @@ void WardenSet(int client)
 			iParticle_Wardens[client] = -1;
 		}
 
-		iParticle_Wardens[client] = CreateParticle(sWardenParticle, 999999.0, client, ATTACH_NORMAL);
+		iParticle_Wardens[client] = CreateParticle(sWardenParticle, 0.0, client, ATTACH_NORMAL);
 	}
 
 	if (cv_RendererColors)SetEntityRenderColor(client, a_iWardenColors[0], a_iWardenColors[1], a_iWardenColors[2], a_iWardenColors[3]);
