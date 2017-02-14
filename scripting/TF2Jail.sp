@@ -4625,7 +4625,6 @@ void ParseMapConfig()
 							fFreedayPosition[1] = StringToFloat(sExplodedCoords[1]);
 							fFreedayPosition[2] = StringToFloat(sExplodedCoords[2]);
 						}
-						
 						else
 						{
 							KvGetVector(hConfig, "Coordinates", fFreedayPosition);
