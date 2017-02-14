@@ -4619,15 +4619,13 @@ void ParseMapConfig()
 						if (StrContains(sCoordinates, ",") != -1)
 						{
 							char sExplodedCoords[3][32];
-							ExplodeString(sCoordinates, ", ", sExplodedCoords, 3, 2);
-
-							for (int i = 0; i < 3; i++)
-							{
-								fFreedayPosition[i] = StringToFloat(sExplodedCoords[i]);
-								fFreedayPosition[i] = StringToFloat(sExplodedCoords[i]);
-								fFreedayPosition[i] = StringToFloat(sExplodedCoords[i]);
-							}
+							ExplodeString(sCoordinates, ", ", sExplodedCoords, 3, 20);
+							
+							fFreedayPosition[0] = StringToFloat(sExplodedCoords[0]);
+							fFreedayPosition[1] = StringToFloat(sExplodedCoords[1]);
+							fFreedayPosition[2] = StringToFloat(sExplodedCoords[2]);
 						}
+						
 						else
 						{
 							KvGetVector(hConfig, "Coordinates", fFreedayPosition);
