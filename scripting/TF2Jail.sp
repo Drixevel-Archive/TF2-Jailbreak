@@ -437,7 +437,7 @@ public void OnPluginStart()
 	hConVars[49] = CreateConVar("sm_tf2jail_airblast", "1", "Stop the Pyro class from air blasting: (1 = yes, 0 = no)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	hConVars[50] = CreateConVar("sm_tf2jail_renderer_particles", "1", "Status for particles to render from config: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	hConVars[51] = CreateConVar("sm_tf2jail_renderer_colors", "1", "Status for colors to render from config: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	hConVars[52] = CreateConVar("sm_tf2jail_renderer_default_color", "256, 256, 256, 256", "Default color to set clients to if one isn't present: (Default: 256, 256, 256, 256)", FCVAR_NOTIFY);
+	hConVars[52] = CreateConVar("sm_tf2jail_renderer_default_color", "255, 255, 255, 255", "Default color to set clients to if one isn't present: (Default: 255, 255, 255, 255)", FCVAR_NOTIFY);
 	hConVars[53] = CreateConVar("sm_tf2jail_warden_voice", "1", "Voice management for Wardens: (0 = disabled, 1 = unmute, 2 = warning)", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	hConVars[54] = CreateConVar("sm_tf2jail_warden_wearables", "1", "Strip Wardens wearables: (1 = enable, 0 = disable)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	hConVars[55] = CreateConVar("sm_tf2jail_freeday_teleport", "1", "Status of teleporting: (1 = enable, 0 = disable) (Disables all functionality regardless of configs)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
