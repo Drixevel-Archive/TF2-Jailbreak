@@ -579,7 +579,7 @@ public void OnPluginStart()
 public void OnAllPluginsLoaded()
 {
 	//Mark a bool for every library that exists so we can use them when available.
-	eSourcebans = LibraryExists("SourceBans");
+	eSourcebans = LibraryExists("sourcebans");
 	eSourceComms = LibraryExists("sourcecomms");
 	eSteamWorks = LibraryExists("SteamWorks");
 	eTF2Attributes = LibraryExists("tf2attributes");
@@ -590,7 +590,7 @@ public void OnAllPluginsLoaded()
 public void OnLibraryAdded(const char[] sName)
 {
 	//Check if the libraries have been added and if so, start using them.
-	eSourcebans = StrEqual(sName, "SourceBans");
+	eSourcebans = StrEqual(sName, "sourcebans");
 	eSourceComms = StrEqual(sName, "sourcecomms");
 	eSteamWorks = StrEqual(sName, "SteamWorks");
 	eTF2Attributes = StrEqual(sName, "tf2attributes");
@@ -601,7 +601,7 @@ public void OnLibraryAdded(const char[] sName)
 public void OnLibraryRemoved(const char[] sName)
 {
 	//Check if the libraries have been removed and if so, stop using them.
-	eSourcebans = StrEqual(sName, "SourceBans");
+	eSourcebans = StrEqual(sName, "sourcebans");
 	eSourceComms = StrEqual(sName, "sourcecomms");
 	eSteamWorks = StrEqual(sName, "SteamWorks");
 	eTF2Attributes = StrEqual(sName, "tf2attributes");
