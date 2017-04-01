@@ -52,7 +52,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.5.9"
+#define PLUGIN_VERSION	"5.6.0"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -222,8 +222,7 @@ bool bHasTalked[MAXPLAYERS + 1];
 bool bLockedFromWarden[MAXPLAYERS + 1];
 bool bRolePreference_Blue[MAXPLAYERS + 1];
 bool bRolePreference_Warden[MAXPLAYERS + 1];
-bool bHasModel[MAXPLAYERS + 1];
-bool bVoted[MAXPLAYERS + 1] =  { false, ... };
+bool bVoted[MAXPLAYERS + 1];
 
 //Global Integer Player Arrays
 int iFirstKill[MAXPLAYERS + 1];
@@ -250,6 +249,7 @@ char sFFButton[32];
 char sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear" };
 char sLRConfig[PLATFORM_MAX_PATH];
 char sCustomLR[32];
+char sOldModel[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
 
 //Role Renderers Globals
 int a_iDefaultColors[4];
@@ -2107,7 +2107,7 @@ public void OnRoundEnd(Handle hEvent, char[] sName, bool bBroadcast)
 				bBlockedDoubleJump[i] = false;
 			}
 
-			if (bHasModel[i])
+			if (strlen(sOldModel[i]) > 0)
 			{
 				RemoveModel(i);
 			}
@@ -3122,11 +3122,12 @@ public Action AdminResetPlugin(int client, int args)
 		bIsFreekiller[i] = false;
 		bHasTalked[i] = false;
 		bLockedFromWarden[i] = false;
-		bHasModel[i] = false;
 
 		iFirstKill[i] = 0;
 		iKillcount[i] = 0;
 		iHasBeenWarden[i] = 0;
+		
+		sOldModel[i][0] = '\0';
 	}
 
 	bCellsOpened = false;
@@ -4826,13 +4827,13 @@ void ParseWardenModelsConfig(bool MenuOnly = false)
 					continue;
 				}
 			}
+			
+			SetTrieString(hWardenSkinClasses, sName, sClass, false);
 
 			if (KvJumpToKey(hConfig, "files"))
 			{
 				if (KvGotoFirstSubKey(hConfig, false))
 				{
-					SetTrieString(hWardenSkinClasses, sName, sClass, false);
-
 					do {
 						char sDownload[PLATFORM_MAX_PATH];
 						KvGetString(hConfig, NULL_STRING, sDownload, sizeof(sDownload));
@@ -5514,7 +5515,10 @@ void SetWardenModel(int client, const char[] sModel)
 
 	char sModelPlatform[PLATFORM_MAX_PATH];
 	GetTrieString(hWardenSkins, sModel, sModelPlatform, sizeof(sModelPlatform));
-	SetModel(client, sModelPlatform);
+	
+	char sClass[64];
+	GetTrieString(hWardenSkinClasses, sModel, sClass, sizeof(sClass));
+	SetModel(client, sModelPlatform, sClass);
 
 	CPrintToChat(client, "%t %t", "plugin tag", "warden model message", sModel);
 }
@@ -5570,33 +5574,33 @@ void WardenUnset(int client)
 	Call_Finish();
 }
 
-void SetModel(int client, const char[] sModel)
+void SetModel(int client, const char[] sModel, const char[] class)
 {
-	if (Client_IsIngame(client) && IsPlayerAlive(client) && !bHasModel[client])
+	if (Client_IsIngame(client) && IsPlayerAlive(client))
 	{
-		SetVariantString(sModel);
-		AcceptEntityInput(client, "SetCustomModel");
-		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
+		TFClassType playerclass = TF2_GetClass(class);
+		
+		if (playerclass != TFClass_Unknown)
+		{
+			TF2_SetPlayerClass(client, playerclass, false, false);
+			TF2_RegeneratePlayer(client);
+		}
+		
+		GetClientModel(client, sOldModel[client], PLATFORM_MAX_PATH);
+		SetEntityModel(client, sModel);
 
 		if (cv_WardenWearables)
 		{
 			RemoveValveHat(client, true);
 		}
-
-		bHasModel[client] = true;
 	}
-
 }
 
 void RemoveModel(int client)
 {
-	if (Client_IsIngame(client) && bHasModel[client])
+	if (Client_IsIngame(client) && strlen(sOldModel[client]) > 0)
 	{
-		SetVariantString("");
-		AcceptEntityInput(client, "SetCustomModel");
-		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 0);
-
-		bHasModel[client] = false;
+		SetEntityModel(client, sOldModel[client]);
 	}
 }
 
