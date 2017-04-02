@@ -52,7 +52,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.6.1"
+#define PLUGIN_VERSION	"5.6.2"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -80,11 +80,11 @@ Handle hLastRequestUses;
 Handle hWardenSkinClasses;
 Handle hWardenSkins;
 
-//Particle Handles
-int iParticle_Wardens[MAXPLAYERS + 1];
-int iParticle_Freedays[MAXPLAYERS + 1];
-int iParticle_Rebels[MAXPLAYERS + 1];
-int iParticle_Freekillers[MAXPLAYERS + 1];
+//Particle Entity Indexes
+int iParticle_Wardens[MAXPLAYERS + 1] = {INVALID_ENT_REFERENCE, ...};
+int iParticle_Freedays[MAXPLAYERS + 1] = {INVALID_ENT_REFERENCE, ...};
+int iParticle_Rebels[MAXPLAYERS + 1] = {INVALID_ENT_REFERENCE, ...};
+int iParticle_Freekillers[MAXPLAYERS + 1] = {INVALID_ENT_REFERENCE, ...};
 
 //Timer Handles
 Handle hTimer_Advertisement;
@@ -4253,22 +4253,34 @@ public int MenuHandle_GiveLR(Handle hMenu, MenuAction action, int param1, int pa
 void GiveFreeday(int client)
 {
 	CPrintToChat(client, "%t %t", "plugin tag", "lr freeday message");
+	
 	int flags = GetEntityFlags(client) | FL_NOTARGET;
 	SetEntityFlags(client, flags);
-	if (cv_FreedayTeleports && bFreedayTeleportSet)TeleportEntity(client, fFreedayPosition, NULL_VECTOR, NULL_VECTOR);
+	
+	if (cv_FreedayTeleports && bFreedayTeleportSet)
+	{
+		TeleportEntity(client, fFreedayPosition, NULL_VECTOR, NULL_VECTOR);
+	}
 
 	if (cv_RendererParticles && strlen(sFreedaysParticle) != 0)
 	{
-		if (iParticle_Freedays[client] != -1)
+		if (iParticle_Freedays[client] != INVALID_ENT_REFERENCE)
 		{
-			AcceptEntityInput(iParticle_Freedays[client], "Kill");
-			iParticle_Freedays[client] = -1;
+			int old = EntRefToEntIndex(iParticle_Freedays[client]);
+			
+			if (IsValidEntity(old))
+			{
+				AcceptEntityInput(old, "Kill");
+			}
 		}
 
 		iParticle_Freedays[client] = CreateParticle(sFreedaysParticle, 0.0, client, ATTACH_NORMAL);
 	}
 
-	if (cv_RendererColors)SetEntityRenderColor(client, a_iFreedaysColors[0], a_iFreedaysColors[1], a_iFreedaysColors[2], a_iFreedaysColors[3]);
+	if (cv_RendererColors)
+	{
+		SetEntityRenderColor(client, a_iFreedaysColors[0], a_iFreedaysColors[1], a_iFreedaysColors[2], a_iFreedaysColors[3]);
+	}
 
 	bIsQueuedFreeday[client] = false;
 	bIsFreeday[client] = true;
@@ -4287,10 +4299,16 @@ void RemoveFreeday(int client)
 	SetEntityFlags(client, flags);
 	ServerCommand("sm_evilbeam #%d", GetClientUserId(client));
 	bIsFreeday[client] = false;
-
-	if (iParticle_Freedays[client] != -1)
+	
+	if (iParticle_Freedays[client] != INVALID_ENT_REFERENCE)
 	{
-		AcceptEntityInput(iParticle_Freedays[client], "Kill");
+		int old = EntRefToEntIndex(iParticle_Freedays[client]);
+		
+		if (IsValidEntity(old))
+		{
+			AcceptEntityInput(old, "Kill");
+		}
+		
 		iParticle_Freedays[client] = -1;
 	}
 
@@ -4309,24 +4327,32 @@ void MarkRebel(int client)
 
 	if (cv_RendererParticles && strlen(sRebellersParticle) != 0)
 	{
-		if (iParticle_Rebels[client] != -1)
+		if (iParticle_Rebels[client] != INVALID_ENT_REFERENCE)
 		{
-			AcceptEntityInput(iParticle_Rebels[client], "Kill");
-			iParticle_Rebels[client] = -1;
+			int old = EntRefToEntIndex(iParticle_Rebels[client]);
+			
+			if (IsValidEntity(old))
+			{
+				AcceptEntityInput(old, "Kill");
+			}
 		}
 
 		iParticle_Rebels[client] = CreateParticle(sRebellersParticle, 0.0, client, ATTACH_NORMAL);
 	}
 
-	if (cv_RendererColors)SetEntityRenderColor(client, a_iRebellersColors[0], a_iRebellersColors[1], a_iRebellersColors[2], a_iRebellersColors[3]);
-
-	CPrintToChatAll("%t %t", "plugin tag", "prisoner has rebelled", client);
+	if (cv_RendererColors)
+	{
+		SetEntityRenderColor(client, a_iRebellersColors[0], a_iRebellersColors[1], a_iRebellersColors[2], a_iRebellersColors[3]);
+	}
+	
 	if (cv_RebelsTime >= 1.0)
 	{
 		int time = RoundFloat(cv_RebelsTime);
 		CPrintToChat(client, "%t %t", "plugin tag", "rebel timer start", time);
 		hTimer_RebelTimers[client] = CreateTimer(cv_RebelsTime, RemoveRebel, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	}
+	
+	CPrintToChatAll("%t %t", "plugin tag", "prisoner has rebelled", client);
 	Jail_Log(false, "%N has been marked as a Rebeller.", client);
 
 	Call_StartForward(sFW_OnRebelGiven);
@@ -4346,10 +4372,14 @@ void MarkFreekiller(int client, bool avoid = false)
 
 	if (cv_RendererParticles && strlen(sFreekillersParticle) != 0)
 	{
-		if (iParticle_Freekillers[client] != -1)
+		if (iParticle_Freekillers[client] != INVALID_ENT_REFERENCE)
 		{
-			AcceptEntityInput(iParticle_Freekillers[client], "Kill");
-			iParticle_Freekillers[client] = -1;
+			int old = EntRefToEntIndex(iParticle_Freekillers[client]);
+			
+			if (IsValidEntity(old))
+			{
+				AcceptEntityInput(old, "Kill");
+			}
 		}
 
 		iParticle_Freekillers[client] = CreateParticle(sFreekillersParticle, 0.0, client, ATTACH_NORMAL);
@@ -4388,9 +4418,15 @@ void ClearFreekiller(int client)
 
 	ClearTimer(hTimer_FreekillingData);
 
-	if (iParticle_Freekillers[client] != -1)
+	if (iParticle_Freekillers[client] != INVALID_ENT_REFERENCE)
 	{
-		AcceptEntityInput(iParticle_Freekillers[client], "Kill");
+		int old = EntRefToEntIndex(iParticle_Freekillers[client]);
+		
+		if (IsValidEntity(old))
+		{
+			AcceptEntityInput(old, "Kill");
+		}
+		
 		iParticle_Freekillers[client] = -1;
 	}
 
@@ -5255,7 +5291,7 @@ void StripToMelee(int client)
 	TF2_SwitchtoSlot(client, TFWeaponSlot_Melee);
 }
 
-int CreateParticle(char[] sType, float time, int client, eAttachedParticles attach = NO_ATTACH, float xOffs = 0.0, float yOffs = 0.0, float zOffs = 0.0)
+int CreateParticle(char[] sType, float refresh = 2.0, int client, eAttachedParticles attach = NO_ATTACH, float xOffs = 0.0, float yOffs = 0.0, float zOffs = 0.0)
 {
 	int particle = CreateEntityByName("info_particle_system");
 
@@ -5289,52 +5325,39 @@ int CreateParticle(char[] sType, float time, int client, eAttachedParticles atta
 
 		ActivateEntity(particle);
 		AcceptEntityInput(particle, "Start");
-
-		if (time != 0.0)
+		
+		if (refresh > 0.0)
 		{
-			CreateTimer(time, DeleteParticle, particle, TIMER_FLAG_NO_MAPCHANGE);
+			Handle hPack;
+			CreateDataTimer(1.0, CheckClient, hPack, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+			WritePackFloat(hPack, 0.0);
+			WritePackCell(hPack, GetClientUserId(client));
+			WritePackCell(hPack, EntIndexToEntRef(particle));
+			WritePackString(hPack, sType);
+			WritePackFloat(hPack, refresh);
+			WritePackCell(hPack, attach);
+			WritePackFloat(hPack, xOffs);
+			WritePackFloat(hPack, yOffs);
+			WritePackFloat(hPack, zOffs);
 		}
-
-		Handle hPack;
-		CreateDataTimer(1.0, CheckClient, hPack, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-		WritePackCell(hPack, GetClientUserId(client));
-		WritePackCell(hPack, EntIndexToEntRef(particle));
-		WritePackString(hPack, sType);
-		WritePackFloat(hPack, time);
-		WritePackCell(hPack, attach);
-		WritePackFloat(hPack, xOffs);
-		WritePackFloat(hPack, yOffs);
-		WritePackFloat(hPack, zOffs);
-
-		return particle;
-	}
-	else
-	{
-		LogError("Could not create info_particle_system");
 	}
 
-	return particle;
-}
-
-public Action DeleteParticle(Handle timer, any data)
-{
-	if (IsValidEntity(data))
-	{
-		AcceptEntityInput(data, "Kill");
-	}
+	return EntIndexToEntRef(particle);
 }
 
 public Action CheckClient(Handle timer, Handle hPack)
 {
 	ResetPack(hPack);
-
+	
+	float time = ReadPackFloat(hPack);
+	
 	int client = GetClientOfUserId(ReadPackCell(hPack));
 	int entity = EntRefToEntIndex(ReadPackCell(hPack));
 
 	char sType[64];
 	ReadPackString(hPack, sType, sizeof(sType));
 
-	float time = ReadPackFloat(hPack);
+	float refresh = ReadPackFloat(hPack);
 	eAttachedParticles attach = view_as<eAttachedParticles>(ReadPackCell(hPack));
 	float xOffs = ReadPackFloat(hPack);
 	float yOffs = ReadPackFloat(hPack);
@@ -5342,56 +5365,40 @@ public Action CheckClient(Handle timer, Handle hPack)
 
 	if (!cv_RendererParticles || !Client_IsIngame(client) || !IsPlayerAlive(client))
 	{
-		if (!IsValidEntity(entity))
-		{
-			return Plugin_Stop;
-		}
-
-		AcceptEntityInput(entity, "Kill");
 		return Plugin_Stop;
 	}
-	else
+	
+	time++;
+	
+	if (time <= refresh)
 	{
-		if (StrEqual(sType, sWardenParticle))
-		{
-			if (iParticle_Wardens[client] != -1 && IsValidEntity(iParticle_Wardens[client]))
-			{
-				AcceptEntityInput(iParticle_Wardens[client], "Kill");
-				iParticle_Wardens[client] = -1;
-			}
-
-			iParticle_Wardens[client] = CreateParticle(sType, time, client, attach, xOffs, yOffs, zOffs);
-		}
-		else if (StrEqual(sType, sFreedaysParticle))
-		{
-			if (iParticle_Freedays[client] != -1 && IsValidEntity(iParticle_Freedays[client]))
-			{
-				AcceptEntityInput(iParticle_Freedays[client], "Kill");
-				iParticle_Freedays[client] = -1;
-			}
-
-			iParticle_Freedays[client] = CreateParticle(sType, time, client, attach, xOffs, yOffs, zOffs);
-		}
-		else if (StrEqual(sType, sRebellersParticle))
-		{
-			if (iParticle_Rebels[client] != -1 && IsValidEntity(iParticle_Rebels[client]))
-			{
-				AcceptEntityInput(iParticle_Rebels[client], "Kill");
-				iParticle_Rebels[client] = -1;
-			}
-
-			iParticle_Rebels[client] = CreateParticle(sType, time, client, attach, xOffs, yOffs, zOffs);
-		}
-		else if (StrEqual(sType, sFreekillersParticle))
-		{
-			if (iParticle_Freekillers[client] != -1 && IsValidEntity(iParticle_Freekillers[client]))
-			{
-				AcceptEntityInput(iParticle_Freekillers[client], "Kill");
-				iParticle_Freekillers[client] = -1;
-			}
-
-			iParticle_Freekillers[client] = CreateParticle(sType, time, client, attach, xOffs, yOffs, zOffs);
-		}
+		ResetPack(hPack);
+		WritePackFloat(hPack, time);
+		return Plugin_Continue;
+	}
+	
+	if (IsValidEntity(entity))
+	{
+		AcceptEntityInput(entity, "Kill");
+	}
+	
+	int new_particle = CreateParticle(sType, time, client, attach, xOffs, yOffs, zOffs);
+	
+	if (StrEqual(sType, sWardenParticle))
+	{
+		iParticle_Wardens[client] = new_particle;
+	}
+	else if (StrEqual(sType, sFreedaysParticle))
+	{
+		iParticle_Freedays[client] = new_particle;
+	}
+	else if (StrEqual(sType, sRebellersParticle))
+	{
+		iParticle_Rebels[client] = new_particle;
+	}
+	else if (StrEqual(sType, sFreekillersParticle))
+	{
+		iParticle_Freekillers[client] = new_particle;
 	}
 
 	return Plugin_Continue;
@@ -5469,18 +5476,25 @@ void WardenSet(int client)
 		SetWardenModel(client, cv_sDefaultWardenModel);
 	}
 
-	if (cv_RendererParticles && strlen(sWardenParticle) != 0)
+	if (cv_RendererParticles && strlen(sWardenParticle) > 0)
 	{
-		if (iParticle_Wardens[client] != -1)
+		if (iParticle_Wardens[client] != INVALID_ENT_REFERENCE)
 		{
-			AcceptEntityInput(iParticle_Wardens[client], "Kill");
-			iParticle_Wardens[client] = -1;
+			int old = EntRefToEntIndex(iParticle_Wardens[client]);
+			
+			if (IsValidEntity(old))
+			{
+				AcceptEntityInput(old, "Kill");
+			}
 		}
 
 		iParticle_Wardens[client] = CreateParticle(sWardenParticle, 0.0, client, ATTACH_NORMAL);
 	}
 
-	if (cv_RendererColors)SetEntityRenderColor(client, a_iWardenColors[0], a_iWardenColors[1], a_iWardenColors[2], a_iWardenColors[3]);
+	if (cv_RendererColors)
+	{
+		SetEntityRenderColor(client, a_iWardenColors[0], a_iWardenColors[1], a_iWardenColors[2], a_iWardenColors[3]);
+	}
 
 	char sWarden[256];
 	Format(sWarden, sizeof(sWarden), "%t", "warden current node", iWarden);
@@ -5548,10 +5562,16 @@ void WardenUnset(int client)
 			hTimer_WardenLock = CreateTimer(float(cv_WardenTimer), DisableWarden, _, TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
-
-	if (iParticle_Wardens[client] != -1)
+	
+	if (iParticle_Wardens[client] != INVALID_ENT_REFERENCE)
 	{
-		AcceptEntityInput(iParticle_Wardens[client], "Kill");
+		int old = EntRefToEntIndex(iParticle_Wardens[client]);
+		
+		if (IsValidEntity(old))
+		{
+			AcceptEntityInput(old, "Kill");
+		}
+		
 		iParticle_Wardens[client] = -1;
 	}
 
@@ -5853,11 +5873,16 @@ public Action RemoveRebel(Handle hTimer, any data)
 	if (Client_IsIngame(client) && TF2_GetClientTeam(client) > TFTeam_Spectator && IsPlayerAlive(client))
 	{
 		bIsRebel[client] = false;
-		CPrintToChat(client, "%t %t", "plugin tag", "rebel timer end");
-
-		if (iParticle_Rebels[client] != -1)
+		
+		if (iParticle_Rebels[client] != INVALID_ENT_REFERENCE)
 		{
-			AcceptEntityInput(iParticle_Rebels[client], "Kill");
+			int old = EntRefToEntIndex(iParticle_Rebels[client]);
+			
+			if (IsValidEntity(old))
+			{
+				AcceptEntityInput(old, "Kill");
+			}
+			
 			iParticle_Rebels[client] = -1;
 		}
 
@@ -5865,13 +5890,14 @@ public Action RemoveRebel(Handle hTimer, any data)
 		{
 			SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
 		}
-
+		
+		CPrintToChat(client, "%t %t", "plugin tag", "rebel timer end");
 		Jail_Log(false, "%N is no longer a Rebeller.", client);
+		
+		Call_StartForward(sFW_OnRebelRemoved);
+		Call_PushCell(client);
+		Call_Finish();
 	}
-
-	Call_StartForward(sFW_OnRebelRemoved);
-	Call_PushCell(client);
-	Call_Finish();
 }
 
 public Action DisableWarden(Handle hTimer)
