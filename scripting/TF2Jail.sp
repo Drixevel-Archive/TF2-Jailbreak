@@ -52,12 +52,10 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.6.0"
+#define PLUGIN_VERSION	"5.6.1"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
-
-#define SOURCEMOD_REQUIRED	"1.8"
 
 //Handle Arrays
 ConVar hConVars[80];
@@ -315,15 +313,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 		return APLRes_Failure;
 	}
 
-	char sVersion[32];
-	GetConVarString(FindConVar("sourcemod_version"), sVersion, sizeof(sVersion));
-
-	if (StrContains(sVersion, SOURCEMOD_REQUIRED) == -1)
-	{
-		Format(error, err_max, "This plugin requires Sourcemod %s+ [Current Version: %s]", SOURCEMOD_REQUIRED, sVersion);
-		return APLRes_Failure;
-	}
-
 	//Mark these as optional just in case either SourceBans itself or Sourcecomms along with SourceBans are running.
 	MarkNativeAsOptional("SBBanPlayer");
 	MarkNativeAsOptional("SourceComms_GetClientMuteType");
@@ -403,7 +392,7 @@ public void OnPluginStart()
 	hConVars[15] = CreateConVar("sm_tf2jail_warden_limit", "3", "Number of allowed Wardens per user per map: (0.0 = unlimited)", FCVAR_NOTIFY, true, 0.0);
 	hConVars[16] = CreateConVar("sm_tf2jail_door_controls", "1", "Allow Wardens and Admins door control: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	hConVars[17] = CreateConVar("sm_tf2jail_cell_timer", "60", "Time after Arena round start to open doors: (1.0 - 60.0) (0.0 = off)", FCVAR_NOTIFY, true, 0.0, true, 60.0);
-	hConVars[18] = CreateConVar("sm_tf2jail_mute_red", "2", "Mute Red team: (2 = mute prisoners alive and all dead, 1 = mute prisoners on round start based on redmute_time, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 2.0);
+	hConVars[18] = CreateConVar("sm_tf2jail_mute_red", "2", "Mute Red team: (2 = mute prisoners all the time, 1 = mute prisoners on round start based on redmute_time, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	hConVars[19] = CreateConVar("sm_tf2jail_mute_red_time", "15", "Mute time for redmute: (1.0 - 60.0)", FCVAR_NOTIFY, true, 1.0, true, 60.0);
 	hConVars[20] = CreateConVar("sm_tf2jail_mute_blue", "2", "Mute Blue players: (2 = always except Wardens, 1 = while Wardens is active, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	hConVars[21] = CreateConVar("sm_tf2jail_mute_dead", "1", "Mute Dead players: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
@@ -943,13 +932,13 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (Client_IsIngame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
+			if (Client_IsIngame(i) && TF2_GetClientTeam(i) == TFTeam_Red)
 			{
 				switch (iNewValue)
 				{
-					case 2:if (bActiveRound)MutePlayer(i);
-					case 1:if (bCellsOpened)MutePlayer(i);
-					case 0:UnmutePlayer(i);
+					case 0: UnmutePlayer(i);
+					case 1: if (bCellsOpened) MutePlayer(i);
+					case 2: if (bActiveRound) MutePlayer(i);
 				}
 			}
 		}
@@ -968,9 +957,9 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 			{
 				switch (iNewValue)
 				{
-					case 2:if (!IsWarden(i))MutePlayer(i);
-					case 1:MutePlayer(i);
-					case 0:UnmutePlayer(i);
+					case 0: UnmutePlayer(i);
+					case 1: if (WardenExists()) MutePlayer(i);
+					case 2: if (!IsWarden(i)) MutePlayer(i);
 				}
 			}
 		}
@@ -1531,14 +1520,10 @@ public void OnPlayerSpawn(Handle hEvent, char[] sName, bool bBroadcast)
 					}
 				}
 			}
-
-			if (cv_RedMute != 0)
+			
+			if (cv_RedMute == 2)
 			{
 				MutePlayer(client);
-			}
-			else
-			{
-				UnmutePlayer(client);
 			}
 
 			if (bIsQueuedFreeday[client])
@@ -1560,13 +1545,9 @@ public void OnPlayerSpawn(Handle hEvent, char[] sName, bool bBroadcast)
 				}
 			}
 
-			if (cv_BlueMute == 2 && !IsWarden(client))
+			if (cv_BlueMute == 2)
 			{
 				MutePlayer(client);
-			}
-			else
-			{
-				UnmutePlayer(client);
 			}
 		}
 	}
@@ -1875,18 +1856,30 @@ public void OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 		case 2:
 		{
 			CPrintToChatAll("%t %t", "plugin tag", "red team muted");
+			
 			Jail_Log(false, "Red team has been muted permanently this round.");
 		}
 		case 1:
 		{
 			int time = RoundFloat(cv_RedMuteTime);
 			CPrintToChatAll("%t %t", "plugin tag", "red team muted temporarily", time);
+			
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (Client_IsIngame(i) && TF2_GetClientTeam(i) == TFTeam_Red)
+				{
+					MutePlayer(i);
+				}
+			}
+			
 			CreateTimer(cv_RedMuteTime, UnmuteReds, _, TIMER_FLAG_NO_MAPCHANGE);
+			
 			Jail_Log(false, "Red team has been temporarily muted and will wait %s seconds to be unmuted.", time);
 		}
 		case 0:
 		{
 			CPrintToChatAll("%t %t", "plugin tag", "red mute system disabled");
+			
 			Jail_Log(false, "Mute system has been disabled this round, nobody has been muted.");
 		}
 	}
@@ -4474,7 +4467,7 @@ void MutePlayer(int client)
 
 void UnmutePlayer(int client)
 {
-	if (!AlreadyMuted(client) && !IsVIP(client) && bIsMuted[client])
+	if (bIsMuted[client])
 	{
 		UnmuteClient(client);
 		bIsMuted[client] = false;
@@ -5438,7 +5431,7 @@ void WardenSet(int client)
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (Client_IsIngame(i) && TF2_GetClientTeam(i) == TFTeam_Blue && i != client)
+			if (Client_IsIngame(i) && TF2_GetClientTeam(i) == TFTeam_Blue && !IsWarden(i))
 			{
 				MutePlayer(i);
 			}
@@ -5536,20 +5529,20 @@ void WardenUnset(int client)
 	{
 		RemoveModel(client);
 	}
+	
+	if (cv_BlueMute == 1)
+	{
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (Client_IsIngame(i) && TF2_GetClientTeam(i) == TFTeam_Blue)
+			{
+				UnmutePlayer(i);
+			}
+		}
+	}
 
 	if (bActiveRound)
 	{
-		if (cv_BlueMute == 1)
-		{
-			for (int i = 1; i <= MaxClients; i++)
-			{
-				if (Client_IsIngame(i) && TF2_GetClientTeam(i) == TFTeam_Blue)
-				{
-					UnmutePlayer(i);
-				}
-			}
-		}
-
 		if (cv_WardenTimer != 0)
 		{
 			hTimer_WardenLock = CreateTimer(float(cv_WardenTimer), DisableWarden, _, TIMER_FLAG_NO_MAPCHANGE);
@@ -5745,7 +5738,7 @@ public Action UnmuteReds(Handle hTimer)
 {
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (Client_IsIngame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
+		if (Client_IsIngame(i) && TF2_GetClientTeam(i) == TFTeam_Red)
 		{
 			UnmutePlayer(i);
 		}
