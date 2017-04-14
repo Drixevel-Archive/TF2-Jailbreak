@@ -22,22 +22,31 @@
 	**
 */
 
-//Required Includes
+//Defines
+#define PLUGIN_NAME	"[TF2] Jailbreak"
+#define PLUGIN_VERSION	"5.6.3"
+#define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
+#define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
+#define PLUGIN_CONTACT	"http://www.drixevel.com/"
+
+//Sourcemod Includes
 #include <sourcemod>
 #include <sdkhooks>
 #include <adminmenu>
 #include <tf2_stocks>
+
+//External Includes
+#include <sourcemod-misc>
 #include <morecolors>
 #include <smlib>
 
-//TF2Jail Include
+//Our Includes
 #include <tf2jail>
 
-//Extensions
+//Required Includes
 #undef REQUIRE_EXTENSIONS
 #tryinclude <SteamWorks>
 
-//Plugins
 #undef REQUIRE_PLUGIN
 #tryinclude <tf2-weapon-restrictions>
 #tryinclude <tf2attributes>
@@ -50,12 +59,6 @@
 //New Syntax
 #pragma semicolon 1
 #pragma newdecls required
-
-#define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.6.2"
-#define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
-#define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
-#define PLUGIN_CONTACT	"http://www.drixevel.com/"
 
 //Handle Arrays
 ConVar hConVars[80];
@@ -266,13 +269,6 @@ enum eWardenMenu
 	Open = 0,
 	FriendlyFire,
 	Collision
-};
-
-enum eAttachedParticles
-{
-	NO_ATTACH = 0,
-	ATTACH_NORMAL,
-	ATTACH_HEAD
 };
 
 enum eTextNodeParams
@@ -831,7 +827,7 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	{
 		cv_Advertise = bNewValue;
 
-		ClearTimer(hTimer_Advertisement);
+		KillTimerSafe(hTimer_Advertisement);
 
 		if (cv_Advertise)
 		{
@@ -1226,7 +1222,7 @@ public void OnMapStart()
 {
 	if (cv_Enabled)
 	{
-		ClearTimer(hTimer_RoundTimer);
+		KillTimerSafe(hTimer_RoundTimer);
 
 		if (cv_Advertise)
 		{
@@ -1470,10 +1466,12 @@ public void OnClientDisconnect(int client)
 	bIsMuted[client] = false;
 	bBlockedDoubleJump[client] = false;
 	bDisabledAirblast[client] = false;
-	bIsRebel[client] = false;
 	bIsQueuedFreeday[client] = false;
 	iKillcount[client] = 0;
 	iFirstKill[client] = 0;
+	
+	ClearFreekiller(client);
+	ClearRebel(client);
 }
 
 public void OnPlayerSpawn(Handle hEvent, char[] sName, bool bBroadcast)
@@ -1506,17 +1504,6 @@ public void OnPlayerSpawn(Handle hEvent, char[] sName, bool bBroadcast)
 					{
 						AddAttribute(client, "airblast disabled", 1.0);
 						bDisabledAirblast[client] = true;
-					}
-				}
-				case TFClass_DemoMan:
-				{
-					if (cv_DemoCharge)
-					{
-						int ent = -1;
-						while ((ent = FindEntityByClassnameSafe(ent, "tf_wearable_demoshield")) != -1)
-						{
-							AcceptEntityInput(ent, "kill");
-						}
 					}
 				}
 			}
@@ -1675,6 +1662,11 @@ public void OnPlayerDeath(Handle hEvent, char[] sName, bool bBroadcast)
 				}
 			}
 		}
+		
+		if (bIsRebel[client])
+		{
+			ClearRebel(client);
+		}
 	}
 
 	if (cv_LRSAutomatic && bLRConfigActive)
@@ -1783,11 +1775,11 @@ public void OnRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 	bActiveRound = true;
 }
 
-public void OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
+public void OnArenaRoundStart(Handle event, const char[] name, bool bDontBroadcast)
 {
 	if (!cv_Enabled)return;
 
-	ClearTimer(hTimer_RoundTimer);
+	KillTimerSafe(hTimer_RoundTimer);
 
 	if (cv_RoundTimerStatus)
 	{
@@ -1956,7 +1948,7 @@ public void OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 
 				if (KvGetNum(hConfig, "TimerStatus", 1) == 1)
 				{
-					ClearTimer(hTimer_RoundTimer);
+					KillTimerSafe(hTimer_RoundTimer);
 				}
 
 				if (KvGetNum(hConfig, "AdminLockWarden", 0) == 1)
@@ -2031,11 +2023,12 @@ public void OnArenaRoundStart(Handle hEvent, char[] sName, bool bBroadcast)
 				{
 					for (int i = 1; i <= MaxClients; i++)
 					{
-						if (bIsFreeday[i])
+						if (IsClientInGame(i) && bIsFreeday[i])
 						{
-							char index_name[MAX_NAME_LENGTH];
-							GetClientName(i, index_name, sizeof(index_name));
-							ReplaceString(sActive, sizeof(sActive), "{NAME}", index_name);
+							char sName[MAX_NAME_LENGTH];
+							GetClientName(i, sName, sizeof(sName));
+							
+							ReplaceString(sActive, sizeof(sActive), "{NAME}", sName);
 							CPrintToChatAll("%t %s", "plugin tag", sActive);
 						}
 					}
@@ -2070,7 +2063,7 @@ public void OnRoundEnd(Handle hEvent, char[] sName, bool bBroadcast)
 {
 	if (!cv_Enabled)return;
 
-	ClearTimer(hTimer_RoundTimer);
+	KillTimerSafe(hTimer_RoundTimer);
 
 	if (b1stRoundFreeday)
 	{
@@ -2105,7 +2098,7 @@ public void OnRoundEnd(Handle hEvent, char[] sName, bool bBroadcast)
 				RemoveModel(i);
 			}
 
-			hTimer_RebelTimers[i] = null;
+			KillTimerSafe(hTimer_RebelTimers[i]);
 
 			for (int x = 0; x < sizeof(hTextNodes); x++)
 			{
@@ -2133,9 +2126,9 @@ public void OnRoundEnd(Handle hEvent, char[] sName, bool bBroadcast)
 	bAdminLockedLR = false;
 	bWardenBackstabbed = false;
 
-	ClearTimer(hTimer_OpenCells);
-	ClearTimer(hTimer_WardenLock);
-	ClearTimer(hTimer_FriendlyFireEnable);
+	KillTimerSafe(hTimer_OpenCells);
+	KillTimerSafe(hTimer_WardenLock);
+	KillTimerSafe(hTimer_FriendlyFireEnable);
 
 	if (iLRCurrent != -1)
 	{
@@ -2221,10 +2214,21 @@ public int WeaponRestrictions_OnExecuted(int client)
 	}
 }
 
+public void TF2_OnConditionAdded(int client, TFCond condition)
+{
+	if (cv_DemoCharge && TF2_GetClientTeam(client) == TFTeam_Red && condition == TFCond_Charging)
+	{
+		TF2_RemoveCondition(client, condition);
+	}
+}
+
 /* Player Commands ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 public Action Command_FireWarden(int client, int args)
 {
-	if (!cv_Enabled)return Plugin_Handled;
+	if (!cv_Enabled || client == 0)
+	{
+		return Plugin_Handled;
+	}
 
 	if (!cv_WVotesStatus)
 	{
@@ -2244,20 +2248,13 @@ public Action Command_FireWarden(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (cv_WVotesPassedLimit != 0)
+	if (cv_WVotesPassedLimit != 0 && iWardenLimit > cv_WVotesPassedLimit)
 	{
-		if (iWardenLimit > cv_WVotesPassedLimit)
-		{
-			CPrintToChat(client, "%t %t", "plugin tag", "warden fire limit reached");
-			return Plugin_Handled;
-		}
-
-		AttemptFireWarden(client);
+		CPrintToChat(client, "%t %t", "plugin tag", "warden fire limit reached");
+		return Plugin_Handled;
 	}
-	else
-	{
-		AttemptFireWarden(client);
-	}
+	
+	AttemptFireWarden(client);
 
 	return Plugin_Handled;
 }
@@ -3973,7 +3970,7 @@ void LastRequestStart(int client, int sender = 0, bool Timer = true, bool lock =
 
 	if (!Timer)
 	{
-		ClearTimer(hTimer_RoundTimer);
+		KillTimerSafe(hTimer_RoundTimer);
 	}
 
 	if (lock)
@@ -4127,7 +4124,7 @@ public int MenuHandle_GiveLR(Handle hMenu, MenuAction action, int param1, int pa
 
 					if (KvGetNum(hConfig, "TimerStatus", 1) == 1)
 					{
-						ClearTimer(hTimer_RoundTimer);
+						KillTimerSafe(hTimer_RoundTimer);
 					}
 
 					if (KvGetNum(hConfig, "AdminLockWarden", 0) == 1)
@@ -4274,7 +4271,7 @@ void GiveFreeday(int client)
 			}
 		}
 
-		iParticle_Freedays[client] = CreateParticle(sFreedaysParticle, 0.0, client, ATTACH_NORMAL);
+		iParticle_Freedays[client] = CreateParticle2(sFreedaysParticle, 0.0, client, ATTACH_NORMAL);
 	}
 
 	if (cv_RendererColors)
@@ -4323,6 +4320,11 @@ void RemoveFreeday(int client)
 
 void MarkRebel(int client)
 {
+	if (bIsRebel[client])
+	{
+		return;
+	}
+	
 	bIsRebel[client] = true;
 
 	if (cv_RendererParticles && strlen(sRebellersParticle) != 0)
@@ -4337,7 +4339,7 @@ void MarkRebel(int client)
 			}
 		}
 
-		iParticle_Rebels[client] = CreateParticle(sRebellersParticle, 0.0, client, ATTACH_NORMAL);
+		iParticle_Rebels[client] = CreateParticle2(sRebellersParticle, 0.0, client, ATTACH_NORMAL);
 	}
 
 	if (cv_RendererColors)
@@ -4345,11 +4347,12 @@ void MarkRebel(int client)
 		SetEntityRenderColor(client, a_iRebellersColors[0], a_iRebellersColors[1], a_iRebellersColors[2], a_iRebellersColors[3]);
 	}
 	
-	if (cv_RebelsTime >= 1.0)
+	if (cv_RebelsTime > 0.0)
 	{
-		int time = RoundFloat(cv_RebelsTime);
-		CPrintToChat(client, "%t %t", "plugin tag", "rebel timer start", time);
-		hTimer_RebelTimers[client] = CreateTimer(cv_RebelsTime, RemoveRebel, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+		CPrintToChat(client, "%t %t", "plugin tag", "rebel timer start", RoundFloat(cv_RebelsTime));
+		
+		KillTimerSafe(hTimer_RebelTimers[client]);
+		hTimer_RebelTimers[client] = CreateTimer(cv_RebelsTime, Timer_RemoveRebel, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	}
 	
 	CPrintToChatAll("%t %t", "plugin tag", "prisoner has rebelled", client);
@@ -4360,11 +4363,49 @@ void MarkRebel(int client)
 	Call_Finish();
 }
 
+void ClearRebel(int client)
+{
+	if (!bIsRebel[client])
+	{
+		return;
+	}
+	
+	bIsRebel[client] = false;
+	
+	if (iParticle_Rebels[client] != INVALID_ENT_REFERENCE)
+	{
+		int old = EntRefToEntIndex(iParticle_Rebels[client]);
+		
+		if (IsValidEntity(old))
+		{
+			AcceptEntityInput(old, "Kill");
+		}
+		
+		iParticle_Rebels[client] = INVALID_ENT_REFERENCE;
+	}
+	
+	if (cv_RendererColors)
+	{
+		SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
+	}
+	
+	KillTimerSafe(hTimer_RebelTimers[client]);
+	
+	Call_StartForward(sFW_OnRebelRemoved);
+	Call_PushCell(client);
+	Call_Finish();
+}
+
 void MarkFreekiller(int client, bool avoid = false)
 {
 	if (avoid && bVoidFreeKills)
 	{
 		CPrintToChatAll("%t %t", "plugin tag", "freekiller flagged while void", client);
+		return;
+	}
+	
+	if (bIsFreekiller[client])
+	{
 		return;
 	}
 
@@ -4382,10 +4423,13 @@ void MarkFreekiller(int client, bool avoid = false)
 			}
 		}
 
-		iParticle_Freekillers[client] = CreateParticle(sFreekillersParticle, 0.0, client, ATTACH_NORMAL);
+		iParticle_Freekillers[client] = CreateParticle2(sFreekillersParticle, 0.0, client, ATTACH_NORMAL);
 	}
 
-	if (cv_RendererColors)SetEntityRenderColor(client, a_iFreekillersColors[0], a_iFreekillersColors[1], a_iFreekillersColors[2], a_iFreekillersColors[3]);
+	if (cv_RendererColors)
+	{
+		SetEntityRenderColor(client, a_iFreekillersColors[0], a_iFreekillersColors[1], a_iFreekillersColors[2], a_iFreekillersColors[3]);
+	}
 
 	TF2_RemoveAllWeapons(client);
 	EmitSoundToAll("ui/system_message_alert.wav", _, _, _, _, 1.0, _, _, _, _, _, _);
@@ -4412,11 +4456,16 @@ void MarkFreekiller(int client, bool avoid = false)
 
 void ClearFreekiller(int client)
 {
+	if (!bIsFreekiller[client])
+	{
+		return;
+	}
+	
 	bIsFreekiller[client] = false;
 
 	TF2_RegeneratePlayer(client);
 
-	ClearTimer(hTimer_FreekillingData);
+	KillTimerSafe(hTimer_FreekillingData);
 
 	if (iParticle_Freekillers[client] != INVALID_ENT_REFERENCE)
 	{
@@ -4430,7 +4479,10 @@ void ClearFreekiller(int client)
 		iParticle_Freekillers[client] = -1;
 	}
 
-	if (cv_RendererColors)SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
+	if (cv_RendererColors)
+	{
+		SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
+	}
 
 	Jail_Log(false, "%N has been cleared as a Freekiller.", client);
 
@@ -5140,6 +5192,7 @@ void FindRandomWarden()
 	if (cv_WardenAuto)
 	{
 		int client = Client_GetRandom(CLIENTFILTER_TEAMTWO | CLIENTFILTER_ALIVE | CLIENTFILTER_NOBOTS);
+		
 		if (Client_IsIngame(client))
 		{
 			if (cv_PrefStatus)
@@ -5195,15 +5248,6 @@ void SetTextNode(Handle node, const char[] sText, float X = -1.0, float Y = -1.0
 		{
 			ShowSyncHudText(i, node, sText);
 		}
-	}
-}
-
-void ClearTimer(Handle &timer)
-{
-	if (timer != null)
-	{
-		KillTimer(timer);
-		timer = null;
 	}
 }
 
@@ -5291,7 +5335,7 @@ void StripToMelee(int client)
 	TF2_SwitchtoSlot(client, TFWeaponSlot_Melee);
 }
 
-int CreateParticle(char[] sType, float refresh = 2.0, int client, eAttachedParticles attach = NO_ATTACH, float xOffs = 0.0, float yOffs = 0.0, float zOffs = 0.0)
+int CreateParticle2(const char[] sType, float refresh = 2.0, int client, int attach = NO_ATTACH, float xOffs = 0.0, float yOffs = 0.0, float zOffs = 0.0)
 {
 	int particle = CreateEntityByName("info_particle_system");
 
@@ -5358,7 +5402,7 @@ public Action CheckClient(Handle timer, Handle hPack)
 	ReadPackString(hPack, sType, sizeof(sType));
 
 	float refresh = ReadPackFloat(hPack);
-	eAttachedParticles attach = view_as<eAttachedParticles>(ReadPackCell(hPack));
+	int attach = ReadPackCell(hPack);
 	float xOffs = ReadPackFloat(hPack);
 	float yOffs = ReadPackFloat(hPack);
 	float zOffs = ReadPackFloat(hPack);
@@ -5382,7 +5426,7 @@ public Action CheckClient(Handle timer, Handle hPack)
 		AcceptEntityInput(entity, "Kill");
 	}
 	
-	int new_particle = CreateParticle(sType, time, client, attach, xOffs, yOffs, zOffs);
+	int new_particle = CreateParticle2(sType, time, client, attach, xOffs, yOffs, zOffs);
 	
 	if (StrEqual(sType, sWardenParticle))
 	{
@@ -5488,7 +5532,7 @@ void WardenSet(int client)
 			}
 		}
 
-		iParticle_Wardens[client] = CreateParticle(sWardenParticle, 0.0, client, ATTACH_NORMAL);
+		iParticle_Wardens[client] = CreateParticle2(sWardenParticle, 0.0, client, ATTACH_NORMAL);
 	}
 
 	if (cv_RendererColors)
@@ -5500,7 +5544,7 @@ void WardenSet(int client)
 	Format(sWarden, sizeof(sWarden), "%t", "warden current node", iWarden);
 	SetTextNode(hTextNodes[2], sWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
 
-	ClearTimer(hTimer_WardenLock);
+	KillTimerSafe(hTimer_WardenLock);
 
 	ResetVotes();
 	WardenMenu(client);
@@ -5728,7 +5772,7 @@ public Action Timer_Round(Handle hTimer)
 {
 	if (!cv_Enabled)
 	{
-		ClearTimer(hTimer_RoundTimer);
+		KillTimerSafe(hTimer_RoundTimer);
 		return Plugin_Stop;
 	}
 
@@ -5747,7 +5791,7 @@ public Action Timer_Round(Handle hTimer)
 	if (iRoundTime <= 0)
 	{
 		ServerCommand("%s", cv_sRoundTimer_Execute);
-		ClearTimer(hTimer_RoundTimer);
+		KillTimerSafe(hTimer_RoundTimer);
 		return Plugin_Stop;
 	}
 
@@ -5865,39 +5909,18 @@ public Action EnableFFTimer(Handle hTimer)
 	SetConVarBool(hEngineConVars[0], true);
 }
 
-public Action RemoveRebel(Handle hTimer, any data)
+public Action Timer_RemoveRebel(Handle hTimer, any data)
 {
 	int client = GetClientOfUserId(data);
-	hTimer_RebelTimers[client] = null;
-
-	if (Client_IsIngame(client) && TF2_GetClientTeam(client) > TFTeam_Spectator && IsPlayerAlive(client))
+	
+	if (client > 0)
 	{
-		bIsRebel[client] = false;
-		
-		if (iParticle_Rebels[client] != INVALID_ENT_REFERENCE)
-		{
-			int old = EntRefToEntIndex(iParticle_Rebels[client]);
-			
-			if (IsValidEntity(old))
-			{
-				AcceptEntityInput(old, "Kill");
-			}
-			
-			iParticle_Rebels[client] = -1;
-		}
-
-		if (cv_RendererColors)
-		{
-			SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
-		}
-		
-		CPrintToChat(client, "%t %t", "plugin tag", "rebel timer end");
-		Jail_Log(false, "%N is no longer a Rebeller.", client);
-		
-		Call_StartForward(sFW_OnRebelRemoved);
-		Call_PushCell(client);
-		Call_Finish();
+		ClearRebel(client);
+		hTimer_RebelTimers[client] = null;
+		return Plugin_Stop;
 	}
+	
+	return Plugin_Stop;
 }
 
 public Action DisableWarden(Handle hTimer)

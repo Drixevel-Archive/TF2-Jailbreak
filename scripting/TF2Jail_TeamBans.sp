@@ -31,7 +31,7 @@
 
 #define PLUGIN_NAME     "[TF2] Jailbreak - Team Bans"
 #define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"
-#define PLUGIN_VERSION  "1.0.5a"
+#define PLUGIN_VERSION  "1.0.6"
 #define PLUGIN_DESCRIPTION	"Manage bans for one or multiple teams."
 #define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"
 
@@ -76,13 +76,13 @@ public void OnPluginStart()
 	LoadTranslations("TF2Jail_TeamBans.phrases");
 
 	ConVars[0] = CreateConVar("tf2jail_teambans_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_SPONLY|FCVAR_DONTRECORD|FCVAR_REPLICATED|FCVAR_NOTIFY);
-	ConVars[1] = CreateConVar("sm_jail_teambans_enable", "1", "Status of the plugin: (1 = on, 0 = off)", FCVAR_PLUGIN);
-	ConVars[2] = CreateConVar("sm_jail_teambans_denysound", "", "Sound file to play when denied. (Relative to the sound folder)",FCVAR_PLUGIN);
-	ConVars[3] = CreateConVar("sm_jail_teambans_joinbanmsg", "Please visit our website to appeal.", "Message to the client on join if banned.", FCVAR_PLUGIN);
-	ConVars[4] = CreateConVar("sm_jail_teambans_tableprefix", "", "Prefix for database tables. (Can be blank)", FCVAR_PLUGIN);
-	ConVars[5] = CreateConVar("sm_jail_teambans_sqldriver", "default", "Config entry to use for database: (default = 'default')", FCVAR_PLUGIN);
-	ConVars[6] = CreateConVar("sm_jail_teambans_debug", "1", "Spew debugging information: (1 = on, 0 = off)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	ConVars[7] = CreateConVar("sm_jail_teambans_sqlprogram", "1", "SQL Program to use: (1 = MySQL, 0 = SQLite)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	ConVars[1] = CreateConVar("sm_jail_teambans_enable", "1", "Status of the plugin: (1 = on, 0 = off)", FCVAR_NOTIFY);
+	ConVars[2] = CreateConVar("sm_jail_teambans_denysound", "", "Sound file to play when denied. (Relative to the sound folder)",FCVAR_NOTIFY);
+	ConVars[3] = CreateConVar("sm_jail_teambans_joinbanmsg", "Please visit our website to appeal.", "Message to the client on join if banned.", FCVAR_NOTIFY);
+	ConVars[4] = CreateConVar("sm_jail_teambans_tableprefix", "", "Prefix for database tables. (Can be blank)", FCVAR_NOTIFY);
+	ConVars[5] = CreateConVar("sm_jail_teambans_sqldriver", "default", "Config entry to use for database: (default = 'default')", FCVAR_NOTIFY);
+	ConVars[6] = CreateConVar("sm_jail_teambans_debug", "1", "Spew debugging information: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	ConVars[7] = CreateConVar("sm_jail_teambans_sqlprogram", "1", "SQL Program to use: (1 = MySQL, 0 = SQLite)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	
 	for (int i = 0; i < sizeof(ConVars); i++)
 	{
@@ -151,8 +151,11 @@ public void OnConfigsExecuted()
 	GetConVarString(ConVars[5], cv_DatabaseConfigEntry, sizeof(cv_DatabaseConfigEntry));
 	cv_Debugging = GetConVarBool(ConVars[6]);
 	cv_SQLProgram = GetConVarBool(ConVars[7]);
-
-	SQL_TConnect(DB_Callback_Connect, cv_DatabaseConfigEntry);
+	
+	if (BanDatabase == null && strlen(cv_DatabaseConfigEntry) > 0)
+	{
+		SQL_TConnect(DB_Callback_Connect, cv_DatabaseConfigEntry);
+	}
 }
 
 public int HandleCvars(Handle hCvar, char[] sOldValue, char[] newValue)
@@ -165,7 +168,7 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] newValue)
 	}
 	else if (hCvar == ConVars[1])
 	{
-		cv_Enabled = view_as<bool>iNewValue;
+		cv_Enabled = view_as<bool>(iNewValue);
 	}
 	else if (hCvar == ConVars[2])
 	{
@@ -185,11 +188,11 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] newValue)
 	}
 	else if (hCvar == ConVars[6])
 	{
-		cv_Debugging = view_as<bool>iNewValue;
+		cv_Debugging = view_as<bool>(iNewValue);
 	}
 	else if (hCvar == ConVars[7])
 	{
-		cv_SQLProgram = view_as<bool>iNewValue;
+		cv_SQLProgram = view_as<bool>(iNewValue);
 	}
 }
 
@@ -216,7 +219,7 @@ public Action RoundEnd(Handle event, const char[] name, bool dontBroadcast)
 
 public void OnClientAuthorized(int client, const char[] auth)
 {
-	if (StrEqual(auth, "BOT"))
+	if (IsFakeClient(client))
 	{
 		return;
 	}
@@ -230,7 +233,7 @@ public void OnClientAuthorized(int client, const char[] auth)
 		LogMessage("Removed %N from rage tables for reconnecting.", client);
 	}
 	
-	if (cv_SQLProgram)
+	if (cv_SQLProgram && BanDatabase != null)
 	{
 		char sQuery[256];
 		Format(sQuery, sizeof(sQuery), "SELECT ban_time FROM %s WHERE steamid = '%s';", sTimesTableName, auth);
@@ -271,15 +274,15 @@ public Action PlayerSpawn(Handle event, const char[] name, bool dontBroadcast)
 		char sCookie[5];
 		GetClientCookie(client, cBan_Blue, sCookie, sizeof(sCookie));
 		
-		if (GetClientTeam(client) == view_as<int>TFTeam_Blue && view_as<bool>StringToInt(sCookie))
+		if (TF2_GetClientTeam(client) == TFTeam_Blue && view_as<bool>(StringToInt(sCookie)))
 		{
 			PrintCenterText(client, "%t", "Enforcing Guard Ban");
 			CPrintToChat(client, cv_JoinBanMsg);
 			
 			switch (RoundActive)
 			{
-				case true: ChangeClientTeam(client, view_as<int>TFTeam_Spectator);
-				case false: ChangeClientTeam(client, view_as<int>TFTeam_Red);
+				case true: TF2_ChangeClientTeam(client, TFTeam_Spectator);
+				case false: TF2_ChangeClientTeam(client, TFTeam_Red);
 			}
 		}
 	}
@@ -647,7 +650,7 @@ void ProcessBanCookies(int client)
 		char cookie[32];
 		GetClientCookie(client, cBan_Blue, cookie, sizeof(cookie));
 		
-		if (StrEqual(cookie, "1") && GetClientTeam(client) == view_as<int>TFTeam_Blue) 
+		if (StrEqual(cookie, "1") && TF2_GetClientTeam(client) == TFTeam_Blue) 
 		{
 			if (IsPlayerAlive(client))
 			{
@@ -664,7 +667,7 @@ void ProcessBanCookies(int client)
 				ForcePlayerSuicide(client);
 			}
 			
-			ChangeClientTeam(client, view_as<int>TFTeam_Red);
+			TF2_ChangeClientTeam(client, TFTeam_Red);
 			CPrintToChat(client, "%s %t", JTAG, "Enforcing Guard Ban");	
 		}
 	}
@@ -711,7 +714,7 @@ void Remove_CTBan(int adminIndex, int targetIndex, bool bExpired = false)
 	char isBanned[12];
 	GetClientCookie(targetIndex, cBan_Blue, isBanned, sizeof(isBanned));
 	
-	if (view_as<bool>StringToInt(isBanned))
+	if (view_as<bool>(StringToInt(isBanned)))
 	{
 		char targetSteam[32];
 		GetClientAuthId(targetIndex, AuthId_Steam2, targetSteam, sizeof(targetSteam));
@@ -811,13 +814,14 @@ void PerformBan(int client, int admin, int banTime = 0, int reason = 0, char[] m
 	char targetSteam[24];
 	GetClientAuthId(client, AuthId_Steam2, targetSteam, sizeof(targetSteam));
 
-	if (GetClientTeam(client) == view_as<int>TFTeam_Blue)
+	if (TF2_GetClientTeam(client) == TFTeam_Blue)
 	{
 		if (IsPlayerAlive(client))
 		{
 			ForcePlayerSuicide(client);
 		}
-		ChangeClientTeam(client, view_as<int>TFTeam_Red);
+		
+		TF2_ChangeClientTeam(client, TFTeam_Red);
 	}
 	
 	char sReason[128];
@@ -1082,40 +1086,44 @@ public int DB_Callback_ClientDisconnect(Handle owner, Handle hndl, const char[] 
 
 public int DB_Callback_Connect(Handle owner, Handle hndl, const char[] error, any client)
 {
-	if (hndl != null)
+	if (hndl == null)
 	{
-		BanDatabase = hndl;
-		char sQuery[256];
-		
-		if (strlen(cv_DatabasePrefix) != 0)
-		{
-			Format(sTimesTableName, sizeof(sTimesTableName), "tf2jail_bluebans");
-		}
-		else
-		{
-			Format(sTimesTableName, sizeof(sTimesTableName), "%s_tf2jail_bluebans", cv_DatabasePrefix);
-		}
-		
-		Format(sQuery, sizeof(sQuery), "CREATE TABLE IF NOT EXISTS %s (steamid VARCHAR(22), ban_time INT(16), PRIMARY KEY (steamid))", sTimesTableName);
-		SQL_TQuery(BanDatabase, DB_Callback_Create, sQuery); 
-		
-		if (strlen(cv_DatabasePrefix) != 0)
-		{
-			Format(sLogTableName, sizeof(sLogTableName), "tf2jail_blueban_logs");
-		}
-		else
-		{
-			Format(sLogTableName, sizeof(sLogTableName), "%s_tf2jail_blueban_logs", cv_DatabasePrefix);
-		}
-		
-		Format(sQuery, sizeof(sQuery), "CREATE TABLE IF NOT EXISTS %s (timestamp INT, offender_steamid VARCHAR(22), offender_name VARCHAR(32), admin_steamid VARCHAR(22), admin_name VARCHAR(32), bantime INT(16), timeleft INT(16), reason VARCHAR(200), PRIMARY KEY (timestamp))", sLogTableName);
-		SQL_TQuery(BanDatabase, DB_Callback_Create, sQuery);
+		LogError("Default database database connection failure: %s", error);
+		return;
+	}
+	
+	if (BanDatabase != null)
+	{
+		CloseHandle(hndl);
+		return;
+	}
+	
+	BanDatabase = hndl;
+	char sQuery[256];
+	
+	if (strlen(cv_DatabasePrefix) != 0)
+	{
+		Format(sTimesTableName, sizeof(sTimesTableName), "tf2jail_bluebans");
 	}
 	else
 	{
-		LogError("Default database database connection failure: %s", error);
-		SetFailState("Error while connecting to default database. Exiting.");
+		Format(sTimesTableName, sizeof(sTimesTableName), "%s_tf2jail_bluebans", cv_DatabasePrefix);
 	}
+	
+	Format(sQuery, sizeof(sQuery), "CREATE TABLE IF NOT EXISTS %s (steamid VARCHAR(22), ban_time INT(16), PRIMARY KEY (steamid))", sTimesTableName);
+	SQL_TQuery(BanDatabase, DB_Callback_Create, sQuery); 
+	
+	if (strlen(cv_DatabasePrefix) != 0)
+	{
+		Format(sLogTableName, sizeof(sLogTableName), "tf2jail_blueban_logs");
+	}
+	else
+	{
+		Format(sLogTableName, sizeof(sLogTableName), "%s_tf2jail_blueban_logs", cv_DatabasePrefix);
+	}
+	
+	Format(sQuery, sizeof(sQuery), "CREATE TABLE IF NOT EXISTS %s (timestamp INT, offender_steamid VARCHAR(22), offender_name VARCHAR(32), admin_steamid VARCHAR(22), admin_name VARCHAR(32), bantime INT(16), timeleft INT(16), reason VARCHAR(200), PRIMARY KEY (timestamp))", sLogTableName);
+	SQL_TQuery(BanDatabase, DB_Callback_Create, sQuery);
 }
 
 public int DB_Callback_Create(Handle owner, Handle hndl, const char[] error, any data)
