@@ -24,7 +24,7 @@
 
 //Defines
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.6.3"
+#define PLUGIN_VERSION	"5.6.4"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -54,7 +54,7 @@
 #tryinclude <sourcecomms>
 #tryinclude <basecomm>
 #tryinclude <clientprefs>
-#tryinclude <voiceannounce_ex>
+//#tryinclude <voiceannounce_ex>
 
 //New Syntax
 #pragma semicolon 1
@@ -189,7 +189,7 @@ bool eSourcebans;
 bool eSourceComms;
 bool eSteamWorks;
 bool eTF2Attributes;
-bool eVoiceannounce_ex;
+//bool eVoiceannounce_ex;
 bool eTF2WeaponRestrictions;
 
 //Plugin Global Booleans
@@ -253,14 +253,14 @@ char sCustomLR[32];
 char sOldModel[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
 
 //Role Renderers Globals
-int a_iDefaultColors[4];
-int a_iWardenColors[4];
+int a_iDefaultColors[4] = {255, 255, 255, 255};
+int a_iWardenColors[4] = {255, 255, 255, 255};
 char sWardenParticle[64];
-int a_iFreedaysColors[4];
+int a_iFreedaysColors[4] = {255, 255, 255, 255};
 char sFreedaysParticle[64];
-int a_iRebellersColors[4];
+int a_iRebellersColors[4] = {255, 255, 255, 255};
 char sRebellersParticle[64];
-int a_iFreekillersColors[4];
+int a_iFreekillersColors[4] = {255, 255, 255, 255};
 char sFreekillersParticle[64];
 
 //Enum Structs
@@ -392,8 +392,8 @@ public void OnPluginStart()
 	hConVars[19] = CreateConVar("sm_tf2jail_mute_red_time", "15", "Mute time for redmute: (1.0 - 60.0)", FCVAR_NOTIFY, true, 1.0, true, 60.0);
 	hConVars[20] = CreateConVar("sm_tf2jail_mute_blue", "2", "Mute Blue players: (2 = always except Wardens, 1 = while Wardens is active, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	hConVars[21] = CreateConVar("sm_tf2jail_mute_dead", "1", "Mute Dead players: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	hConVars[22] = CreateConVar("sm_tf2jail_microphonecheck_enable", "1", "Check blue clients for microphone: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	hConVars[23] = CreateConVar("sm_tf2jail_microphonecheck_type", "1", "Block blue team or Wardens if no microphone: (1 = Blue, 0 = Wardens only)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[22] = CreateConVar("sm_tf2jail_microphonecheck_enable", "0", "Check blue clients for microphone: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[23] = CreateConVar("sm_tf2jail_microphonecheck_type", "0", "Block blue team or Wardens if no microphone: (1 = Blue, 0 = Wardens only)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	hConVars[24] = CreateConVar("sm_tf2jail_rebelling_enable", "1", "Enable the Rebel system: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	hConVars[25] = CreateConVar("sm_tf2jail_rebelling_time", "30.0", "Rebel timer: (1.0 - 60.0, 0 = always)", FCVAR_NOTIFY, true, 1.0, true, 60.0);
 	hConVars[26] = CreateConVar("sm_tf2jail_criticals", "1", "Which team gets crits: (0 = off, 1 = blue, 2 = red, 3 = both)", FCVAR_NOTIFY, true, 0.0, true, 3.0);
@@ -568,7 +568,7 @@ public void OnAllPluginsLoaded()
 	eSourceComms = LibraryExists("sourcecomms");
 	eSteamWorks = LibraryExists("SteamWorks");
 	eTF2Attributes = LibraryExists("tf2attributes");
-	eVoiceannounce_ex = LibraryExists("voiceannounce_ex");
+	//eVoiceannounce_ex = LibraryExists("voiceannounce_ex");
 	eTF2WeaponRestrictions = LibraryExists("tf2weaponrestrictions");
 }
 
@@ -579,7 +579,7 @@ public void OnLibraryAdded(const char[] sName)
 	eSourceComms = StrEqual(sName, "sourcecomms");
 	eSteamWorks = StrEqual(sName, "SteamWorks");
 	eTF2Attributes = StrEqual(sName, "tf2attributes");
-	eVoiceannounce_ex = StrEqual(sName, "voiceannounce_ex");
+	//eVoiceannounce_ex = StrEqual(sName, "voiceannounce_ex");
 	eTF2WeaponRestrictions = StrEqual(sName, "tf2weaponrestrictions");
 }
 
@@ -590,7 +590,7 @@ public void OnLibraryRemoved(const char[] sName)
 	eSourceComms = StrEqual(sName, "sourcecomms");
 	eSteamWorks = StrEqual(sName, "SteamWorks");
 	eTF2Attributes = StrEqual(sName, "tf2attributes");
-	eVoiceannounce_ex = StrEqual(sName, "voiceannounce_ex");
+	//eVoiceannounce_ex = StrEqual(sName, "voiceannounce_ex");
 	eTF2WeaponRestrictions = StrEqual(sName, "tf2weaponrestrictions");
 }
 
@@ -967,10 +967,22 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	else if (hCvar == hConVars[22])
 	{
 		cv_MicCheck = bNewValue;
+		
+		if (cv_MicCheck)
+		{
+			SetConVarBool(hCvar, false);
+			LogMessage("This feature is currently disabled.");
+		}
 	}
 	else if (hCvar == hConVars[23])
 	{
 		cv_MicCheckType = bNewValue;
+		
+		if (cv_MicCheckType)
+		{
+			SetConVarBool(hCvar, false);
+			LogMessage("This feature is currently disabled.");
+		}
 	}
 	else if (hCvar == hConVars[24])
 	{
@@ -1520,7 +1532,7 @@ public void OnPlayerSpawn(Handle hEvent, char[] sName, bool bBroadcast)
 		}
 		case TFTeam_Blue:
 		{
-			if (eVoiceannounce_ex && cv_MicCheck)
+			/*if (eVoiceannounce_ex && cv_MicCheck)
 			{
 				if (cv_MicCheckType)
 				{
@@ -1530,8 +1542,8 @@ public void OnPlayerSpawn(Handle hEvent, char[] sName, bool bBroadcast)
 						CPrintToChat(client, "%t %t", "plugin tag", "microphone unverified");
 					}
 				}
-			}
-
+			}*/
+			
 			if (cv_BlueMute == 2)
 			{
 				MutePlayer(client);
@@ -2197,14 +2209,14 @@ public void OnClientSayCommand_Post(int client, const char[] sCommand, const cha
 	}
 }
 
-public bool OnClientSpeakingEx(int client)
+/*public bool OnClientSpeakingEx(int client)
 {
 	if (cv_Enabled && eVoiceannounce_ex && cv_MicCheck && !bHasTalked[client])
 	{
 		bHasTalked[client] = true;
 		CPrintToChat(client, "%t %t", "plugin tag", "microphone verified");
 	}
-}
+}*/
 
 public int WeaponRestrictions_OnExecuted(int client)
 {
@@ -4309,7 +4321,10 @@ void RemoveFreeday(int client)
 		iParticle_Freedays[client] = -1;
 	}
 
-	if (cv_RendererColors)SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
+	if (cv_RendererColors)
+	{
+		SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
+	}
 
 	Jail_Log(false, "%N is no longer a Freeday.", client);
 
@@ -5306,7 +5321,7 @@ void RemoveValveHat(int client, bool unhide = false)
 			if (idx != 57 && idx != 133 && idx != 231 && idx != 444 && idx != 405 && idx != 608 && idx != 642 && GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client)
 			{
 				SetEntityRenderMode(edict, (unhide ? RENDER_NORMAL : RENDER_TRANSCOLOR));
-				SetEntityRenderColor(edict, 256, 256, 256, (unhide ? 256 : 0));
+				SetEntityRenderColor(edict, 255, 255, 255, (unhide ? 255 : 0));
 			}
 		}
 	}
@@ -5319,7 +5334,7 @@ void RemoveValveHat(int client, bool unhide = false)
 			if (idx != 57 && idx != 133 && idx != 231 && idx != 444 && idx != 405 && idx != 608 && idx != 642 && GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client)
 			{
 				SetEntityRenderMode(edict, (unhide ? RENDER_NORMAL : RENDER_TRANSCOLOR));
-				SetEntityRenderColor(edict, 256, 256, 256, (unhide ? 256 : 0));
+				SetEntityRenderColor(edict, 255, 255, 255, (unhide ? 255 : 0));
 			}
 		}
 	}
@@ -5635,16 +5650,21 @@ void SetModel(int client, const char[] sModel, const char[] class)
 {
 	if (Client_IsIngame(client) && IsPlayerAlive(client))
 	{
-		TFClassType playerclass = TF2_GetClass(class);
-		
-		if (playerclass != TFClass_Unknown)
+		if (cv_WardenForceClass)
 		{
-			TF2_SetPlayerClass(client, playerclass, false, false);
-			TF2_RegeneratePlayer(client);
+			TFClassType playerclass = TF2_GetClass(class);
+			
+			if (playerclass != TFClass_Unknown)
+			{
+				TF2_SetPlayerClass(client, playerclass, false, false);
+				TF2_RegeneratePlayer(client);
+			}
 		}
 		
 		GetClientModel(client, sOldModel[client], PLATFORM_MAX_PATH);
-		SetEntityModel(client, sModel);
+		
+		SetVariantString(sModel);
+		AcceptEntityInput(client, "SetCustomModel");
 
 		if (cv_WardenWearables)
 		{
@@ -5655,9 +5675,10 @@ void SetModel(int client, const char[] sModel, const char[] class)
 
 void RemoveModel(int client)
 {
-	if (Client_IsIngame(client) && strlen(sOldModel[client]) > 0)
+	if (Client_IsIngame(client))
 	{
-		SetEntityModel(client, sOldModel[client]);
+		SetVariantString(sOldModel[client]);
+		AcceptEntityInput(client, "SetCustomModel");
 	}
 }
 

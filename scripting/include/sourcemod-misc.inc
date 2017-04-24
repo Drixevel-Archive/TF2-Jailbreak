@@ -1125,3 +1125,21 @@ stock int GetActiveWeapon(int client)
 {
 	return GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
 }
+
+stock int GetRandomClient(bool ingame = true, bool alive = false, bool nofake = false, int team = 0)
+{
+	int[] clients = new int[MaxClients];
+	int amount;
+	
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (ingame && !IsClientInGame(i) || alive && !IsPlayerAlive(i) || nofake && IsFakeClient(i) || team > 0 && team != GetClientTeam(i))
+		{
+			continue;
+		}
+		
+		clients[amount++] = i;
+	}
+	
+	return clients[GetRandomInt(0, amount)];
+}
