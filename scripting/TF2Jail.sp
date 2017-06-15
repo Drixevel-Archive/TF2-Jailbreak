@@ -24,7 +24,7 @@
 
 //Defines
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.6.4"
+#define PLUGIN_VERSION	"5.6.5"
 #define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
 #define PLUGIN_CONTACT	"http://www.drixevel.com/"
@@ -1281,14 +1281,6 @@ public void OnMapEnd()
 					RemoveModel(i);
 				}
 
-				for (int x = 0; x < sizeof(hTextNodes); x++)
-				{
-					if (hTextNodes[x] != null)
-					{
-						ClearSyncHud(i, hTextNodes[x]);
-					}
-				}
-
 				if (bIsMuted[i])
 				{
 					UnmuteClient(i);
@@ -1902,9 +1894,12 @@ public void OnArenaRoundStart(Handle event, const char[] name, bool bDontBroadca
 		{
 			if (strlen(sCustomLR) == 0)
 			{
-				char sLRName[256]; char sLRMessage[256];
+				char sLRName[256];
 				KvGetString(hConfig, "Name", sLRName, sizeof(sLRName));
+				
+				char sLRMessage[256];
 				Format(sLRMessage, sizeof(sLRMessage), "%t", "last request node", sLRName);
+				
 				SetTextNode(hTextNodes[1], sLRMessage, EnumTNPS[1][fCoord_X], EnumTNPS[1][fCoord_Y], EnumTNPS[1][fHoldTime], EnumTNPS[1][iRed], EnumTNPS[1][iGreen], EnumTNPS[1][iBlue], EnumTNPS[1][iAlpha], EnumTNPS[1][iEffect], EnumTNPS[1][fFXTime], EnumTNPS[1][fFadeIn], EnumTNPS[1][fFadeOut]);
 			}
 
@@ -2114,8 +2109,10 @@ public void OnRoundEnd(Handle hEvent, char[] sName, bool bBroadcast)
 
 			for (int x = 0; x < sizeof(hTextNodes); x++)
 			{
-				if (hTextNodes[x] == null)continue;
-				ClearSyncHud(i, hTextNodes[x]);
+				if (hTextNodes[x] != null)
+				{
+					ClearSyncHud(i, hTextNodes[x]);
+				}
 			}
 
 			if (GetClientMenu(i) != MenuSource_None)
@@ -5638,6 +5635,14 @@ void WardenUnset(int client)
 	{
 		SetEntityRenderColor(client, a_iDefaultColors[0], a_iDefaultColors[1], a_iDefaultColors[2], a_iDefaultColors[3]);
 	}
+	
+	if (hTextNodes[2] != null)
+	{
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			ClearSyncHud(i, hTextNodes[2]);
+		}
+	}
 
 	EnumWardenMenu = Open;
 
@@ -5802,12 +5807,12 @@ public Action Timer_Round(Handle hTimer)
 	char sRoundTimer[64];
 	Format(sRoundTimer, sizeof(sRoundTimer), "%02d:%02d", iRoundTime / 60, iRoundTime % 60);
 
-	if (hTextNodes[3] && hTextNodes[3] != null)
-	{
-		SetTextNode(hTextNodes[3], sRoundTimer, EnumTNPS[3][fCoord_X], EnumTNPS[3][fCoord_Y], EnumTNPS[3][fHoldTime], EnumTNPS[3][iRed], EnumTNPS[3][iGreen], EnumTNPS[3][iBlue], EnumTNPS[3][iAlpha], EnumTNPS[3][iEffect], EnumTNPS[3][fFXTime], EnumTNPS[3][fFadeIn], EnumTNPS[3][fFadeOut]);
-	}
+	SetTextNode(hTextNodes[3], sRoundTimer, EnumTNPS[3][fCoord_X], EnumTNPS[3][fCoord_Y], EnumTNPS[3][fHoldTime], EnumTNPS[3][iRed], EnumTNPS[3][iGreen], EnumTNPS[3][iBlue], EnumTNPS[3][iAlpha], EnumTNPS[3][iEffect], EnumTNPS[3][fFXTime], EnumTNPS[3][fFadeIn], EnumTNPS[3][fFadeOut]);
 
-	if (cv_RoundTime_Center)PrintCenterTextAll(sRoundTimer);
+	if (cv_RoundTime_Center)
+	{
+		PrintCenterTextAll(sRoundTimer);
+	}
 
 	if (iRoundTime <= 0)
 	{

@@ -5,7 +5,6 @@
 #include <tf2_stocks>
 #include <morecolors>
 #include <smlib>
-#include <jackofdesigns>
 
 //TF2Jail Includes
 #include <tf2jail>
@@ -13,7 +12,11 @@
 #define PLUGIN_NAME     "[TF2] TF2Jail - Repeat Sprite"
 #define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"
 #define PLUGIN_DESCRIPTION	"Spawns a sprite above players heads who say 'Repeat' in chat."
+#define PLUGIN_VERSION "1.0.0"
 #define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"
+
+#define JTAG "[RS]"
+#define JTAG_COLORED "{red}[RS]{default}"
 
 new g_EntList[MAXPLAYERS + 1];
 new Handle:g_hCooldown[MAXPLAYERS + 1];
@@ -48,7 +51,7 @@ public OnMapEnd()
 {
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsValidClient(i))
+		if (IsClientInGame(i))
 		{
 			g_hCooldown[i] = INVALID_HANDLE;
 		}
@@ -59,7 +62,7 @@ public RoundEnd(Handle:hEvent, const String:strName[], bool:bBroadcast)
 {
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsValidClient(i))
+		if (IsClientInGame(i))
 		{
 			ClearTimer(g_hCooldown[i]);
 		}
@@ -88,7 +91,7 @@ public OnClientDisconnect(client)
 
 public Action:ExecuteRepeat(client, args)
 {
-	if (!IsValidClient(client))
+	if (!IsClientInGame(client))
 	{
 		CReplyToCommand(client, "%s %t", JTAG, "Command is in-game only");
 		return Plugin_Handled;
@@ -148,7 +151,7 @@ public OnMapStart()
 public PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (IsValidClient(client))
+	if (IsClientInGame(client))
 	{
 		g_hMaxPerRound[client] = 3;
 	}
@@ -169,7 +172,7 @@ public Action:ChangeClass(Handle:event, const String:name[], bool:dontBroadcast)
 public Action:RemoveSprite(Handle:hTimer, any:data)
 {
 	new client = GetClientOfUserId(data);
-	if (IsValidClient(client) && IsPlayerAlive(client))
+	if (IsClientInGame(client) && IsPlayerAlive(client))
 	{
 		KillSprite(client);
 	}
@@ -179,7 +182,7 @@ public Action:CanRepeat(Handle:hTimer, any:data)
 {
 	new client = GetClientOfUserId(data);
 	
-	if (IsValidClient(client))
+	if (IsClientInGame(client))
 	{
 		g_hCooldown[client] = INVALID_HANDLE;
 		CPrintToChat(client, "You can now repeat again.");
@@ -246,5 +249,14 @@ public OnGameFrame()
 				TeleportEntity(ent, vOrigin, NULL_VECTOR, vVelocity);
 			}
 		}
+	}
+}
+
+void ClearTimer(Handle& timer)
+{
+	if (timer != null)
+	{
+		KillTimer(timer);
+		timer = null;
 	}
 }

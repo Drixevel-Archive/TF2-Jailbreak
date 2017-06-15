@@ -14,13 +14,16 @@
 //#include <bedeflector>
 #include <morecolors>
 #include <smlib>
-#include <fc>
+//#include <fc>
 
 #undef REQUIRE_PLUGIN
 #include <boss_spawns>
 
 //TF2Jail Includes
 #include <tf2jail>
+
+#define JTAG "[LR]"
+#define JTAG_COLORED "{red}[LR]{default}"
 
 new bool:g_bLateLoad = false;
 new bool:g_bFallDamage = false;
@@ -37,13 +40,11 @@ new Handle:FreezeCheck[MAXPLAYERS+1] = INVALID_HANDLE;
 new bool:g_MovementSpeedFTW[MAXPLAYERS+1] = false;
 new bool:g_SkeletonRoundClients[MAXPLAYERS+1] = false;
 new bool:g_RobotRoundClients[MAXPLAYERS+1] = false;
-new bool:g_BHOPClients[MAXPLAYERS+1] = false;
 new bool:g_BumperCar[MAXPLAYERS+1] = false;
 
 new bool:e_betheskeleton = false;
 new bool:e_betherobot = false;
 new bool:e_tf2attributes = false;
-new bool:e_fc = false;
 
 new bool:bMagicianWars = false;
 
@@ -121,7 +122,6 @@ public OnAllPluginsLoaded()
 	e_betheskeleton = LibraryExists("betheskeleton");
 	e_betherobot = LibraryExists("betherobot");
 	e_tf2attributes = LibraryExists("tf2attributes");
-	e_fc = LibraryExists("fc");
 }
 
 public OnLibraryAdded(const String:name[])
@@ -129,7 +129,6 @@ public OnLibraryAdded(const String:name[])
 	e_betheskeleton = StrEqual(name, "betheskeleton");
 	e_betherobot = StrEqual(name, "betherobot");
 	e_tf2attributes = StrEqual(name, "tf2attributes");
-	e_fc = StrEqual(name, "fc");
 }
 
 public OnLibraryRemoved(const String:name[])
@@ -137,7 +136,6 @@ public OnLibraryRemoved(const String:name[])
 	e_betheskeleton = StrEqual(name, "betheskeleton");
 	e_betherobot = StrEqual(name, "betherobot");
 	e_tf2attributes = StrEqual(name, "tf2attributes");
-	e_fc = StrEqual(name, "fc");
 }
 
 public OnClientPutInServer(client)
@@ -266,20 +264,6 @@ public TF2Jail_OnLastRequestExecute(const String:Handler[])
 	{
 		ClearTimer(apocdaystart);
 		apocdaystart = CreateTimer(30.0, StartApocDay, INVALID_HANDLE, TIMER_FLAG_NO_MAPCHANGE);
-	}
-	else if (StrEqual(Handler, "LR_BhopRound"))
-	{
-		if (e_fc)
-		{
-			for (new i = 1; i <= MaxClients; i++)
-			{
-				if (IsClientInGame(i) && IsPlayerAlive(i) && !FC_BhopStatus(i))
-				{
-					FC_SetBhop(i, true, true, 1.04, 1.01);
-					g_BHOPClients[i] = true;
-				}
-			}
-		}
 	}
 	else if (StrEqual(Handler, "LR_BumperCars"))
 	{
@@ -528,12 +512,6 @@ CleanAllLRs(client)
 	{
 		BeTheRobot_SetRobot(client, false);
 		g_RobotRoundClients[client] = false;
-	}
-	
-	if (g_BHOPClients[client])
-	{
-		FC_SetBhop(client, false, false, 1.0, 1.0);
-		g_BHOPClients[client] = false;
 	}
 	
 	if (g_BumperCar[client])
