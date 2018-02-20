@@ -846,15 +846,29 @@ void PerformBan(int client, int admin, int banTime = 0, int reason = 0, char[] m
 	
 	int timestamp = GetTime();
 	
+	char sName_Client[MAX_NAME_LENGTH];
+	GetClientName(client, sName_Client, sizeof(sName_Client));
+	
+	int size = 2 * strlen(sName_Client) + 1;
+	char[] sEscapedName = new char[size];
+	SQL_EscapeString(BanDatabase, sName_Client, sEscapedName, size + 1);
+	
 	if (admin && IsClientInGame(admin))
 	{
+		char sName_Admin[MAX_NAME_LENGTH];
+		GetClientName(admin, sName_Admin, sizeof(sName_Admin));
+		
+		size = 2 * strlen(sName_Admin) + 1;
+		char[] sEscapedName2 = new char[size];
+		SQL_EscapeString(BanDatabase, sName_Admin, sEscapedName2, size + 1);
+		
 		char adminSteam[32];
 		GetClientAuthId(admin, AuthId_Steam2, adminSteam, sizeof(adminSteam));
 		
 		if (cv_SQLProgram)
 		{
 			char logQuery[350];
-			Format(logQuery, sizeof(logQuery), "INSERT INTO %s (timestamp, offender_steamid, offender_name, admin_steamid, admin_name, bantime, timeleft, reason) VALUES (%d, '%s', '%N', '%s', '%N', %d, %d, '%s')", sLogTableName, timestamp, targetSteam, client, adminSteam, admin, banTime, banTime, sReason);
+			Format(logQuery, sizeof(logQuery), "INSERT INTO %s (timestamp, offender_steamid, offender_name, admin_steamid, admin_name, bantime, timeleft, reason) VALUES (%d, '%s', '%s', '%s', '%s', %d, %d, '%s')", sLogTableName, timestamp, targetSteam, sEscapedName, adminSteam, sEscapedName2, banTime, banTime, sReason);
 			LogMessage("log query: %s", logQuery);
 			SQL_TQuery(BanDatabase, DB_Callback_CTBan, logQuery, client);
 		}
@@ -866,7 +880,7 @@ void PerformBan(int client, int admin, int banTime = 0, int reason = 0, char[] m
 		if (cv_SQLProgram)
 		{
 			char logQuery[350];
-			Format(logQuery, sizeof(logQuery), "INSERT INTO %s (timestamp, offender_steamid, offender_name, admin_steamid, admin_name, bantime, reason) VALUES (%d, '%s', '%N', 'STEAM_0:1:1', 'Console', %d, %d, '%s')", sLogTableName, timestamp, targetSteam, client, banTime, banTime, sReason);
+			Format(logQuery, sizeof(logQuery), "INSERT INTO %s (timestamp, offender_steamid, offender_name, admin_steamid, admin_name, bantime, reason) VALUES (%d, '%s', '%s', 'STEAM_0:1:1', 'Console', %d, %d, '%s')", sLogTableName, timestamp, targetSteam, sEscapedName, banTime, banTime, sReason);
 			LogMessage("log query: %s", logQuery);
 			SQL_TQuery(BanDatabase, DB_Callback_CTBan, logQuery, client);
 		}
