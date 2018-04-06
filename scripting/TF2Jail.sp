@@ -24,10 +24,10 @@
 
 //Defines
 #define PLUGIN_NAME	"[TF2] Jailbreak"
-#define PLUGIN_VERSION	"5.6.5"
-#define PLUGIN_AUTHOR	"Keith Warren(Drixevel)"
+#define PLUGIN_VERSION	"5.6.6"
+#define PLUGIN_AUTHOR	"Keith Warren(Shaders Allen)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
-#define PLUGIN_CONTACT	"http://www.drixevel.com/"
+#define PLUGIN_CONTACT	"http://www.github.com/ShadersAllen"
 
 //Sourcemod Includes
 #include <sourcemod>
@@ -61,9 +61,9 @@
 #pragma newdecls required
 
 //Handle Arrays
-ConVar hConVars[80];
+ConVar hConVars[81];
 Handle hTextNodes[4];
-Handle hEngineConVars[3];
+ConVar hEngineConVars[3];
 
 //Plugin Forward Handles
 Handle sFW_WardenCreated;
@@ -79,9 +79,9 @@ Handle sFW_OnRebelRemoved;
 //Other Handles
 Handle hRolePref_Blue;
 Handle hRolePref_Warden;
-Handle hLastRequestUses;
-Handle hWardenSkinClasses;
-Handle hWardenSkins;
+ArrayList hLastRequestUses;
+StringMap hWardenSkinClasses;
+StringMap hWardenSkins;
 
 //Particle Entity Indexes
 int iParticle_Wardens[MAXPLAYERS + 1] = {INVALID_ENT_REFERENCE, ...};
@@ -99,9 +99,9 @@ Handle hTimer_RoundTimer;
 Handle hTimer_RebelTimers[MAXPLAYERS + 1];
 
 //Menu Handles
-Handle hWardenMenu;
-Handle hListLRsMenu;
-Handle hWardenModelsMenu;
+Menu hWardenMenu;
+Menu hListLRsMenu;
+Menu hWardenModelsMenu;
 
 //ConVar Global Variables
 bool cv_Enabled;
@@ -183,6 +183,7 @@ char cv_sDefaultWardenModel[64];
 bool cv_WardenModelMenu;
 int cv_RandomWardenTimer;
 bool cv_bDebugs;
+bool cv_bGodmodeFreedays;
 
 //External Extensions/Plugin Booleans
 bool eSourcebans;
@@ -449,7 +450,8 @@ public void OnPluginStart()
 	hConVars[76] = CreateConVar("sm_tf2jail_warden_defaultmodel", "Warden V2", "Default model by name to set Wardens to: (Maximum Characters: 64)", FCVAR_NOTIFY);
 	hConVars[77] = CreateConVar("sm_tf2jail_warden_models_menu", "1", "Status for the Warden models menu: (1 = Enabled, 0 = Disabled)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	hConVars[78] = CreateConVar("sm_tf2jail_random_warden_timer", "5", "Seconds after the round starts to choose a warden: (0 = instant, default: 5)", FCVAR_NOTIFY, true, 0.0);
-	hConVars[79] = CreateConVar("sm_tf2jail_debug_logs", "1", "Status for debugging logs.\n (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0);
+	hConVars[79] = CreateConVar("sm_tf2jail_debug_logs", "1", "Status for debugging logs.\n (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hConVars[80] = CreateConVar("sm_tf2jail_freeday_godmode", "1", "Status for freedays to receive godmode.\n (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	//Execute the file after we create & set the ConVars.
 	AutoExecConfig();
@@ -457,7 +459,7 @@ public void OnPluginStart()
 	//Hook all ConVars up and check for changes.
 	for (int i = 0; i < sizeof(hConVars); i++)
 	{
-		HookConVarChange(hConVars[i], HandleCvars);
+		hConVars[i].AddChangeHook(HandleCvars);
 	}
 
 	//Hooked Events
@@ -556,9 +558,9 @@ public void OnPluginStart()
 	BuildPath(Path_SM, sLRConfig, sizeof(sLRConfig), "configs/tf2jail/lastrequests.cfg");
 
 	//Arrays/Tries (Holds data)
-	hLastRequestUses = CreateArray();
-	hWardenSkinClasses = CreateTrie();
-	hWardenSkins = CreateTrie();
+	hLastRequestUses = new ArrayList();
+	hWardenSkinClasses = new StringMap();
+	hWardenSkins = new StringMap();
 }
 
 public void OnAllPluginsLoaded()
@@ -700,6 +702,7 @@ public void OnConfigsExecuted()
 	cv_WardenModelMenu = GetConVarBool(hConVars[77]);
 	cv_RandomWardenTimer = GetConVarInt(hConVars[78]);
 	cv_bDebugs = GetConVarBool(hConVars[79]);
+	cv_bGodmodeFreedays = GetConVarBool(hConVars[80]);
 
 	if (cv_Enabled)
 	{
@@ -1219,6 +1222,10 @@ public int HandleCvars(Handle hCvar, char[] sOldValue, char[] sNewValue)
 	{
 		cv_bDebugs = bNewValue;
 	}
+	else if (hCvar == hConVars[80])
+	{
+		cv_bGodmodeFreedays = bNewValue;
+	}
 }
 
 public void TF2WeaponRestrictions_RestrictionChanged(const char[] sRestriction)
@@ -1261,9 +1268,9 @@ public void OnMapStart()
 		iVotesNeeded = 0;
 		ResetVotes();
 
-		for (int i = 0; i < GetArraySize(hLastRequestUses); i++)
+		for (int i = 0; i < hLastRequestUses.Length; i++)
 		{
-			SetArrayCell(hLastRequestUses, i, 0);
+			hLastRequestUses.Set(i, 0);
 		}
 	}
 }
@@ -1372,7 +1379,7 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 	bool bReturn;
 
-	if (bIsFreeday[victim] && !IsWarden(attacker))
+	if (cv_bGodmodeFreedays && bIsFreeday[victim] && !IsWarden(attacker))
 	{
 		damage = 0.0;
 		bReturn = true;
@@ -1882,7 +1889,7 @@ public void OnArenaRoundStart(Handle event, const char[] name, bool bDontBroadca
 
 	if (iLRCurrent != -1)
 	{
-		SetArrayCell(hLastRequestUses, iLRCurrent, GetArrayCell(hLastRequestUses, iLRCurrent) + 1);
+		hLastRequestUses.Set(iLRCurrent, hLastRequestUses.Get(iLRCurrent) + 1);
 
 		Handle hConfig = CreateKeyValues("TF2Jail_LastRequests");
 		FileToKeyValues(hConfig, sLRConfig);
@@ -4064,7 +4071,7 @@ public int MenuHandle_GiveLR(Handle hMenu, MenuAction action, int param1, int pa
 					return;
 				}
 
-				SetArrayCell(hLastRequestUses, StringToInt(sInfo), GetArrayCell(hLastRequestUses, StringToInt(sInfo)) + 1);
+				hLastRequestUses.Set(StringToInt(sInfo), hLastRequestUses.Get(StringToInt(sInfo)) + 1);
 
 				Call_StartForward(sFW_OnLastRequestExecute);
 				Call_PushString(Handler);
@@ -4256,8 +4263,13 @@ public int MenuHandle_GiveLR(Handle hMenu, MenuAction action, int param1, int pa
 
 
 /* Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-void GiveFreeday(int client)
+bool GiveFreeday(int client)
 {
+	if (client == 0 || client > MaxClients || !IsClientConnected(client) || !IsClientInGame(client) || !IsPlayerAlive(client))
+	{
+		return false;
+	}
+
 	CPrintToChat(client, "%t %t", "plugin tag", "lr freeday message");
 
 	int flags = GetEntityFlags(client) | FL_NOTARGET;
@@ -4295,10 +4307,17 @@ void GiveFreeday(int client)
 	Call_StartForward(sFW_OnFreedayGiven);
 	Call_PushCell(client);
 	Call_Finish();
+
+	return true;
 }
 
-void RemoveFreeday(int client)
+bool RemoveFreeday(int client)
 {
+	if (client == 0 || client > MaxClients || !IsClientConnected(client) || !IsClientInGame(client) || !IsPlayerAlive(client))
+	{
+		return false;
+	}
+
 	CPrintToChatAll("%t %t", "plugin tag", "lr freeday lost", client);
 	PrintCenterTextAll("%t", "lr freeday lost center", client);
 	int flags = GetEntityFlags(client) & ~FL_NOTARGET;
@@ -4328,13 +4347,15 @@ void RemoveFreeday(int client)
 	Call_StartForward(sFW_OnFreedayRemoved);
 	Call_PushCell(client);
 	Call_Finish();
+
+	return true;
 }
 
-void MarkRebel(int client)
+bool MarkRebel(int client)
 {
 	if (bIsRebel[client])
 	{
-		return;
+		return false;
 	}
 
 	bIsRebel[client] = true;
@@ -4373,6 +4394,8 @@ void MarkRebel(int client)
 	Call_StartForward(sFW_OnRebelGiven);
 	Call_PushCell(client);
 	Call_Finish();
+
+	return true;
 }
 
 void ClearRebel(int client)
@@ -4408,17 +4431,17 @@ void ClearRebel(int client)
 	Call_Finish();
 }
 
-void MarkFreekiller(int client, bool avoid = false)
+bool MarkFreekiller(int client, bool avoid = false)
 {
 	if (avoid && bVoidFreeKills)
 	{
 		CPrintToChatAll("%t %t", "plugin tag", "freekiller flagged while void", client);
-		return;
+		return false;
 	}
 
 	if (bIsFreekiller[client])
 	{
-		return;
+		return false;
 	}
 
 	bIsFreekiller[client] = true;
@@ -4464,6 +4487,8 @@ void MarkFreekiller(int client, bool avoid = false)
 	Call_StartForward(sFW_OnFreekillerGiven);
 	Call_PushCell(client);
 	Call_Finish();
+
+	return true;
 }
 
 void ClearFreekiller(int client)
@@ -4592,7 +4617,7 @@ void ParseLastRequests(int client, Handle hMenu)
 			if (KvJumpToKey(hConfig, "Parameters"))
 			{
 				int disabled = KvGetNum(hConfig, "Disabled", 0);
-				int CurrentUses = GetArrayCell(hLastRequestUses, StringToInt(sLRID));
+				int CurrentUses = hLastRequestUses.Get(StringToInt(sLRID));
 				int Permitted = KvGetNum(hConfig, "UsesPerMap", 3);
 
 				switch (disabled)
@@ -4811,13 +4836,13 @@ void ParseLastRequestConfig(bool DefaultValue = false)
 		}
 	}
 
-	ResizeArray(hLastRequestUses, iSize);
+	hLastRequestUses.Resize(iSize);
 
 	if (DefaultValue)
 	{
-		for (int i = 0; i < GetArraySize(hLastRequestUses); i++)
+		for (int i = 0; i < hLastRequestUses.Length; i++)
 		{
-			SetArrayCell(hLastRequestUses, i, 0);
+			hLastRequestUses.Set(i, 0);
 		}
 	}
 
@@ -4862,8 +4887,8 @@ void ParseWardenModelsConfig(bool MenuOnly = false)
 {
 	if (!MenuOnly)
 	{
-		ClearTrie(hWardenSkinClasses);
-		ClearTrie(hWardenSkins);
+		hWardenSkinClasses.Clear();
+		hWardenSkins.Clear();
 	}
 
 	if (MenuOnly && hWardenModelsMenu == null)
@@ -4911,7 +4936,7 @@ void ParseWardenModelsConfig(bool MenuOnly = false)
 
 					PrecacheModel(sModel);
 					AddFileToDownloadsTable(sModel);
-					SetTrieString(hWardenSkins, sName, sModel, false);
+					hWardenSkins.SetString(sName, sModel, false);
 					AddMenuItem(hWardenModelsMenu, sName, sName);
 				}
 				case false:
@@ -4921,7 +4946,7 @@ void ParseWardenModelsConfig(bool MenuOnly = false)
 				}
 			}
 
-			SetTrieString(hWardenSkinClasses, sName, sClass, false);
+			hWardenSkinClasses.SetString(sName, sClass, false);
 
 			if (KvJumpToKey(hConfig, "files"))
 			{
@@ -5017,7 +5042,7 @@ void BuildMenus()
 				else
 				{
 					int Permitted = KvGetNum(hConfig, "UsesPerMap", 3);
-					int CurrentUses = GetArrayCell(hLastRequestUses, StringToInt(sLRID));
+					int CurrentUses = hLastRequestUses.Get(StringToInt(sLRID));
 					Format(sLRName, sizeof(sLRName), "[%i/%i] %s", CurrentUses, Permitted, sLRName);
 				}
 
@@ -5337,14 +5362,21 @@ void RemoveValveHat(int client, bool unhide = false)
 	}
 }
 
-void StripToMelee(int client)
+bool StripToMelee(int client)
 {
+	if (client == 0 || client > MaxClients || !IsClientConnected(client) || !IsClientInGame(client) || !IsPlayerAlive(client))
+	{
+		return false;
+	}
+
 	TF2_RemoveWeaponSlot(client, 0);
 	TF2_RemoveWeaponSlot(client, 1);
 	TF2_RemoveWeaponSlot(client, 3);
 	TF2_RemoveWeaponSlot(client, 4);
 	TF2_RemoveWeaponSlot(client, 5);
 	TF2_SwitchtoSlot(client, TFWeaponSlot_Melee);
+
+	return true;
 }
 
 int CreateParticle2(const char[] sType, float refresh = 2.0, int client, int attach = NO_ATTACH, float xOffs = 0.0, float yOffs = 0.0, float zOffs = 0.0)
@@ -5474,11 +5506,11 @@ void TF2_SwitchtoSlot(int client, int slot)
 	}
 }
 
-void WardenSet(int client)
+bool WardenSet(int client)
 {
 	if (WardenExists() || !bActiveRound)
 	{
-		return;
+		return false;
 	}
 
 	iWarden = client;
@@ -5509,7 +5541,7 @@ void WardenSet(int client)
 	if (cv_WardenForceClass)
 	{
 		char sClass[PLATFORM_MAX_PATH];
-		if (GetTrieString(hWardenSkinClasses, cv_sDefaultWardenModel, sClass, sizeof(sClass)))
+		if (hWardenSkinClasses.GetString(cv_sDefaultWardenModel, sClass, sizeof(sClass)))
 		{
 			TFClassType iClass = TF2_GetClass(sClass);
 
@@ -5567,6 +5599,8 @@ void WardenSet(int client)
 
 	CPrintToChatAll("%t %t", "plugin tag", "warden new", client);
 	CPrintToChat(client, "%t %t", "plugin tag", "warden message");
+
+	return true;
 }
 
 void SetWardenModel(int client, const char[] sModel)
@@ -5577,20 +5611,20 @@ void SetWardenModel(int client, const char[] sModel)
 	}
 
 	char sModelPlatform[PLATFORM_MAX_PATH];
-	GetTrieString(hWardenSkins, sModel, sModelPlatform, sizeof(sModelPlatform));
+	hWardenSkins.GetString(sModel, sModelPlatform, sizeof(sModelPlatform));
 
 	char sClass[64];
-	GetTrieString(hWardenSkinClasses, sModel, sClass, sizeof(sClass));
+	hWardenSkinClasses.GetString(sModel, sClass, sizeof(sClass));
 	SetModel(client, sModelPlatform, sClass);
 
 	CPrintToChat(client, "%t %t", "plugin tag", "warden model message", sModel);
 }
 
-void WardenUnset(int client)
+bool WardenUnset(int client)
 {
 	if (!IsWarden(client) || !IsPlayerAlive(client))
 	{
-		return;
+		return false;
 	}
 
 	iWarden = -1;
@@ -5649,6 +5683,8 @@ void WardenUnset(int client)
 	Call_StartForward(sFW_WardenRemoved);
 	Call_PushCell(client);
 	Call_Finish();
+
+	return true;
 }
 
 void SetModel(int client, const char[] sModel, const char[] class)
@@ -6096,12 +6132,12 @@ public int Native_ExistWarden(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_Warden)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Warden' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Warden' for 'TF2Jail' is currently disabled.");
 	}
 
 	return WardenExists();
@@ -6111,18 +6147,18 @@ public int Native_IsWarden(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_Warden)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Warden' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Warden' for 'TF2Jail' is currently disabled.");
 	}
 
 	int client = GetNativeCell(1);
-	if (!Client_IsIngame(client))
+	if (client < 1 || client > MaxClients || !Client_IsIngame(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	}
 
 	return IsWarden(client);
@@ -6132,75 +6168,75 @@ public int Native_SetWarden(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_Warden)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Warden' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Warden' for 'TF2Jail' is currently disabled.");
 	}
 
 	int client = GetNativeCell(1);
-	if (!Client_IsIngame(client))
+	if (client < 1 || client > MaxClients || !Client_IsIngame(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	}
 
 	if (WardenExists())
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "warden is currently in use, cannot execute native function.");
+		return ThrowNativeError(SP_ERROR_INDEX, "warden is currently in use, cannot execute native function.");
 	}
 
 	if (cv_PrefStatus && bRolePreference_Warden[client])
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i has their preference set to prisoner only.", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i has their preference set to prisoner only.", client);
 	}
 
-	WardenSet(client);
+	return WardenSet(client);
 }
 
 public int Native_RemoveWarden(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_Warden)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Warden' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Warden' for 'TF2Jail' is currently disabled.");
 	}
 
 	int client = GetNativeCell(1);
-	if (!Client_IsIngame(client))
+	if (client < 1 || client > MaxClients || !Client_IsIngame(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	}
 
 	if (!IsWarden(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is currently not warden.", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is currently not warden.", client);
 	}
 
-	WardenUnset(client);
+	return WardenUnset(client);
 }
 
 public int Native_IsFreeday(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_LRSEnabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Last Requests' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Last Requests' for 'TF2Jail' is currently disabled.");
 	}
 
 	int client = GetNativeCell(1);
-	if (!Client_IsIngame(client))
+	if (client < 1 || client > MaxClients || !Client_IsIngame(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	}
 
 	return view_as<bool>(bIsQueuedFreeday[client] || bIsFreeday[client]);
@@ -6210,23 +6246,23 @@ public int Native_GiveFreeday(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_LRSEnabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Last Requests' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Last Requests' for 'TF2Jail' is currently disabled.");
 	}
 
 	int client = GetNativeCell(1);
-	if (!Client_IsIngame(client))
+	if (client < 1 || client > MaxClients || !Client_IsIngame(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	}
 
 	if (bIsFreeday[client])
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is already a Freeday.", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is already a Freeday.", client);
 	}
 
 	if (bIsQueuedFreeday[client])
@@ -6235,51 +6271,51 @@ public int Native_GiveFreeday(Handle plugin, int numParams)
 		Jail_Log(false, "%N was queued as a Freeday, removed from queue to turn into a Freeday.");
 	}
 
-	GiveFreeday(client);
+	return GiveFreeday(client);
 }
 
 public int Native_RemoveFreeday(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_LRSEnabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Last Requests' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Last Requests' for 'TF2Jail' is currently disabled.");
 	}
 
 	int client = GetNativeCell(1);
-	if (!Client_IsIngame(client))
+	if (client < 1 || client > MaxClients || !Client_IsIngame(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	}
 
 	if (!bIsFreeday[client])
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is not a Freeday.", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is not a Freeday.", client);
 	}
 
-	RemoveFreeday(client);
+	return RemoveFreeday(client);
 }
 
 public int Native_IsRebel(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_Rebels)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Rebels' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Rebels' for 'TF2Jail' is currently disabled.");
 	}
 
 	int client = GetNativeCell(1);
-	if (!Client_IsIngame(client))
+	if (client < 1 || client > MaxClients || !Client_IsIngame(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	}
 
 	return bIsRebel[client];
@@ -6289,44 +6325,44 @@ public int Native_MarkRebel(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_Rebels)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Rebels' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Rebels' for 'TF2Jail' is currently disabled.");
 	}
 
 	int client = GetNativeCell(1);
-	if (!Client_IsIngame(client))
+	if (client < 1 || client > MaxClients || !Client_IsIngame(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	}
 
 	if (bIsRebel[client])
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is already a Rebel.", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is already a Rebel.", client);
 	}
 
-	MarkRebel(client);
+	return MarkRebel(client);
 }
 
 public int Native_IsFreekiller(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_Freekillers)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Freekillers' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Freekillers' for 'TF2Jail' is currently disabled.");
 	}
 
 	int client = GetNativeCell(1);
-	if (!Client_IsIngame(client))
+	if (client < 1 || client > MaxClients || !Client_IsIngame(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	}
 
 	return bIsFreekiller[client];
@@ -6336,129 +6372,133 @@ public int Native_MarkFreekill(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_Freekillers)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Freekillers' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Freekillers' for 'TF2Jail' is currently disabled.");
 	}
 
 	int client = GetNativeCell(1);
-	if (!Client_IsIngame(client))
+	if (client < 1 || client > MaxClients || !Client_IsIngame(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	}
 
 	if (bIsFreekiller[client])
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is already marked as a Freekiller.", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is already marked as a Freekiller.", client);
 	}
 
-	MarkFreekiller(client);
+	return MarkFreekiller(client);
 }
 
 public int Native_StripToMelee(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	int client = GetNativeCell(1);
-	if (!Client_IsIngame(client))
+	if (client < 1 || client > MaxClients || !Client_IsIngame(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	}
 
 	if (!IsPlayerAlive(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is currently not alive to strip ammo.", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is currently not alive to strip ammo.", client);
 	}
 
 	RequestFrame(ManageWeapons, GetClientUserId(client));
+	return 0;
 }
 
 public int Native_StripAllWeapons(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	int client = GetNativeCell(1);
-	if (!Client_IsIngame(client))
+	if (client < 1 || client > MaxClients || !Client_IsIngame(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	}
 
 	if (!IsPlayerAlive(client))
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is currently not alive to strip weapons.", client);
+		return ThrowNativeError(SP_ERROR_INDEX, "Client index %i is currently not alive to strip weapons.", client);
 	}
 
-	StripToMelee(client);
+	return StripToMelee(client);
 }
 
 public int Native_LockWarden(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_Warden)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Warden' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Warden' for 'TF2Jail' is currently disabled.");
 	}
 
 	bAdminLockWarden = true;
 	CPrintToChatAll("%t %t", "plugin tag", "warden locked natives");
 
 	Jail_Log(false, "Natives has locked Warden.");
+	return 0;
 }
 
 public int Native_UnlockWarden(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_Warden)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Warden' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Warden' for 'TF2Jail' is currently disabled.");
 	}
 
 	bAdminLockWarden = false;
 	CPrintToChatAll("%t %t", "plugin tag", "warden unlocked natives");
 
 	Jail_Log(false, "Natives has unlocked Warden.");
+	return 0;
 }
 
 public int Native_Logging(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	char sFormat[1024];
 	FormatNativeString(0, 1, 2, sizeof(sFormat), _, sFormat);
 
 	Jail_Log(false, sFormat);
+	return 0;
 }
 
 public int Native_IsLRRound(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_LRSEnabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Last Requests' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Last Requests' for 'TF2Jail' is currently disabled.");
 	}
 
 	return view_as<bool>(iLRCurrent != -1);
@@ -6468,12 +6508,12 @@ public int Native_ManageCells(Handle plugin, int numParams)
 {
 	if (!cv_Enabled)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin 'TF2Jail' is currently disabled.");
 	}
 
 	if (!cv_DoorControl)
 	{
-		ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Door Controls' for 'TF2Jail' is currently disabled.");
+		return ThrowNativeError(SP_ERROR_INDEX, "Plugin feature 'Door Controls' for 'TF2Jail' is currently disabled.");
 	}
 
 	if (!bIsMapCompatible)
