@@ -637,14 +637,14 @@ stock CShowActivity2(client, const String:tag[], const String:format[], any:...)
 	new value = GetConVarInt(sm_show_activity);
 	//new ReplySource:replyto = GetCmdReplySource();
 	
-	new String:name[MAX_NAME_LENGTH] = "Console";
+	new String:name2[MAX_NAME_LENGTH] = "Console";
 	new String:sign[MAX_NAME_LENGTH] = "ADMIN";
 	if (client != 0)
 	{
 		if (client < 0 || client > MaxClients || !IsClientConnected(client))
 			ThrowError("Client index %d is invalid", client);
 		
-		GetClientName(client, name, sizeof(name));
+		GetClientName(client, name2, sizeof(name2));
 		new AdminId:id = GetUserAdmin(client);
 		if (id == INVALID_ADMIN_ID
 		|| !GetAdminFlag(id, Admin_Generic, Access_Effective))
@@ -695,7 +695,7 @@ stock CShowActivity2(client, const String:tag[], const String:format[], any:...)
 				newsign = sign;
 				if ((value & 2))
 				{
-					newsign = name;
+					newsign = name2;
 				}
 				VFormat(szBuffer, sizeof(szBuffer), format, 4);
 				
@@ -714,7 +714,7 @@ stock CShowActivity2(client, const String:tag[], const String:format[], any:...)
 				newsign = sign;
 				if ((value & 8) || ((value & 16) && is_root))
 				{
-					newsign = name;
+					newsign = name2;
 				}
 				VFormat(szBuffer, sizeof(szBuffer), format, 4);
 				

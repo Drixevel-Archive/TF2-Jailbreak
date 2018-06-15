@@ -2,17 +2,16 @@
 
 #include <sourcemod>
 #include <tf2jail>
-#include <game_text_tf>
 
 new bool:g_bNotMinimumHud[MAXPLAYERS + 1];
 
 public Plugin:myinfo =
 {
 	name = "[TF2Jail] Freeday Godmode",
-	author = "Keith Warren (Jack of Designs)",
+	author = "Keith Warren (Shaders Allen)",
 	description = "Gives Freedays Godmode on start & removes on exit.",
 	version = "1.0.0",
-	url = "http://www.jackofdesigns.com/"
+	url = "http://www.shadersallen.com/"
 };
 
 public OnClientPostAdminCheck(client)
@@ -60,7 +59,7 @@ GiveHint(client, const String:sHint[])
 {
 	switch (g_bNotMinimumHud[client])
 	{
-		case true: PrintTFText(String:message[], team = 0, color = 0,	Float:displayTime = 0.0, String:icon[] = "ico_build");
+		case true: //PrintTFText(String:message[], team = 0, color = 0,	Float:displayTime = 0.0, String:icon[] = "ico_build");
 		case false: PrintHintText(client, const String:format[], any:...);
 	}
 }

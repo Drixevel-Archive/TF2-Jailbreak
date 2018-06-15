@@ -10,9 +10,9 @@
 #include <tf2jail>
 
 #define PLUGIN_NAME     "[TF2] TF2Jail - Last Request"
-#define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"
+#define PLUGIN_AUTHOR   "Keith Warren(Shaders Allen)"
 #define PLUGIN_DESCRIPTION	"Allows Wardens to grant last requests to prisoners."
-#define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"
+#define PLUGIN_CONTACT  "http://www.shadersallen.com/"
 
 new iQuePnts[MAXPLAYERS+1] = {0,...};
 new PlayerRanks[MAXPLAYERS+1] = {0,...};

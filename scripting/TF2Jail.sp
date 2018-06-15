@@ -27,7 +27,11 @@
 #define PLUGIN_VERSION	"5.6.6"
 #define PLUGIN_AUTHOR	"Keith Warren(Shaders Allen)"
 #define PLUGIN_DESCRIPTION	"Jailbreak for Team Fortress 2."
-#define PLUGIN_CONTACT	"http://www.github.com/ShadersAllen"
+#define PLUGIN_CONTACT	"http://www.shadersallen.com/"
+
+#define NO_ATTACH 0
+#define ATTACH_NORMAL 1
+#define ATTACH_HEAD 2
 
 //Sourcemod Includes
 #include <sourcemod>
@@ -36,7 +40,6 @@
 #include <tf2_stocks>
 
 //External Includes
-#include <sourcemod-misc>
 #include <morecolors>
 #include <smlib>
 
@@ -6526,3 +6529,12 @@ public int Native_ManageCells(Handle plugin, int numParams)
 	return true;
 }
 /* Plugin End ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+stock void KillTimerSafe(Handle &timer)
+{
+	if (timer != null)
+	{
+		KillTimer(timer);
+		timer = null;
+	}
+}

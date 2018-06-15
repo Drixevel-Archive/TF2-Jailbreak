@@ -10,10 +10,10 @@
 #include <tf2jail>
 
 #define PLUGIN_NAME     "[TF2] TF2Jail - Repeat Sprite"
-#define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"
+#define PLUGIN_AUTHOR   "Keith Warren(Shaders Allen)"
 #define PLUGIN_DESCRIPTION	"Spawns a sprite above players heads who say 'Repeat' in chat."
 #define PLUGIN_VERSION "1.0.0"
-#define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"
+#define PLUGIN_CONTACT  "http://www.shadersallen.com/"
 
 #define JTAG "[RS]"
 #define JTAG_COLORED "{red}[RS]{default}"

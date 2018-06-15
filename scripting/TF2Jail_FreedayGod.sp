@@ -7,10 +7,10 @@
 public Plugin:myinfo =
 {
 	name = "[TF2Jail] Freeday Godmode",
-	author = "Keith Warren (Jack of Designs)",
+	author = "Keith Warren (Shaders Allen)",
 	description = "Gives Freedays Godmode on start & removes on exit.",
 	version = "1.0.0",
-	url = "http://www.jackofdesigns.com/"
+	url = "http://www.shadersallen.com/"
 };
 
 public OnClientPutInServer(client)

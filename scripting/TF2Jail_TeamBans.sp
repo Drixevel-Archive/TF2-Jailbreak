@@ -30,10 +30,10 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME     "[TF2] Jailbreak - Team Bans"
-#define PLUGIN_AUTHOR   "Keith Warren(Jack of Designs)"
+#define PLUGIN_AUTHOR   "Keith Warren(Shaders Allen)"
 #define PLUGIN_VERSION  "1.0.6"
 #define PLUGIN_DESCRIPTION	"Manage bans for one or multiple teams."
-#define PLUGIN_CONTACT  "http://www.jackofdesigns.com/"
+#define PLUGIN_CONTACT  "http://www.shadersallen.com/"
 
 #define JTAG "[Teambans]"
 
